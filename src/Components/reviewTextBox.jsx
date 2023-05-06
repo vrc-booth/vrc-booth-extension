@@ -17,7 +17,7 @@ function ReviewTextBox () {
     <>
       <div className="tw-w-full tw-mb-4 tw-border tw-border-gray-200 tw-rounded-lg tw-bg-gray-50">
         <div className="tw-px-4 tw-py-2 tw-bg-white tw-rounded-t-lg">
-          <label for="TextBox" className="tw-sr-only">리뷰를 작성하려면 로그인이 필요합니다.</label>
+          <label htmlFor="TextBox" className="tw-sr-only">리뷰를 작성하려면 로그인이 필요합니다.</label>
           <textarea
             id="TextBox"
             rows="4"
