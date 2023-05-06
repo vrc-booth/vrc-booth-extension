@@ -38,12 +38,10 @@ function Pagination ({ data, page, onButtonClick }) {
             <nav className="tw-isolate tw-inline-flex -tw-space-x-px tw-rounded-md tw-shadow" aria-label="Pagination">
               <div
                 className="tw-relative tw-inline-flex tw-items-center tw-rounded-l-md tw-px-2 tw-py-2 tw-text-gray-400 tw-ring-1 tw-ring-inset tw-ring-gray-300 hover:tw-bg-gray-50 focus:tw-z-20 focus:tw-outline-offset-0 tw-cursor-pointer">
-                <p>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
-                       stroke="currentColor" className="tw-w-5 tw-h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
-                  </svg>
-                </p>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5}
+                     stroke="currentColor" className="tw-w-5 tw-h-5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5"/>
+                </svg>
               </div>
               {
                 buttonRender().map(el => (
