@@ -25,7 +25,7 @@ function App () {
         <div className="mt-8">
           <Review list={data.list}/>
           <Pagination data={data} page={page} onButtonClick={(val) => setPage(val)}/>
-          <ReviewTextBox/>
+          <ReviewTextBox onButtonClick={(val) => setPage(val)}/>
         </div>
       </div>
     </>
