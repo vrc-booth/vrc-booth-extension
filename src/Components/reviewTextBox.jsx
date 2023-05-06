@@ -3,14 +3,14 @@ import Heart from './heart.jsx'
 
 function ReviewTextBox () {
   const [clicked, setClicked] = useState([false, false, false, false, false])
-  const dummy = [0, 1, 2, 3, 4 ]
+  const dummy = [0, 1, 2, 3, 4]
 
   const handleStarClick = index => {
-    let clickStates = [...clicked];
+    let clickStates = [...clicked]
     for (let i = 0; i < 5; i++) {
-      clickStates[i] = i <= index;
+      clickStates[i] = i <= index
     }
-    setClicked(clickStates);
+    setClicked(clickStates)
   }
 
   return (
