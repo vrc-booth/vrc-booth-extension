@@ -24,7 +24,9 @@ function App () {
         <h3 className="font-bold !m-0 !p-0 typography-16 preserve-half-leading">리뷰</h3>
         <div className="mt-8">
           <Review list={data.list}/>
-          <Pagination data={data} page={page} onButtonClick={(val) => setPage(val)}/>
+          {
+            data.count === 0 || <Pagination data={data} page={page} onButtonClick={(val) => setPage(val)}/>
+          }
           <ReviewTextBox onButtonClick={(val) => setPage(val)}/>
         </div>
       </div>
