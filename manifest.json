@@ -5,13 +5,28 @@
     "action": {
         "default_popup": "index.html"
     },
+    "permissions": [
+        "identity"
+    ],
+    "oauth2": {
+        "client_id": "309877406534-hdpbdv34dgvjhq1pbau1h10pe5aloqb6.apps.googleusercontent.com",
+        "scopes": [
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "openid"
+        ]
+    },
     "content_scripts": [
         {
             "js": [
                 "src/Inject.jsx",
-                "src/ellipseDetail.js"
+                "src/config/ellipseDetail.js"
             ],
             "matches": ["https://booth.pm/*/items/*"]
         }
-    ]
+    ],
+    "background": {
+        "service_worker": "src/config/background.js",
+        "type": "module"
+    }
 }
