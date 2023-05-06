@@ -33,7 +33,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             Authorization: 'Bearer ' + token,
             'Content-Type': 'application/json'
           },
-          'contentType': 'json'
+          'contentType': 'json',
+          body: JSON.stringify(request.data.body)
         }
         fetch(
           `${baseURL}${request.data.uri}`, init)
