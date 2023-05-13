@@ -1,9 +1,29 @@
 import Heart from './heart.jsx'
 import dayjs from 'dayjs'
+import { chromeSendMessage } from '../AppData/apis.js'
+import { useResetRecoilState } from 'recoil'
+import { pageState } from '../AppData/atoms.js'
+import { reviewsSelector } from '../AppData/selectors.js'
 
 function ReviewContent (props) {
   const dummy = [0, 1, 2, 3, 4]
-  const { comment, createdDate, name, profileImage, rating } = props.data
+  const { id, comment, createdDate, name, profileImage, rating } = props.data
+  const resetPage = useResetRecoilState(pageState)
+  const resetReviews = useResetRecoilState(reviewsSelector)
+
+  const deleteReview = () => {
+    chromeSendMessage({
+      message: 'http',
+      data: {
+        method: 'DELETE',
+        uri: `/post/${id}`
+      }
+    })
+      .then(() => {
+        resetPage()
+        resetReviews()
+      })
+  }
 
   return (
     <>

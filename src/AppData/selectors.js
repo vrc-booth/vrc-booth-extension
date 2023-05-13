@@ -1,5 +1,5 @@
 import { selector } from 'recoil'
-import { httpRequest } from './apis.js'
+import { chromeSendMessage } from './apis.js'
 import { pageState, pathNameState, triggerState } from './atoms.js'
 
 export const reviewsSelector = selector({
@@ -10,7 +10,7 @@ export const reviewsSelector = selector({
     const splitUrl = pathName.split('/')
     const { page, pageSize } = get(pageState)
 
-    return await httpRequest({
+    return await chromeSendMessage({
       message: 'http',
       data: {
         method: 'GET',

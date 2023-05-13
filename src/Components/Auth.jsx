@@ -1,6 +1,5 @@
-import { useRecoilState } from 'recoil'
-import { userInfoState } from '../AppData/atoms.js'
-import { getItemFromStorage, httpRequest } from '../AppData/apis.js'
+import { useRecoilValue } from 'recoil'
+import { chromeSendMessage } from '../AppData/apis.js'
 import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
 
@@ -9,7 +8,7 @@ function Auth () {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const getUserInfo = async () => {
-    httpRequest({
+    const user = await chromeSendMessage({
       message: 'http',
       data: {
         method: 'GET',

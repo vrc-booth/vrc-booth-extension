@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import Heart from './heart.jsx'
 import { useResetRecoilState } from 'recoil'
-import { httpRequest } from '../AppData/apis.js'
+import { chromeSendMessage } from '../AppData/apis.js'
 import { reviewsSelector } from '../AppData/selectors.js'
 import { pageState } from '../AppData/atoms.js'
 
@@ -24,7 +24,7 @@ function ReviewTextBox () {
   const writeReview = () => {
     if (comment == null || comment === '') return
 
-    httpRequest({
+    chromeSendMessage({
       message: 'http',
       data: {
         method: 'POST',
