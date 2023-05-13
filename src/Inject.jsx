@@ -1,8 +1,9 @@
 import React, { Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
+import { RecoilRoot } from 'recoil'
 import './index.css'
 import App from './App.jsx'
-import { RecoilRoot } from 'recoil'
+import Loading from './Loading.jsx'
 
 const commentRoot = document.querySelector('.u-pt-600')
 const root = document.createElement('div')
@@ -13,7 +14,7 @@ ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <>
       <RecoilRoot>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<Loading/>}>
           <App/>
         </Suspense>
       </RecoilRoot>
