@@ -51,6 +51,20 @@ function ReviewContent (props) {
               />))
           }
         </div>
+        {
+          props.displayDeleteButton === props.data.creator &&
+          <div>
+            <button type="button"
+                    className="tw-bg-white tw-rounded-md tw-p-2 tw-inline-flex tw-items-center tw-justify-center tw-text-gray-400 hover:tw-text-gray-500 hover:tw-bg-gray-100 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-inset focus:tw-ring-indigo-500"
+                    onClick={deleteReview}>
+              <span className="tw-sr-only">Close menu</span>
+              <svg className="tw-h-6 tw-w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                   stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        }
       </li>
     </>
   )
