@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Heart from './heart.jsx'
 import { useResetRecoilState } from 'recoil'
+import { httpRequest } from '../AppData/apis.js'
 import { reviewsSelector } from '../AppData/selectors.js'
 
 function ReviewTextBox ({ onButtonClick }) {
@@ -19,7 +20,7 @@ function ReviewTextBox ({ onButtonClick }) {
   }
 
   const writeReview = () => {
-    chrome.runtime.sendMessage({
+    httpRequest({
       message: 'http',
       data: {
         method: 'POST',
