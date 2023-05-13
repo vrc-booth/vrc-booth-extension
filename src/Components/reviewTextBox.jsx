@@ -2,7 +2,7 @@ import { useState } from 'react'
 import Heart from './heart.jsx'
 
 function ReviewTextBox ({ onButtonClick }) {
-  const [clicked, setClicked] = useState([false, false, false, false, false])
+  const [clicked, setClicked] = useState([true, false, false, false, false])
   const [comment, setComment] = useState('')
   const dummy = [0, 1, 2, 3, 4]
   const splitUrl = window.location.pathname.split('/')
