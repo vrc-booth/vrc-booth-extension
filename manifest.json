@@ -21,13 +21,13 @@
         {
             "js": [
                 "src/Inject.jsx",
-                "src/config/ellipseDetail.js"
+                "src/AppData/ellipseDetail.js"
             ],
             "matches": ["https://booth.pm/*/items/*"]
         }
     ],
     "background": {
-        "service_worker": "src/config/background.js",
+        "service_worker": "src/AppData/background.js",
         "type": "module"
     }
 }
