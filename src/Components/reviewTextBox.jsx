@@ -3,8 +3,10 @@ import Heart from './heart.jsx'
 import { useResetRecoilState } from 'recoil'
 import { httpRequest } from '../AppData/apis.js'
 import { reviewsSelector } from '../AppData/selectors.js'
+import { pageState } from '../AppData/atoms.js'
 
-function ReviewTextBox ({ onButtonClick }) {
+function ReviewTextBox () {
+  const resetPage = useResetRecoilState(pageState)
   const resetReviews = useResetRecoilState(reviewsSelector)
   const [clicked, setClicked] = useState([true, false, false, false, false])
   const [comment, setComment] = useState('')
@@ -20,6 +22,8 @@ function ReviewTextBox ({ onButtonClick }) {
   }
 
   const writeReview = () => {
+    if (comment == null || comment === '') return
+
     httpRequest({
       message: 'http',
       data: {
@@ -32,13 +36,12 @@ function ReviewTextBox ({ onButtonClick }) {
         }
       }
     })
-
-    onButtonClick({
-      current: 1,
-      pageSize: 5
-    })
-
-    resetReviews()
+      .then(() => {
+        resetPage()
+        resetReviews()
+        setComment('')
+        setClicked([true, false, false, false, false])
+      })
   }
 
   return (
@@ -51,6 +54,7 @@ function ReviewTextBox ({ onButtonClick }) {
             rows="4"
             className="tw-w-full tw-px-0 tw-text-sm tw-text-gray-900 tw-bg-white tw-border-0 focus:tw-ring-0 tw-resize-none"
             onChange={e => setComment(e.target.value)}
+            value={comment}
             placeholder="리뷰를 작성하려면 로그인이 필요합니다."
             required></textarea>
         </div>
