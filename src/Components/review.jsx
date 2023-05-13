@@ -11,7 +11,7 @@ function Review () {
       <ul role="list" className="tw-divide-y tw-divide-gray-100">
         {
           reviewData?.list?.map(content => (
-            <ReviewContent data={content} key={content.id} displayDeleteButton={userInfo.userId} />
+            <ReviewContent data={content} key={content.id} displayDeleteButton={userInfo?.userId} />
           ))
         }
         {
