@@ -17,3 +17,15 @@ export const triggerState = atomFamily({
   key: 'triggerState',
   default: Date.now()
 })
+
+export const userInfoState = atom({
+  key: 'userInfoState',
+  default: {
+    id: 0,
+    userId: '',
+    name: '',
+    email: '',
+    profileImage: '',
+    createdDate: ''
+  }
+})
