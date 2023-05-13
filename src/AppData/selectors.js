@@ -19,6 +19,6 @@ export const reviewsSelector = selector({
     })
   },
   set: ({ set }) => {
-    set(triggerState('reviewsSelect'), Date.now())
+    set(triggerState('reviewsSelector'), Date.now())
   }
 })
