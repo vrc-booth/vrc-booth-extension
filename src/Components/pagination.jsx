@@ -1,19 +1,18 @@
-function Pagination ({ data, page, onButtonClick }) {
+import { useRecoilState, useRecoilValue } from 'recoil'
+import { pageState } from '../AppData/atoms.js'
+import { reviewsSelector } from '../AppData/selectors.js'
 
-  let totalPage = Math.ceil(data?.count / page?.pageSize)
+function Pagination () {
+  const [page, setPage] = useRecoilState(pageState)
+  const data = useRecoilValue(reviewsSelector)
+
+  const totalPage = Math.ceil(data?.count / page.pageSize)
   const buttonRender = () => {
     const arr = []
     for (let i = 0; i < totalPage; i++) {
       arr.push(i + 1)
     }
     return arr
-  }
-
-  const buttonClick = (el) => {
-    onButtonClick({
-      current: el,
-      pageSize: 5
-    })
   }
 
   const notSelectedPage =
@@ -45,8 +44,9 @@ function Pagination ({ data, page, onButtonClick }) {
               </div>
               {
                 buttonRender().map(el => (
-                  <div className={el === page.current ? selectedPage : notSelectedPage}
-                       onClick={() => buttonClick(el)}
+                  <div className={el === page.page ? selectedPage : notSelectedPage}
+                       key={el}
+                       onClick={() => setPage({ page: el, pageSize: 5 })}
                   >
                     {el}
                   </div>

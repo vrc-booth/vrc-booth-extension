@@ -1,16 +1,19 @@
 import ReviewContent from './reviewContent.jsx'
+import { useRecoilValue } from 'recoil'
+import { reviewsSelector } from '../AppData/selectors.js'
 
-function Review (props) {
+function Review () {
+  const reviewData = useRecoilValue(reviewsSelector)
   return (
     <>
       <ul role="list" className="tw-divide-y tw-divide-gray-100">
         {
-          props?.list?.map(content => (
-            <ReviewContent data={content}/>
+          reviewData?.list?.map(content => (
+            <ReviewContent data={content} key={content.id} />
           ))
         }
         {
-          props?.list?.length > 0 ||
+          reviewData?.list?.length > 0 ||
           <div className="tw-flex tw-gap-x-6 tw-py-5 tw-justify-center">
             <span className="tw-text-gray-400">
               No Data

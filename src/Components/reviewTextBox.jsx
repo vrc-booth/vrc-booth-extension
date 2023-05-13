@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import Heart from './heart.jsx'
+import { useResetRecoilState } from 'recoil'
+import { reviewsSelector } from '../AppData/selectors.js'
 
 function ReviewTextBox ({ onButtonClick }) {
+  const resetReviews = useResetRecoilState(reviewsSelector)
   const [clicked, setClicked] = useState([true, false, false, false, false])
   const [comment, setComment] = useState('')
   const dummy = [0, 1, 2, 3, 4]
@@ -33,6 +36,8 @@ function ReviewTextBox ({ onButtonClick }) {
       current: 1,
       pageSize: 5
     })
+
+    resetReviews()
   }
 
   return (
