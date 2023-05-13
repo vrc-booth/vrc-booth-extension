@@ -1,22 +1,10 @@
-// const baseURL = 'https://port-0-boothplussrv-687p2alhbu0pyg.sel4.cloudtype.app'
-const baseURL = 'http://localhost:3000'
+const baseURL = 'https://port-0-boothplussrv-687p2alhbu0pyg.sel4.cloudtype.app'
 
-const getAuthToken = () => {
-  return new Promise((resolve, reject) => {
-    chrome.identity.getAuthToken({ interactive: true }, token => {
-      if (token) resolve(token)
-      else reject(token)
-    })
-  })
-}
-
-const handleRequest = (request, sender, sendResponse) => {
-  console.log(request)
-
-  if (request && request.message != null) {
-    if (request.message === 'Auth') {
-      getAuthToken().then(token => {
-        fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  switch (request.message) {
+    case 'Auth':
+      chrome.identity.getAuthToken({ interactive: true }, token => {
+        let init = {
           method: 'GET',
           async: true,
           headers: {
@@ -24,15 +12,21 @@ const handleRequest = (request, sender, sendResponse) => {
             'Content-Type': 'application/json'
           },
           'contentType': 'json'
-        })
+        }
+        fetch(
+          'https://www.googleapis.com/oauth2/v2/userinfo', init)
           .then(response => response.json())
-          .then(({ name, picture }) => {
-            sendResponse({ name: name, img: picture })
+          .then(data => {
+            sendResponse({
+              name: data.name,
+              img: data.picture
+            })
           })
       })
-    } else if (request.message === 'http') {
-      getAuthToken().then(token => {
-        fetch(`${baseURL}${request.data.uri}`, {
+      break
+    case 'http':
+      chrome.identity.getAuthToken({ interactive: true }, token => {
+        let init = {
           method: request.data.method,
           async: true,
           headers: {
@@ -41,16 +35,16 @@ const handleRequest = (request, sender, sendResponse) => {
           },
           'contentType': 'json',
           body: JSON.stringify(request.data.body)
-        })
-          .then(response => response.json())
-          .then(data => sendResponse(data))
+        }
+        fetch(
+          `${baseURL}${request.data.uri}`, init)
+          .then(res => res.json())
+          .then(data => {
+            sendResponse(data)
+          })
       })
-    }
-
-    return true
-  } else {
-    sendResponse({ success: false, message: 'Invalid message Received' })
+      break
   }
-}
 
-chrome.runtime.onMessage.addListener(handleRequest)
+  return true
+})
