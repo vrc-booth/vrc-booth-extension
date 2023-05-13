@@ -2,9 +2,10 @@ import { useRecoilValue } from 'recoil'
 import { chromeSendMessage } from '../AppData/apis.js'
 import { useEffect, useState } from 'react'
 import dayjs from 'dayjs'
+import { userInfoSelector } from '../AppData/selectors.js'
 
 function Auth () {
-  const [userInfo, setUserInfo] = useRecoilState(userInfoState)
+  const userInfo = useRecoilValue(userInfoSelector)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
   const getUserInfo = async () => {
@@ -14,12 +15,11 @@ function Auth () {
         method: 'GET',
         uri: `/user/me`
       }
-    }).then(user => {
-      chrome.storage.session.set({ isLoggedIn: true }, function () {
-        setUserInfo(user)
-        setIsLoggedIn(true)
-      })
     })
+
+    chrome.storage.session.set({ isLoggedIn: true })
+    chrome.runtime.sendMessage({ message: 'setToStorage', data: { userInfo: user } })
+    setIsLoggedIn(true)
   }
 
   const Login = () => {
@@ -29,8 +29,8 @@ function Auth () {
   useEffect(() => {
     chrome.storage.session.get(['isLoggedIn'])
       .then(async (r) => {
-        const result = await getUserInfo()
-        setIsLoggedIn(result.isLoggedIn)
+        await getUserInfo()
+        setIsLoggedIn(r.isLoggedIn)
       })
   }, [])
 
@@ -43,9 +43,9 @@ function Auth () {
             <>
               <div className="tw-m-5"></div>
               <div className="tw-flex tw-flex-col tw-items-center tw-pb-10">
-                <img className="tw-w-24 tw-h-24 tw-mb-3 tw-rounded-full tw-shadow-lg" src={userInfo.profileImage}/>
-                <h5 className="tw-mb-1 tw-text-xl tw-font-medium tw-text-gray-900">{userInfo.name}</h5>
-                <span className="text-sm tw-text-gray-500">{dayjs(userInfo.createdDate).format('YYYY-MM-DD')}</span>
+                <img className="tw-w-24 tw-h-24 tw-mb-3 tw-rounded-full tw-shadow-lg" src={userInfo?.profileImage}/>
+                <h5 className="tw-mb-1 tw-text-xl tw-font-medium tw-text-gray-900">{userInfo?.name}</h5>
+                <span className="text-sm tw-text-gray-500">{dayjs(userInfo?.createdDate).format('YYYY-MM-DD')}</span>
               </div>
             </>
           ) :

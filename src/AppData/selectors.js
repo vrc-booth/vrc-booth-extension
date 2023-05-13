@@ -22,3 +22,10 @@ export const reviewsSelector = selector({
     set(triggerState('reviewsSelector'), Date.now())
   }
 })
+
+export const userInfoSelector = selector({
+  key: 'userInfoSelector',
+  get: async () => {
+    return await chromeSendMessage({ message: 'getFromStorage', key: 'userId' })
+  }
+})

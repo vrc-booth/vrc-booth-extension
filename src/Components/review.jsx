@@ -1,9 +1,11 @@
 import ReviewContent from './reviewContent.jsx'
 import { useRecoilValue } from 'recoil'
-import { reviewsSelector } from '../AppData/selectors.js'
+import { reviewsSelector, userInfoSelector } from '../AppData/selectors.js'
 
 function Review () {
   const reviewData = useRecoilValue(reviewsSelector)
+  const userInfo = useRecoilValue(userInfoSelector)
+
   return (
     <>
       <ul role="list" className="tw-divide-y tw-divide-gray-100">

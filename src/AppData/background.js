@@ -1,4 +1,5 @@
-const baseURL = 'https://port-0-boothplussrv-687p2alhbu0pyg.sel4.cloudtype.app'
+// const baseURL = 'https://port-0-boothplussrv-687p2alhbu0pyg.sel4.cloudtype.app'
+const baseURL = 'http://localhost:3000'
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.message) {
@@ -43,6 +44,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse(data)
           })
       })
+      break
+    case 'getFromStorage':
+      chrome.storage.session.get(['userInfo'])
+        .then(s => {
+          sendResponse(s.userInfo)
+        })
+      break
+    case 'setToStorage':
+      chrome.storage.session.set(request.data)
+      sendResponse(true)
       break
   }
 
