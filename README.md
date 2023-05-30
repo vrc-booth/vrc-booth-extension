@@ -1,4 +1,4 @@
-# BoothPlus Server
+# BoothPlus
 크롬 확장프로그램 BoothPlus입니다.
 
 # 기술스택
