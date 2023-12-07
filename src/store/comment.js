@@ -2,7 +2,7 @@ import { atom, useRecoilValue, useSetRecoilState } from 'recoil'
 import { useMutation, useQuery } from 'react-query'
 import { useRecoilState } from 'recoil'
 import { Configs } from '../AppData/configs.js'
-import { userState } from './user.js'
+import { Api } from '../AppData/api.js'
 
 export const pageState = atom({
   key: 'pageState',
@@ -46,9 +46,7 @@ export function useFetchComments () {
   const productId = useRecoilValue(productIdState)
 
   const fetchComments = async () => {
-    const response = await fetch(`${Configs.BaseURL}/comment?page=${page}&productId=${productId}`, {
-      credentials: 'include'
-    })
+    const response = await fetch(`${Configs.BaseURL}/comment?page=${page}&productId=${productId}`)
     return response.json()
   }
 
@@ -65,19 +63,15 @@ export function useFetchComments () {
 export function usePostComments () {
   const productId = useRecoilValue(productIdState)
 
-  const postComment = async (message) => {
-    console.log(message)
-    if (!message || message === '') return
-    const response = await fetch(`${Configs.BaseURL}/comment/${productId}`, {
+  const postComment = (message, rating) => {
+    Api(`/comment/${productId}`, {
       method: 'POST',
-      credentials: 'include',
       body: JSON.stringify({
         'content': message,
-        'language': 'ko'
+        'language': 'ko',
+        'score': rating
       })
     })
-
-    return await response.json()
   }
 
   const { mutate, isLoading, isError } = useMutation(postComment)

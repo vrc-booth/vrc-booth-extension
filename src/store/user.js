@@ -1,36 +1,28 @@
 import { atom, useSetRecoilState } from 'recoil'
-import { useMutation, useQuery } from 'react-query'
-import { Configs } from '../AppData/configs.js'
+import { useQuery } from 'react-query'
+import { isAuthenticated } from './auth.js'
+import { Api } from '../AppData/api.js'
 
 export const userState = atom({
   key: 'userState',
   default: null,
 })
 
-export const isLoggedInState = atom({
-  key: 'isLoggedInState',
-  default: false,
-})
-
 export const useUser = () => {
   const setUser = useSetRecoilState(userState)
-  const setIsLoggedIn = useSetRecoilState(isLoggedInState)
+  const setIsLoggedIn = useSetRecoilState(isAuthenticated)
 
   const getMe = async () => {
-    const response = await fetch(`${Configs.BaseURL}/user/me`, {
-      credentials: 'include',
-    })
-    return response.json()
+    return await Api('/user/me')
   }
 
   const { data, isLoading, isError } = useQuery('user', getMe, {
-
     onSuccess: (data) => {
       setUser(data)
-      setIsLoggedIn(data.statusCode !== 401)
+      setIsLoggedIn(data?.status !== 401 || data?.status !== 999)
     },
-    onError: () => {
-      console.log('d')
+    onError: (err) => {
+      console.log(err)
       setIsLoggedIn(false)
     }
   })
