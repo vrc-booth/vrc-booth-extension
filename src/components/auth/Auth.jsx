@@ -1,10 +1,11 @@
 import AuthWithDiscord from './AuthWithDiscord.jsx'
 import { useRecoilValue } from 'recoil'
-import { isLoggedInState, userState, useUser } from '../../store/user.js'
+import { useUser } from '../../store/user.js'
+import { isAuthenticated } from '../../store/auth.js'
 
 function Auth ({ children }) {
-  const isLoggedIn = useRecoilValue(isLoggedInState)
-  const { isLoading, isError } = useUser()
+  const isLoggedIn = useRecoilValue(isAuthenticated)
+  useUser()
 
   return (
     <>
