@@ -1,14 +1,25 @@
 import CommentHeartRate from './CommentHeartRate.jsx'
 import { useRecoilState } from 'recoil'
 import { useCommentState, usePostComments } from '../../store/comment.js'
+import { useState } from 'react'
 
 function CommentTextBox () {
-  let dummy = [0, 1, 2, 3, 4]
+  const dummy = [0, 1, 2, 3, 4]
+  const [clicked, setClicked] = useState([true, false, false, false, false])
   const [comment, setComment] = useRecoilState(useCommentState)
-  const { postComments, isLoading, isError } = usePostComments()
+  const { postComment, isLoading, isError } = usePostComments()
+
+  const handleStarClick = index => {
+    let clickStates = [...clicked]
+    for (let i = 0; i < 5; i++) {
+      clickStates[i] = i <= index
+    }
+    setClicked(clickStates)
+  }
+
   const handlePostComment = () => {
-    console.log('click')
-    postComments(comment)
+    if (!comment) return
+    postComment(comment, clicked.filter(Boolean).length * 2)
     setComment('')
   }
 
@@ -32,8 +43,8 @@ function CommentTextBox () {
               dummy.map(el => (
                 <CommentHeartRate
                   key={el}
-                  // isOutline={!clicked[el]}
-                  // onClick={() => handleStarClick(el)}
+                  isOutline={!clicked[el]}
+                  onClick={() => handleStarClick(el)}
                   className="tw-h-5 tw-w-5 tw-text-main tw-cursor-pointer"
                 />))
             }
