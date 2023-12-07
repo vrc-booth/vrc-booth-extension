@@ -5,11 +5,12 @@
     "action": {
         "default_popup": "index.html"
     },
+    "host_permissions": [
+        "*://vrc-booth.com/api/**/*",
+        "*://vrc-booth.ribe.io/api/**/*",
+        "*://discord.com/**/*"
+    ],
     "permissions": [
-        "http://127.0.0.1:8000/api/*",
-        "https://vrc-booth.com/api/*",
-        "https://vrc-booth.ribe.io/api/*",
-        "https://discord.com/*",
         "identity",
         "tabs",
         "storage"
