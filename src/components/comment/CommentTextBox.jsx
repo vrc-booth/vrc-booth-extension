@@ -20,13 +20,12 @@ function CommentTextBox () {
   }
 
   const handlePostComment = async () => {
-    if (!comment) return
+    if (!comment.message) return
     postComment(comment)
     setComment({
       message: '',
       rate: 0
     })
-    await queryClient.invalidateQueries('comments')
   }
 
   const updateComment = (value) => {

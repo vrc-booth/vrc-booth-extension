@@ -1,5 +1,5 @@
 import { atom, useRecoilValue, useSetRecoilState } from 'recoil'
-import { useMutation, useQuery } from 'react-query'
+import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useRecoilState } from 'recoil'
 import { Configs } from '../AppData/configs.js'
 import { Api } from '../AppData/api.js'
@@ -65,9 +65,10 @@ export function useFetchComments () {
 
 export function usePostComments () {
   const productId = useRecoilValue(productIdState)
+  const queryClient = useQueryClient()
 
-  const postComment = (comment) => {
-    Api(`/comment/${productId}`, {
+  const postComment = async (comment) => {
+    const _ = await Api(`/comment/${productId}`, {
       method: 'POST',
       body: JSON.stringify({
         'content': comment.message,
@@ -77,7 +78,11 @@ export function usePostComments () {
     })
   }
 
-  const { mutate, isLoading, isError } = useMutation(postComment)
+  const { mutate, isLoading, isError } = useMutation(postComment, {
+    onSuccess: () => {
+      queryClient.refetchQueries('comments')
+    }
+  })
 
   return { postComment: mutate, isLoading, isError }
 }

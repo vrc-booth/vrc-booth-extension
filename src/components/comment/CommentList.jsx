@@ -1,9 +1,19 @@
-import { useFetchComments } from '../../store/comment.js'
+import { pageSizeState, pageState, useCommentPagination, useFetchComments } from '../../store/comment.js'
 import CommentListItem from './CommentListItem.jsx'
+import { useRecoilValue } from 'recoil'
+import { useQueryClient } from 'react-query'
 
 function CommentList () {
+  const queryClient = useQueryClient()
+  const page = useRecoilValue(pageState)
+  const pageSize = useRecoilValue(pageSizeState)
   const { comments, isLoading, isError } = useFetchComments()
+  const { setPage, setPageSize } = useCommentPagination()
 
+  const handlePageChange = (newPage) => {
+    setPage(newPage)
+    queryClient.refetchQueries('comments')
+  }
 
   const noData = (
     <div className="tw-flex tw-gap-x-6 tw-py-5 tw-justify-center">
@@ -23,6 +33,19 @@ function CommentList () {
             ))
         }
       </ul>
+      <div className="tw-flex tw-justify-center tw-mt-4 tw-mb-4">
+        {[...Array(Math.ceil(comments.count / pageSize)).keys()].map((p) => (
+          <button
+            key={p}
+            onClick={() => handlePageChange(p + 1)}
+            className={`tw-mx-2 tw-px-4 tw-py-2 tw-rounded ${
+              page === p + 1 ? 'tw-bg-main tw-text-white' : 'tw-bg-gray-300'
+            }`}
+          >
+            {p + 1}
+          </button>
+        ))}
+      </div>
     </>
   )
 }
