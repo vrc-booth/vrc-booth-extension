@@ -1,23 +1,20 @@
 {
     "manifest_version": 3,
     "name": "BoothPlus",
-    "version": "1.1.1",
+    "version": "2.1.0",
     "action": {
         "default_popup": "index.html"
     },
+    "host_permissions": [
+        "*://vrc-booth.com/api/**/*",
+        "*://vrc-booth.ribe.io/api/**/*",
+        "*://discord.com/**/*"
+    ],
     "permissions": [
         "identity",
         "tabs",
         "storage"
     ],
-    "oauth2": {
-        "client_id": "309877406534-hdpbdv34dgvjhq1pbau1h10pe5aloqb6.apps.googleusercontent.com",
-        "scopes": [
-            "https://www.googleapis.com/auth/userinfo.email",
-            "https://www.googleapis.com/auth/userinfo.profile",
-            "openid"
-        ]
-    },
     "icons": {
         "16": "Icon16.png",
         "32": "Icon32.png",
@@ -30,11 +27,22 @@
                 "src/Inject.jsx",
                 "src/AppData/ellipseDetail.js"
             ],
-            "matches": ["https://booth.pm/*/items/*"]
+            "matches": [
+                "*://booth.pm/*/items/*"
+            ]
+        },
+        {
+            "js": [
+                "src/InjectForStore.jsx"
+            ],
+            "matches": [
+                "*://*.booth.pm/items/*"
+            ]
         }
     ],
     "background": {
         "service_worker": "src/AppData/background.js",
         "type": "module"
-    }
+    },
+    "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAp7FZB6bFp2sn1uhlBE8K8hYQHsLaAl622sNlZhC/JEnhpKLNpp1DXbbBLyENUheH/yEd5McB3BvOJBNYD2w+Z7BjGvvCcGpBRiOoI/MHyrwqcDKzCdTbu8IQXqcSp2s+JPJhHMYZCwK7kLPV/5aT0x1n2SuizagWNIPeAgNU4vh04OQUXvb6gs/sMLbgH/F8S9ZNU/gOo0A/JabvEBmiMM/KgCTP8tu6m9bNittSdkzWAsheYV3i0MYAv1frhfI/QfoRb4PlP3jf92t4/TRM0/XwFMsVzD8SFRX6fMX/lf3j1tH1LWGJfpHHD0yeOLHsEFAwjJ3pDZcuWsNiL6tENQIDAQAB"
 }

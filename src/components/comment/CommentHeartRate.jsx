@@ -1,4 +1,4 @@
-function Heart (props) {
+function CommentHeartRate (props) {
   return (
     <>
       {props.isOutline ?
@@ -29,4 +29,4 @@ function Heart (props) {
   )
 }
 
-export default Heart
+export default CommentHeartRate
