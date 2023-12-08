@@ -29,7 +29,10 @@ export const useCommentListAtom = atom({
 
 export const useCommentState = atom({
   key: 'useCommentState',
-  default: ''
+  default: {
+    message: '',
+    rate: 1
+  }
 })
 
 export function useCommentPagination () {
@@ -63,13 +66,13 @@ export function useFetchComments () {
 export function usePostComments () {
   const productId = useRecoilValue(productIdState)
 
-  const postComment = (message, rating) => {
+  const postComment = (comment) => {
     Api(`/comment/${productId}`, {
       method: 'POST',
       body: JSON.stringify({
-        'content': message,
+        'content': comment.message,
         'language': 'ko',
-        'score': rating
+        'score': comment.rate
       })
     })
   }

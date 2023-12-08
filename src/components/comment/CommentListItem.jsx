@@ -10,14 +10,18 @@ function CommentListItem (props) {
   const [avatar, setAvatar] = useState('')
 
   const fetchAvatar = async () => {
-    const response = await fetch(`${Configs.BaseURL}/user/avatar/${user.id}`)
-    return response.url
+    try {
+      const response = await fetch(`${Configs.BaseURL}/user/avatar/${user.id}`)
+      return response.url
+    } catch (e) {
+      return '/public/no_profile.png'
+    }
   }
 
   const { data, error, isLoading } = useQuery(`avatar_${user.id}`, fetchAvatar, {
     onSuccess: (data) => {
       setAvatar(data)
-    },
+    }
   })
 
   return (
@@ -42,7 +46,7 @@ function CommentListItem (props) {
               dummy.map(el => (
                 <CommentHeartRate
                   key={el}
-                  isOutline={el > (score - 1)}
+                  isOutline={el > (score - 1) / 2}
                   className="tw-h-5 tw-w-5 tw-text-main"
                 />))
             }
