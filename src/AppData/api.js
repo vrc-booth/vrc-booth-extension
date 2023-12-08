@@ -7,7 +7,10 @@ import {
 
 export const Api = async function (url, options = {}) {
   const authToken = await getObjectFromLocalStorage('authorization')
-  if (!authToken?.accessToken) throw new Error()
+  if (!authToken?.accessToken) return {
+    status: 999,
+    message: 'Empty accessToken'
+  }
 
   const defaultOptions = {
     headers: {
