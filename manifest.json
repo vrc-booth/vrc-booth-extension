@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "BoothPlus",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "action": {
         "default_popup": "index.html"
     },
@@ -27,7 +27,17 @@
                 "src/Inject.jsx",
                 "src/AppData/ellipseDetail.js"
             ],
-            "matches": ["https://booth.pm/*/items/*"]
+            "matches": [
+                "*://booth.pm/*/items/*"
+            ]
+        },
+        {
+            "js": [
+                "src/InjectForStore.jsx"
+            ],
+            "matches": [
+                "*://*.booth.pm/items/*"
+            ]
         }
     ],
     "background": {
