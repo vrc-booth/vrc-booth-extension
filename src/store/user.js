@@ -19,7 +19,7 @@ export const useUser = () => {
   const { data, isLoading, isError } = useQuery('user', getMe, {
     onSuccess: (data) => {
       setUser(data)
-      setIsLoggedIn(data?.status !== 401 || data?.status !== 999)
+      setIsLoggedIn(data?.status !== 999)
     },
     onError: (err) => {
       console.log(err)
