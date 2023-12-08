@@ -5,7 +5,13 @@ import React from 'react'
 import { QueryClient, QueryClientProvider } from 'react-query'
 import { RecoilRoot } from 'recoil'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 20000
+    }
+  }
+})
 
 function App () {
   return (
