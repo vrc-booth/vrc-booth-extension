@@ -1,18 +1,15 @@
 # BoothPlus
-크롬 확장프로그램 BoothPlus입니다.
-
-# 기술스택
-- 언어
-  - JavaScript / NodeJS v18
-  - React 18
-  - Tailwindcss
 
 # 요약
-booth.pm 사이트에 리뷰가 없어서 상품을 구매할 때 리뷰를 보고 비교를 하고 싶어서 개발한 편의성 에드온 입니다.
-이 프로젝트는 크롬 확장프로그램에서 작성하는 리뷰의 텍스트와 별점을 받아 MySQL DB에 저장하고 조회하는 프로젝트이며
-GCP의 OAuth를 이용하여 인증 구현까지 한 프로젝트 입니다.
+
+부스(booth.pm) 사이트에 상품을 구매할 때 리뷰 확인하고 현명한 소비를 하고 싶은 생각에 만든 크롬 확장프로그램입니다.
+카뮤님의 부스 리뷰 사이트(vrc-booth.com)의 리뷰들을 활용해 부스 하단에 리뷰 창을 띄워주는 기능이 있으며
+디스코드 OAuth 2.0 사용해서 인증을 통해 사용자 관리를 하고 있습니다.
+
+
 
 # 적용 이미지
-<p align="center">
-  <img src="https://github.com/BoothPlus/BoothPlusSrv/blob/main/images/1.png" width="1000">
+<p style="align-content: center">
+  <img src="./.images/ex1.png" alt="">
+  <img src="./.images/ex2.png" alt="">
 </p>
