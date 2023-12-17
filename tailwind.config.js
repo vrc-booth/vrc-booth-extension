@@ -17,5 +17,10 @@ module.exports = {
     { pattern: /(bg|text|border)-(main|secondary)/ },
     { pattern: /([wh])-*/ },
   ],
-  plugins: [],
+  plugins: [
+    require('daisyui')
+  ],
+  daisyui: {
+    theme: ['light'],
+  }
 }

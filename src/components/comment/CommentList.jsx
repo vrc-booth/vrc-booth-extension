@@ -7,8 +7,8 @@ function CommentList () {
   const queryClient = useQueryClient()
   const page = useRecoilValue(pageState)
   const pageSize = useRecoilValue(pageSizeState)
-  const { comments, isLoading, isError } = useFetchComments()
-  const { setPage, setPageSize } = useCommentPagination()
+  const { comments } = useFetchComments()
+  const { setPage } = useCommentPagination()
 
   const handlePageChange = (newPage) => {
     setPage(newPage)

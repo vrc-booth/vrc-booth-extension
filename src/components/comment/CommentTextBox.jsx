@@ -2,14 +2,12 @@ import CommentHeartRate from './CommentHeartRate.jsx'
 import { useRecoilState } from 'recoil'
 import { useCommentState, usePostComments } from '../../store/comment.js'
 import { useState } from 'react'
-import { useQueryClient } from 'react-query'
 
 function CommentTextBox () {
   const dummy = [0, 1, 2, 3, 4]
   const [clicked, setClicked] = useState([true, false, false, false, false])
   const [comment, setComment] = useRecoilState(useCommentState)
-  const { postComment, isLoading, isError } = usePostComments()
-  const queryClient = useQueryClient()
+  const { postComment } = usePostComments()
 
   const handleStarClick = index => {
     let clickStates = [...clicked]

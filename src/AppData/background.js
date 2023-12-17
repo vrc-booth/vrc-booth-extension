@@ -1,8 +1,8 @@
-import { Configs } from './configs.js'
+import { Config } from './config.js'
 
 const messageMap = {
   auth: (request, sender, sendResponse) => {
-    const authUrl = new URL(`${Configs.BaseURL}/auth/oauth/discord`)
+    const authUrl = new URL(`${Config.BaseURL}/auth/oauth/discord`)
     const extensionUrl = new URL(`https://${chrome.runtime.id}.chromiumapp.org/`)
     authUrl.searchParams.set('redirectUrl', extensionUrl)
     chrome.identity.launchWebAuthFlow({
@@ -11,7 +11,7 @@ const messageMap = {
       },
       function (redirectURL) {
         const code = new URL(redirectURL).searchParams.get('code')
-        const callbackUrl = new URL(`${Configs.BaseURL}/auth/oauth/discord/callback`)
+        const callbackUrl = new URL(`${Config.BaseURL}/auth/oauth/discord/callback`)
         callbackUrl.searchParams.set('code', code)
         callbackUrl.searchParams.set('redirectUrl', extensionUrl)
         fetch(callbackUrl.toString())

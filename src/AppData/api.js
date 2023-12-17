@@ -1,32 +1,51 @@
 import {
-  Configs,
+  Config,
   getObjectFromLocalStorage,
   removeObjectFromLocalStorage,
   saveObjectInLocalStorage
-} from './configs.js'
+} from './config.js'
 
-export const Api = async function (url, options = {}) {
-  const authToken = await getObjectFromLocalStorage('authorization')
-  if (!authToken?.accessToken) return {
-    status: 999,
-    message: 'Empty accessToken'
-  }
-
-  const defaultOptions = {
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${authToken?.accessToken}`
-    },
-  }
-
+export const callApi = async function (url, options = {}) {
+  const defaultOptions = await setHeaders()
   const mergedOptions = {
     ...defaultOptions,
-    ...options,
+    ...options
   }
 
-  const response = await fetch(`${Configs.BaseURL}${url}`, mergedOptions)
+  try {
+    const response = await fetch(`${Config.BaseURL}${url}`, mergedOptions)
+    return await handleUnAuthorizedResponse(url, mergedOptions, response)
+  } catch (error) {
+    throw new Error('Network error')
+  }
+}
 
+async function validateAuthorization() {
+  const authToken = await getObjectFromLocalStorage('authorization')
+
+  if (!authToken?.accessToken) {
+    throw {
+      status: 999,
+      message: 'Empty accessToken'
+    }
+  }
+
+  return authToken
+}
+
+async function setHeaders() {
+  const authToken = await validateAuthorization()
+
+  return {
+    headers: {
+      Authorization: `Bearer ${authToken?.accessToken}`
+    }
+  }
+}
+
+async function handleUnAuthorizedResponse(url, mergedOptions, response) {
   if (response.status === 401) {
+    const authToken = await validateAuthorization()
     const tokenResponse = await refreshToken({
       refreshToken: authToken?.refreshToken
     })
@@ -39,20 +58,18 @@ export const Api = async function (url, options = {}) {
       }
     }
 
-    saveObjectInLocalStorage({'authorization': tokenResponse.json()})
-      .then(() => {
-        Api(url, mergedOptions)
-      })
+    await saveObjectInLocalStorage({ 'authorization': tokenResponse.json() })
+    return await callApi(url, mergedOptions)
   }
 
-  return response.json()
+  return await response.json()
 }
 
 const refreshToken = async (token) => {
-  return await fetch(`${Configs.BaseURL}/auth/token`, {
+  return await fetch(`${Config.BaseURL}/auth/token`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(token)
   })
