@@ -1,7 +1,7 @@
 import { atom, useSetRecoilState } from 'recoil'
 import { useQuery } from 'react-query'
 import { isAuthenticated } from './auth.js'
-import { Api } from '../AppData/api.js'
+import { callApi } from '../AppData/api.js'
 
 export const userState = atom({
   key: 'userState',
@@ -13,7 +13,7 @@ export const useUser = () => {
   const setIsLoggedIn = useSetRecoilState(isAuthenticated)
 
   const getMe = async () => {
-    return await Api('/user/me')
+    return await callApi('/user/me')
   }
 
   const { data, isLoading, isError } = useQuery('user', getMe, {

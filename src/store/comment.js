@@ -2,7 +2,7 @@ import { atom, useRecoilValue, useSetRecoilState } from 'recoil'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useRecoilState } from 'recoil'
 import { Config } from '../AppData/config.js'
-import { Api } from '../AppData/api.js'
+import { callApi } from '../AppData/api.js'
 
 export const pageState = atom({
   key: 'pageState',
@@ -45,7 +45,7 @@ export function useCommentPagination () {
 export function useFetchComments () {
   const [comments, setComments] = useRecoilState(useCommentListAtom)
   const page = useRecoilValue(pageState)
-  const pageSize = useRecoilValue(pageSizeState)
+  // const pageSize = useRecoilValue(pageSizeState)
   const productId = useRecoilValue(productIdState)
 
   const fetchComments = async () => {
@@ -68,7 +68,7 @@ export function usePostComments () {
   const queryClient = useQueryClient()
 
   const postComment = async (comment) => {
-    const _ = await Api(`/comment/${productId}`, {
+    const _ = await callApi(`/comment/${productId}`, {
       method: 'POST',
       body: JSON.stringify({
         'content': comment.message,
