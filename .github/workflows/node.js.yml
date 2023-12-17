@@ -17,13 +17,14 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - id: get_version
+    - name: ✅ 체크아웃 source code.
+      uses: actions/checkout@v3
+
+    - name: ⚙️ 빌드 버전 저장합니다.
+      id: get_version
       run: |
         cat ./manifest.json >> $GITHUB_ENV
         echo 'EOF' >> $GITHUB_ENV
-
-    - name: ✅ 체크아웃 source code.
-      uses: actions/checkout@v3
 
     - name: ⚙️ ${{ matrix.node-version }} 버전의 노드로 세팅합니다.
       uses: actions/setup-node@v3
