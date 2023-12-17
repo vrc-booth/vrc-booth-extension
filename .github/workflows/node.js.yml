@@ -23,8 +23,8 @@ jobs:
     - name: ⚙️ 빌드 버전 저장합니다.
       id: get_version
       run: |
-        cat ./manifest.json >> $GITHUB_ENV
-        echo 'EOF' >> $GITHUB_ENV
+        echo "MANIFEST_JSON=$(jq -c . < manifest.json)" >> $GITHUB_ENV
+        echo '${{ fromJson(env.MANIFEST_JSON).version }}'
 
     - name: ⚙️ ${{ matrix.node-version }} 버전의 노드로 세팅합니다.
       uses: actions/setup-node@v3
