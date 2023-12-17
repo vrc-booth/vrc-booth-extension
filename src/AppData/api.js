@@ -14,8 +14,6 @@ export const callApi = async function (url, options = {}) {
 
   try {
     const response = await fetch(`${Config.BaseURL}${url}`, mergedOptions)
-
-    // Extracted 401 status handling
     return await handleUnAuthorizedResponse(url, mergedOptions, response)
   } catch (error) {
     throw new Error('Network error')
@@ -40,7 +38,6 @@ async function setHeaders() {
 
   return {
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Bearer ${authToken?.accessToken}`
     }
   }
