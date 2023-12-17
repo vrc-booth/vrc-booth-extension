@@ -38,6 +38,8 @@ jobs:
     - name: ✨ 빌드 과정을 시작
       working-directory: ./
       run: yarn run build
+
+    - name: ✨ 파일 업로드
       uses: actions/upload-artifact@v3
       with:
         name: Booth-Extension-${{ fromJson(env.PACKAGE_JSON).version }}
