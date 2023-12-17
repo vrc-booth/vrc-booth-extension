@@ -19,7 +19,6 @@ jobs:
     steps:
     - id: get_version
       run: |
-        echo 'PACKAGE_JSON<<EOF' >> $GITHUB_ENV
         cat ./manifest.json >> $GITHUB_ENV
         echo 'EOF' >> $GITHUB_ENV
 
