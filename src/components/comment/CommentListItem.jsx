@@ -18,7 +18,7 @@ function CommentListItem (props) {
     }
   }
 
-  const { data, error, isLoading } = useQuery(`avatar_${user.id}`, fetchAvatar, {
+  useQuery(`avatar_${user.id}`, fetchAvatar, {
     onSuccess: (data) => {
       setAvatar(data)
     }
