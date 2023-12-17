@@ -1,7 +1,5 @@
-const BaseURL = process.env.NODE_ENV === 'production' ? 'https://vrc-booth.com/api' : 'https://vrc-booth.ribe.io/api'
-
-const Configs = {
-  BaseURL: BaseURL
+const Config = {
+  BaseURL: 'https://vrc-booth.com/api'
 }
 
 const getObjectFromLocalStorage = async function (key) {
@@ -41,7 +39,7 @@ const removeObjectFromLocalStorage = async function (keys) {
 }
 
 export {
-  Configs,
+  Config,
   getObjectFromLocalStorage,
   saveObjectInLocalStorage,
   removeObjectFromLocalStorage

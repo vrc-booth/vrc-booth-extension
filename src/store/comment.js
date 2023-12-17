@@ -1,7 +1,7 @@
 import { atom, useRecoilValue, useSetRecoilState } from 'recoil'
 import { useMutation, useQuery, useQueryClient } from 'react-query'
 import { useRecoilState } from 'recoil'
-import { Configs } from '../AppData/configs.js'
+import { Config } from '../AppData/config.js'
 import { Api } from '../AppData/api.js'
 
 export const pageState = atom({
@@ -49,7 +49,7 @@ export function useFetchComments () {
   const productId = useRecoilValue(productIdState)
 
   const fetchComments = async () => {
-    const response = await fetch(`${Configs.BaseURL}/comment?page=${page}&productId=${productId}`)
+    const response = await fetch(`${Config.BaseURL}/comment?page=${page}&productId=${productId}`)
     return response.json()
   }
 

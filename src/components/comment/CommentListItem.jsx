@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import CommentHeartRate from './CommentHeartRate.jsx'
 import { useState } from 'react'
 import { useQuery } from 'react-query'
-import { Configs } from '../../AppData/configs.js'
+import { Config } from '../../AppData/config.js'
 
 function CommentListItem (props) {
   const dummy = [0, 1, 2, 3, 4]
@@ -11,7 +11,7 @@ function CommentListItem (props) {
 
   const fetchAvatar = async () => {
     try {
-      const response = await fetch(`${Configs.BaseURL}/user/avatar/${user.id}`)
+      const response = await fetch(`${Config.BaseURL}/user/avatar/${user.id}`)
       return response.url
     } catch (e) {
       return '/public/no_profile.png'
