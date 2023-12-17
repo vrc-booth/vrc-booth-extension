@@ -23,8 +23,13 @@ jobs:
     - name: ⚙️ 빌드 버전 저장합니다.
       id: get_version
       run: |
-        echo "MANIFEST_JSON=$(jq -c . < manifest.json)" >> $GITHUB_ENV
-        echo '${{ fromJson(env.MANIFEST_JSON).version }}'
+        content=`cat ./package.json`
+        # the following lines are only required for multi line json
+        content="${content//'%'/'%25'}"
+        content="${content//$'\n'/'%0A'}"
+        content="${content//$'\r'/'%0D'}"
+        # end of optional handling for multi line json
+        echo "::set-output name=packageJson::$content"
 
     - name: ⚙️ ${{ matrix.node-version }} 버전의 노드로 세팅합니다.
       uses: actions/setup-node@v3
@@ -42,5 +47,5 @@ jobs:
     - name: ✨ 파일 업로드
       uses: actions/upload-artifact@v3
       with:
-        name: Booth-Extension-${{ fromJson(env.PACKAGE_JSON).version }}
+        name: Booth-Extension-${{ fromJson(steps.get_version.outputs.packageJson).version }}
         path: dist
