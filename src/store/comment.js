@@ -86,3 +86,21 @@ export function usePostComments () {
 
   return { postComment: mutate, isLoading, isError }
 }
+
+export function useDeleteComments () {
+  const productId = useRecoilValue(productIdState)
+  const queryClient = useQueryClient()
+  const deleteComment = async () => {
+    const _ = await callApi(`/comment/${productId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  const { mutate, isLoading: deleteIsLoading, isError: deleteIsError } = useMutation(deleteComment, {
+    onSuccess: () => {
+      queryClient.refetchQueries('comments')
+    }
+  })
+
+  return { deleteComment: mutate, deleteIsLoading, deleteIsError }
+}
