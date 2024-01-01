@@ -70,6 +70,9 @@ export function usePostComments () {
   const postComment = async (comment) => {
     const _ = await callApi(`/comment/${productId}`, {
       method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         'content': comment.message,
         'language': 'ko',

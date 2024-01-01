@@ -74,7 +74,7 @@ function CommentListItem (props) {
                   </div>
                   <ul tabIndex={0}
                       className="tw-dropdown-content tw-z-[1] tw-menu tw-p-2 tw-shadow tw-rounded-box tw-w-52">
-                    <li><div role="button" onClick={deleteCommentConfirm}>Item 1</div></li>
+                    <li><div role="button" onClick={deleteCommentConfirm}>삭제</div></li>
                   </ul>
                 </div>
               </div> :
