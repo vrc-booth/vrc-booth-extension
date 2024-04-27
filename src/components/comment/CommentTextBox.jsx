@@ -7,18 +7,12 @@ import { useQueryClient } from '@tanstack/react-query'
 
 function CommentTextBox () {
   const dummy = [0, 1, 2, 3, 4]
-  const [clicked, setClicked] = useState([true, false, false, false, false])
-  const [comment, setComment] = useRecoilState(commentAtom)
+  const [rate, setRate] = useState(1)
+  const [comment, setComment] = useState('')
   const queryClient = useQueryClient()
 
-  const handleStarClick = index => {
-    let clickStates = [...clicked]
-    for (let i = 0; i < 5; i++) {
-      clickStates[i] = i <= index
-    }
-    setClicked(clickStates)
-    setComment({ message: comment.message, rate: clicked.filter(Boolean).length * 2 })
-    console.log(comment)
+  const handleStarClick = (index) => {
+    setRate(index + 1)
   }
 
   const handlePostComment = async () => {
@@ -27,14 +21,12 @@ function CommentTextBox () {
     setComment({ message: '', rate: 0 })
     setClicked([true, false, false, false, false])
     queryClient.invalidateQueries({ queryKey: ['comments'] })
+    setComment('')
+    setRate(1)
   }
 
   const updateComment = (value) => {
-    setComment({
-      message: value,
-      rate: clicked.filter(Boolean).length * 2
-    })
-    console.log(comment)
+    setComment(value)
   }
 
   return (
@@ -57,7 +49,7 @@ function CommentTextBox () {
               dummy.map(el => (
                 <CommentHeartRate
                   key={el}
-                  isOutline={!clicked[el]}
+                  isOutline={el >= rate}
                   onClick={() => handleStarClick(el)}
                   className="tw-h-5 tw-w-5 tw-text-main tw-cursor-pointer"
                 />))
