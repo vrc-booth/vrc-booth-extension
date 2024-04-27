@@ -43,7 +43,7 @@ function CommentListItem (props) {
         <div className="tw-flex tw-gap-x-6 tw-py-5 tw-grow">
           <div className="tw-flex tw-gap-x-4 tw-flex-initial">
             <img className="tw-h-12 tw-w-12 tw-flex-none tw-rounded-full tw-bg-gray-50"
-                 src={isError ? `chrome-extension://${chrome.runtime.id}/no_profile.png` : data} alt=""/>
+                 src={isError ? `https://raw.githubusercontent.com/vrc-booth/vrc-booth-extension/main/public/vrc_cat.png` : data} alt=""/>
             <div className="tw-min-w-0 tw-flex-auto">
               <p className="tw-text-sm tw-font-semibold tw-leading-6 tw-text-gray-900 tw-overflow-ellipsis">
                 {user.username}
