@@ -12,6 +12,7 @@ function CommentList () {
     queryKey: ['comments'],
     queryFn: () => getComments(page),
   })
+
   const handlePageChange = (newPage) => {
     setPage(newPage)
     queryClient.invalidateQueries({ queryKey: ['comments'] })
