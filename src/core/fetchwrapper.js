@@ -58,6 +58,11 @@ const post = async (url, body = {}, options = {}) => {
   return await request(url, { ...options, method: 'POST', body: JSON.stringify(body), headers })
 }
 
+const put = async (url, body = {}, options = {}) => {
+  const headers = { 'Content-Type': 'application/json', ...options.headers }
+  return await request(url, { ...options, method: 'PUT', body: JSON.stringify(body), headers })
+}
+
 const _delete = async (url, options = {}) => {
   return await request(url, { ...options, method: 'DELETE' })
 }
@@ -65,5 +70,6 @@ const _delete = async (url, options = {}) => {
 export default {
   get,
   post,
+  put,
   _delete,
 }
