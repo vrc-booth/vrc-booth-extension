@@ -1,5 +1,4 @@
 import CommentHeartRate from './CommentHeartRate.jsx'
-import { useRecoilState } from 'recoil'
 import { useState } from 'react'
 import { getMyComment, postComment, putComment, PRODUCT_ID } from '../../api/comments.js'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
