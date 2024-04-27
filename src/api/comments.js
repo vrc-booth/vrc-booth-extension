@@ -45,4 +45,5 @@ export {
   postComment,
   putComment,
   deleteComment,
+  PRODUCT_ID
 }
