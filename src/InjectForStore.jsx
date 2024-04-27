@@ -9,6 +9,8 @@ root.style = 'background: white;padding: 20px 32px 20px 32px'
 root.id = 'crx-root'
 commentRoot.after(root)
 
-  ReactDOM.createRoot(root).render(
-  <App/>
+ReactDOM.createRoot(root).render(
+  <>
+    <App/>
+  </>
 )

@@ -1,12 +1,19 @@
-import { useAuth } from '../../store/auth.js'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 function AuthWithDiscord () {
-  const { login } = useAuth()
+  const queryClient = useQueryClient()
+  const mutation = useMutation({
+    mutationFn: async () => { return await chrome.runtime.sendMessage({ message: 'auth' }) },
+    onSuccess: (data) => {
+      chrome.storage.local.set({ userToken: data })
+      queryClient.invalidateQueries({ queryKey: ['userMe'] })
+    },
+  })
 
   return (
     <button
       className="tw-flex tw-items-center tw-bg-white tw-border tw-border-gray-300 tw-rounded-lg tw-shadow-md tw-px-6 tw-py-2 tw-text-sm tw-font-medium tw-text-gray-800 hover:tw-bg-gray-200 focus:tw-outline-none focus:tw-ring-2 focus:tw-ring-offset-2 focus:tw-ring-gray-500"
-      onClick={login}
+      onClick={async () => { await mutation.mutate() }}
     >
       <svg className="tw-h-6 tw-w-6 tw-mr-2"
            xmlns="http://www.w3.org/2000/svg"
