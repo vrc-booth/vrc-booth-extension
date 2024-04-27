@@ -1,16 +1,16 @@
 import AuthWithDiscord from './AuthWithDiscord.jsx'
-import { useRecoilValue } from 'recoil'
-import { useUser } from '../../store/user.js'
-import { isAuthenticated } from '../../store/auth.js'
+import { useQuery } from '@tanstack/react-query'
+import { getUserMe } from '../../api/users.js'
 
 function Auth ({ children }) {
-  const isLoggedIn = useRecoilValue(isAuthenticated)
-  useUser()
+  const { data, isPending, isError, error } = useQuery({
+    queryKey: ['userMe'],
+    queryFn: getUserMe,
+  })
 
   return (
     <>
-      {isLoggedIn ?
-        children :
+      {isPending || isError ?
         <div className="tw-relative">
           <div className="tw-absolute tw-inset-0 tw-flex tw-items-center tw-justify-center tw-filter-none tw-z-50">
             <AuthWithDiscord/>
@@ -18,7 +18,8 @@ function Auth ({ children }) {
           <div className="tw-blur-sm tw-pointer-events-none">
             {children}
           </div>
-        </div>
+        </div> :
+        children
       }
     </>
   )
