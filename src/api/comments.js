@@ -24,6 +24,17 @@ const postComment = async (comment) => {
   )
 }
 
+const putComment = async (comment) => {
+  await request.put(
+    `/comment/${PRODUCT_ID()}`,
+    {
+      'content': comment.message,
+      'language': 'ko',
+      'score': comment.rate
+    }
+  )
+}
+
 const deleteComment = async () => {
   await request._delete(`/comment/${PRODUCT_ID()}`, { method: 'DELETE' })
 }
@@ -32,5 +43,6 @@ export {
   getComments,
   getMyComment,
   postComment,
+  putComment,
   deleteComment,
 }
