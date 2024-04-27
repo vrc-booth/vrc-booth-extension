@@ -1,9 +1,13 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 function AuthWithDiscord () {
+  const queryClient = useQueryClient()
   const mutation = useMutation({
     mutationFn: async () => { return await chrome.runtime.sendMessage({ message: 'auth' }) },
-    onSuccess: (data) => { chrome.storage.local.set({ userToken: data }) },
+    onSuccess: (data) => {
+      chrome.storage.local.set({ userToken: data })
+      queryClient.invalidateQueries({ queryKey: ['userMe'] })
+    },
   })
 
   return (
