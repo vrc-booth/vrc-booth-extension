@@ -35,15 +35,25 @@ const putComment = async (comment) => {
   )
 }
 
+const postCommentThumbsUp = async (commentId) => {
+  await request.post(`/comment/${commentId}/upvote`)
+}
+
+const postCommentThumbsDown = async (commentId) => {
+  await request.post(`/comment/${commentId}/downvote`)
+}
+
 const deleteComment = async () => {
   await request._delete(`/comment/${PRODUCT_ID()}`, { method: 'DELETE' })
 }
 
 export {
+  PRODUCT_ID,
   getComments,
   getMyComment,
   postComment,
   putComment,
   deleteComment,
-  PRODUCT_ID
+  postCommentThumbsUp,
+  postCommentThumbsDown,
 }
