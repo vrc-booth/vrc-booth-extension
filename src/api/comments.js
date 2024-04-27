@@ -9,6 +9,10 @@ const getComments = async (page) => {
   return await request.get(`/comment?page=${page}&productId=${PRODUCT_ID()}`)
 }
 
+const getMyComment = async () => {
+  return await request.get(`/comment/${PRODUCT_ID()}/my`)
+}
+
 const postComment = async (comment) => {
   await request.post(
     `/comment/${PRODUCT_ID()}`,
@@ -26,6 +30,7 @@ const deleteComment = async () => {
 
 export {
   getComments,
+  getMyComment,
   postComment,
   deleteComment,
 }
