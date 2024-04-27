@@ -9,5 +9,7 @@ root.id = 'crx-root'
 commentRoot.after(root)
 
 ReactDOM.createRoot(root).render(
-  <App/>
+  <>
+    <App/>
+  </>
 )
