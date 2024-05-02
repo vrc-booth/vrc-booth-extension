@@ -13,6 +13,7 @@ function CommentTextBox () {
   const { data, isPending, isError, error } = useQuery({
     queryKey: ['myComment', PRODUCT_ID()],
     queryFn: getMyComment,
+    enabled: !!currentUser?.id,
   })
 
   const handleStarClick = (index) => {
