@@ -33,11 +33,26 @@ jobs:
       - name: Read package.json
         uses: zvonimirsun/read-package-version-actions@v2
         with: 
-          path: "./package.json"
+          path: "./"
         id: package-version
 
       - name: Show version number
         run: echo "Version is ${{ steps.package-version.outputs.version }}"
+
+      - name: Get PR Description
+        # 2. PR 본문을 환경 변수로 설정
+        # PR 본문(description)은 여러 줄일 수 있으므로
+        # 스크립트에서 안전하게 사용하기 위해 env(환경 변수)로 설정하는 것이 가장 좋습니다.
+        env:
+          PR_BODY: ${{ github.context.payload.pull_request.body }}
+        
+        # 3. 환경 변수 사용
+        # 설정된 $PR_BODY 변수를 스크립트에서 사용합니다.
+        run: |
+          echo "Pull Request Description (Markdown):"
+          echo "------------------------------------"
+          echo "$PR_BODY"
+          echo "------------------------------------"
 
       - uses: ncipollo/release-action@v1
         with:
