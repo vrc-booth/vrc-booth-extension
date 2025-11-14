@@ -13,12 +13,11 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [20.x]
-        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+        node-version: [24.x]
 
     steps:
     - name: ✅ 체크아웃 source code.
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: ⚙️ 빌드 버전 저장합니다.
       id: get_version
@@ -36,16 +35,17 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
 
-    - name: ✨ 패키지 설치
-      working-directory: ./
-      run: yarn
+    - name: pnpm 활성화
+      run: corepack enable pnpm
 
-    - name: ✨ 빌드 과정을 시작
-      working-directory: ./
-      run: yarn run build
+    - name: ✨ pnpm 의존성 설치
+      run: pnpm install
 
-    - name: ✨ 파일 업로드
+    - name: ✨ pnpm run zip
+      run: pnpm run zip
+
+    - name: ✨ 아티팩트 업로드
       uses: actions/upload-artifact@v3
       with:
         name: Booth-Extension-${{ fromJson(steps.get_version.outputs.packageJson).version }}
-        path: dist
+        path: dist/*.zip
