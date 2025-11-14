@@ -17,4 +17,5 @@ export default defineConfig({
   webExt: {
     startUrls: ["https://booth.pm/ko/items/6571299", "https://jingo1016.booth.pm/items/5058077"],
   },
+  outDir: 'dist',
 });
