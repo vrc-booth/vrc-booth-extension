@@ -41,10 +41,12 @@ jobs:
 
       - name: PR 설명 발라내기
         uses: actions/github-script@v7
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
         with:
           script: |  # 스크립트 시작
-            const pull_request = context.payload.pull_request;   // pull_request 객체 가져오기
-            console.log(JSON.stringify(pull_request));
+            const title = process.env.TITLE;
+            console.log(title);
 
       - uses: ncipollo/release-action@v1
         with:
