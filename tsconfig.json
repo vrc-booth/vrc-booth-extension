@@ -5,8 +5,7 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"],
-      "#i18n": ["./locales/index"]
+      "@/*": ["./*"]
     }
   },
 }
