@@ -1,3 +1,4 @@
+import { i18n } from "#i18n";
 import {
   API_BASE,
   deleteComment,
@@ -20,7 +21,6 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { browser } from "wxt/browser";
 import { CommentItem } from "./review/types";
 import StarIcons from "./StarIcon";
-import { i18n } from "#i18n";
 
 const DEFAULT_SCORE = 8;
 const COMMENTS_PAGE_SIZE = 10;
@@ -52,9 +52,6 @@ export function ReviewBoard() {
   const comments = commentsQuery.data?.pages?.flatMap((page) => page.comments) ?? [];
   const totalCount = commentsQuery.data?.pages?.[0]?.count ?? 0;
   const commentCount = totalCount;
-  const totalPages = totalCount > 0 ? Math.max(1, Math.ceil(totalCount / COMMENTS_PAGE_SIZE)) : 1;
-  const pagesLoaded = commentsQuery.data?.pages.length ?? 0;
-  const currentPageNumber = pagesLoaded === 0 ? 1 : Math.min(pagesLoaded, totalPages);
   const hasMoreComments = Boolean(commentsQuery.hasNextPage);
   const isFetchingNextPage = commentsQuery.isFetchingNextPage;
   const myComment = myCommentQuery.data ?? null;
@@ -191,7 +188,6 @@ export function ReviewBoard() {
     try {
       await authTokenStorage.setValue(null);
       await refreshAuthDependentData();
-      await closeSidePanel();
       setFormState({ content: "", score: DEFAULT_SCORE });
     } catch {
       showErrorToast(i18n.t("messages.logoutError"));
@@ -261,9 +257,6 @@ export function ReviewBoard() {
 
     setFormState((previous) => ({ ...previous, score: value }));
   };
-
-  const openSidePanel = async () => sendMessage('openSidePanel');
-  const closeSidePanel = async () => sendMessage('closeSidePanel');
 
   if (productQuery.isLoading) {
     return (

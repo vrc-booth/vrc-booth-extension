@@ -14,13 +14,4 @@ export default defineBackground(() => {
             return null;
         }
     });
-
-    onMessage('openSidePanel', (message) => {
-        browser.sidePanel.setOptions({ tabId: message.sender.tab.id, enabled: true, path: 'user.html' });
-        browser.sidePanel.open({ tabId: message.sender.tab.id });
-    })
-
-    onMessage('closeSidePanel', (message) => {
-        browser.sidePanel.setOptions({ tabId: message.sender.tab.id, enabled: false });
-    })
 });
