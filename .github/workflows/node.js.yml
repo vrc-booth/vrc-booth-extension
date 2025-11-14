@@ -3,8 +3,6 @@ name: pnpm Workflow
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,20 +12,41 @@ jobs:
         node-version: [24]
     steps:
       - uses: actions/checkout@v4
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 10
+
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "pnpm"
+
       - name: Install dependencies
         run: pnpm install
+
       - name: Build Extension
         run: pnpm run zip
-      - uses: actions/upload-artifact@v4
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.1 
         with:
-          name: Upload artifact
-          path: ./dist/*.zip
+          github_token: ${{ secrets.GITHUB_TOKEN }} 
+
+      - name: Read package.json
+        uses: zvonimirsun/read-package-version-actions@v2
+        with: 
+          path: "./package.json"
+        id: package-version
+
+      - name: Show version number
+        run: echo "Version is ${{ steps.package-version.outputs.version }}"
+
+      - uses: ncipollo/release-action@v1
+        with:
+          artifacts: "./dist/*.zip"
+          name: Release v${{ steps.package-version.outputs.version }}
+          body: ${{ steps.tag_version.outputs.changelog }}
