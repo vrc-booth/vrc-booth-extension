@@ -1,0 +1,85 @@
+common:
+  on: "ON"
+  off: "OFF"
+reviewBoard:
+  header: "商品レビュー"
+  loading: "レビューを読み込んでいます…"
+  info: "新着順に並べ、いいね/よくないね数も表示されます。"
+  commentsCount: "コメント {count}件"
+  button:
+    login: "ログイン"
+    logout: "ログアウト"
+    accountSettings: "アカウント設定"
+  noComments: "まだコメントがありません。最初の体験を共有してみてください。"
+  placeholder: "使用した感想を正直に共有してください。"
+  rating: "評価"
+  loginPrompt: "ログインするとコメントできます。"
+  submit:
+    new: "コメント登録"
+    edit: "コメント修正"
+    saving: "保存中…"
+    deleting: "削除中…"
+    delete: "コメントを削除"
+  vote:
+    like: "コメントにいいね"
+    dislike: "コメントによくないね"
+  loader:
+    loadingMore: "次のページを読み込んでいます…"
+userComments:
+  title: "マイコメント"
+  total: "合計 {count}件"
+  refresh: "更新"
+  loading: "コメントを読み込んでいます…"
+  empty: "まだコメントを書いていません。"
+  previous: "前へ"
+  next: "次へ"
+messages:
+  fetchReviewFailed: "レビューの取得に失敗しました。"
+  checkContent: "内容を確認してください。"
+  reviewSaveError: "コメントの保存中にエラーが発生しました。"
+  reviewDeleteError: "コメントの削除中にエラーが発生しました。"
+  voteOwnUp: "自分のレビューにはいいねできません。"
+  voteOwnDown: "自分のレビューにはよくないねできません。"
+  voteError: "投票中にエラーが発生しました。"
+  logoutError: "ログアウト中にエラーが発生しました。"
+  loginRequired: "ログインが必要です。"
+  emptyContent: "内容を入力してください。"
+  usernameRequired: "ユーザー名を入力してください。"
+userPanel:
+  title: "ユーザー管理"
+  description: "現在ログイン中のユーザーのプロフィールと設定を管理します。"
+  loading: "ユーザー情報を読み込んでいます…"
+  notLoggedIn: "レビュー管理パネルにログインしていません。まずレビュー画面でログインを完了してください。"
+  checkLogin: "ログイン状態を再確認"
+  labels:
+    userId: "ユーザーID"
+    discord: "Discord"
+    admin: "管理者権限"
+  adminValue:
+    yes: "はい"
+    no: "いいえ"
+  sections:
+    settings: "基本設定"
+    profile: "プロフィール"
+  toggles:
+    adult: "アダルトコンテンツを許可"
+    hideAvatar: "プロフィールアバターを非表示"
+    autoCollapse: "説明を自動で展開"
+  profileFields:
+    username: "ユーザー名"
+    bio: "自己紹介"
+    save: "保存"
+    refresh: "再読み込み"
+  statuses:
+    adultSaved: "アダルト設定を保存しました。"
+    adultError: "アダルト設定の保存に失敗しました。"
+    autoCollapseSaved: "自動展開設定を保存しました。"
+    autoCollapseError: "自動展開設定の保存に失敗しました。"
+    hideAvatarSaved: "アバター表示設定を保存しました。"
+    hideAvatarError: "アバター表示設定の保存に失敗しました。"
+    usernameSaved: "ユーザー名を保存しました。"
+    usernameError: "ユーザー名の保存に失敗しました。"
+    bioSaved: "自己紹介を保存しました。"
+    bioError: "自己紹介の保存に失敗しました。"
+aria:
+  scorePoint: "{value}.0 点"

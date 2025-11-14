@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useMyCommentsQuery, useUserProfileQuery } from "@/components/review/queries";
 import { UserCommentsList } from "@/components/review/components/UserCommentsList";
+import { t } from "@/locales";
 
 type Status = {
   message: string;
@@ -72,36 +73,36 @@ function App() {
     queryClient,
     setStatus,
     updateUserAdult,
-    "성인 콘텐츠 설정이 저장되었습니다.",
-    "성인 콘텐츠 설정 저장에 실패했습니다.",
+    t("userPanel.statuses.adultSaved"),
+    t("userPanel.statuses.adultError"),
   );
   const autoCollapseMutation = useAsyncStatusMutation(
     queryClient,
     setStatus,
     updateUserAutoCollapse,
-    "자동 접기 설정이 저장되었습니다.",
-    "자동 접기 설정 저장에 실패했습니다.",
+    t("userPanel.statuses.autoCollapseSaved"),
+    t("userPanel.statuses.autoCollapseError"),
   );
   const hideAvatarMutation = useAsyncStatusMutation(
     queryClient,
     setStatus,
     updateUserHideAvatar,
-    "아바타 숨김 설정이 저장되었습니다.",
-    "아바타 숨김 설정 저장에 실패했습니다.",
+    t("userPanel.statuses.hideAvatarSaved"),
+    t("userPanel.statuses.hideAvatarError"),
   );
   const usernameMutation = useAsyncStatusMutation(
     queryClient,
     setStatus,
     updateUsername,
-    "사용자명이 저장되었습니다.",
-    "사용자명 저장에 실패했습니다.",
+    t("userPanel.statuses.usernameSaved"),
+    t("userPanel.statuses.usernameError"),
   );
   const bioMutation = useAsyncStatusMutation(
     queryClient,
     setStatus,
     updateBio,
-    "소개글이 저장되었습니다.",
-    "소개글 저장에 실패했습니다.",
+    t("userPanel.statuses.bioSaved"),
+    t("userPanel.statuses.bioError"),
   );
 
   const handleToggle = (field: "adult" | "hideAvatar" | "autoCollapse", value: boolean) => {
@@ -122,7 +123,7 @@ function App() {
 
   const handleUsernameSave = () => {
     if (!formState.username.trim()) {
-      setStatus({ variant: "error", message: "사용자명을 입력해주세요." });
+    setStatus({ variant: "error", message: t("messages.usernameRequired") });
       return;
     }
     usernameMutation.mutate(formState.username.trim());
@@ -135,7 +136,7 @@ function App() {
   if (profileQuery.isLoading) {
     return (
       <div className="p-6 text-sm text-slate-500">
-        사용자 정보를 불러오는 중입니다…
+        {t("userPanel.loading")}
       </div>
     );
   }
@@ -143,7 +144,7 @@ function App() {
   if (!profileQuery.data) {
     return (
       <div className="p-6 text-sm text-slate-500">
-        리뷰 관리 패널에 로그인되어 있지 않습니다. 먼저 리뷰 페이지에서 로그인을 완료해 주세요.
+        {t("userPanel.notLoggedIn")}
         <div className="mt-3">
           <button
             type="button"
@@ -151,7 +152,7 @@ function App() {
             onClick={() => profileQuery.refetch()}
             disabled={profileQuery.isFetching}
           >
-            로그인 상태 다시 확인
+            {t("userPanel.checkLogin")}
           </button>
         </div>
       </div>
@@ -162,8 +163,8 @@ function App() {
     <div className="min-h-screen bg-slate-50 p-6">
       <div className="mx-auto max-w-lg space-y-5">
         <div className="rounded-2xl bg-white p-4 shadow-sm">
-          <h1 className="text-lg font-semibold text-slate-900">사용자 관리</h1>
-          <p className="mt-1 text-xs text-slate-500">현재 로그인한 사용자의 프로필과 설정을 관리합니다.</p>
+          <h1 className="text-lg font-semibold text-slate-900">{t("userPanel.title")}</h1>
+          <p className="mt-1 text-xs text-slate-500">{t("userPanel.description")}</p>
           {status && (
             <p
               className={`mt-3 rounded-xl px-3 py-2 text-xs ${
@@ -175,24 +176,26 @@ function App() {
           )}
           <dl className="mt-4 space-y-2 text-[13px]">
             <div className="flex justify-between">
-              <dt className="text-slate-500">유저 ID</dt>
+              <dt className="text-slate-500">{t("userPanel.labels.userId")}</dt>
               <dd className="font-semibold text-slate-900">{profileQuery.data.id}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">디스코드</dt>
+              <dt className="text-slate-500">{t("userPanel.labels.discord")}</dt>
               <dd className="font-semibold text-slate-900">{profileQuery.data.discord}</dd>
             </div>
             <div className="flex justify-between">
-              <dt className="text-slate-500">관리자 권한</dt>
-              <dd className="font-semibold text-slate-900">{profileQuery.data.admin ? "예" : "아니오"}</dd>
+              <dt className="text-slate-500">{t("userPanel.labels.admin")}</dt>
+              <dd className="font-semibold text-slate-900">
+                {profileQuery.data.admin ? t("userPanel.adminValue.yes") : t("userPanel.adminValue.no")}
+              </dd>
             </div>
           </dl>
         </div>
 
         <section className="rounded-2xl bg-white p-4 shadow-sm space-y-3">
-          <h2 className="text-sm font-semibold text-slate-900">기본 설정</h2>
+          <h2 className="text-sm font-semibold text-slate-900">{t("userPanel.sections.settings")}</h2>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-            <span className="text-sm text-slate-700">성인 콘텐츠 허용</span>
+            <span className="text-sm text-slate-700">{t("userPanel.toggles.adult")}</span>
             <label className="relative inline-flex justify-center cursor-pointer items-center">
               <input
                 type="checkbox"
@@ -203,12 +206,12 @@ function App() {
               />
               <div className="h-5 w-10 rounded-full bg-slate-200 transition peer-checked:bg-[#fc4d50]"></div>
               <span className="absolute inline-flex justify-center text-[10px] uppercase tracking-[0.2em] text-white">
-                {formState.adult ? "ON" : "OFF"}
+                {formState.adult ? t("common.on") : t("common.off")}
               </span>
             </label>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-            <span className="text-sm text-slate-700">프로필 아바타 숨김</span>
+            <span className="text-sm text-slate-700">{t("userPanel.toggles.hideAvatar")}</span>
             <label className="relative inline-flex justify-center cursor-pointer items-center">
               <input
                 type="checkbox"
@@ -219,12 +222,12 @@ function App() {
               />
               <div className="h-5 w-10 rounded-full bg-slate-200 transition peer-checked:bg-[#fc4d50]"></div>
               <span className="absolute justify-center align-center text-[10px] uppercase tracking-[0.2em] text-white">
-                {formState.hideAvatar ? "ON" : "OFF"}
+                {formState.hideAvatar ? t("common.on") : t("common.off")}
               </span>
             </label>
           </div>
           <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-slate-50 px-3 py-2">
-            <span className="text-sm text-slate-700">설명 자동 펼침</span>
+            <span className="text-sm text-slate-700">{t("userPanel.toggles.autoCollapse")}</span>
             <label className="relative inline-flex justify-center cursor-pointer items-center">
               <input
                 type="checkbox"
@@ -235,7 +238,7 @@ function App() {
               />
               <div className="h-5 w-10 rounded-full bg-slate-200 transition peer-checked:bg-[#fc4d50]"></div>
               <span className="absolute inline-flex justify-center text-[10px] uppercase tracking-[0.2em] text-white">
-                {formState.autoCollapse ? "ON" : "OFF"}
+                {formState.autoCollapse ? t("common.on") : t("common.off")}
               </span>
             </label>
           </div>
@@ -243,20 +246,20 @@ function App() {
 
         <section className="rounded-2xl bg-white p-4 shadow-sm space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-900">프로필</h2>
+            <h2 className="text-sm font-semibold text-slate-900">{t("userPanel.sections.profile")}</h2>
             <button
               type="button"
               className="text-xs text-slate-500 hover:text-slate-900"
               disabled={profileQuery.isFetching}
               onClick={() => profileQuery.refetch()}
             >
-              다시 불러오기
+              {t("userPanel.profileFields.refresh")}
             </button>
           </div>
 
           <div className="space-y-2">
             <label className="text-[11px] font-semibold text-slate-500" htmlFor="username">
-              사용자명
+              {t("userPanel.profileFields.username")}
             </label>
             <div className="flex gap-2">
               <input
@@ -271,14 +274,14 @@ function App() {
                 onClick={handleUsernameSave}
                 disabled={usernameMutation.isPending}
               >
-                저장
+                {t("userPanel.profileFields.save")}
               </button>
             </div>
           </div>
 
           <div className="space-y-2">
             <label className="text-[11px] font-semibold text-slate-500" htmlFor="bio">
-              소개글
+              {t("userPanel.profileFields.bio")}
             </label>
             <textarea
               id="bio"
@@ -293,7 +296,7 @@ function App() {
               onClick={handleBioSave}
               disabled={bioMutation.isPending}
             >
-              저장
+              {t("userPanel.profileFields.save")}
             </button>
           </div>
         </section>

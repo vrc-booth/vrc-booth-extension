@@ -1,5 +1,6 @@
 import type { CommentItem } from "@/components/review/types";
 import { UserCommentItem } from "./UserCommentItem";
+import { t } from "@/locales";
 
 type Props = {
   comments: CommentItem[];
@@ -28,22 +29,22 @@ export function UserCommentsList({
   return (
     <section className="rounded-2xl bg-white p-4 shadow-sm space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-900">나의 댓글</h2>
+        <h2 className="text-sm font-semibold text-slate-900">{t("userComments.title")}</h2>
         <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span>총 {count}개</span>
+          <span>{t("userComments.total", { count })}</span>
           <button
             type="button"
             className="text-xs text-slate-500 hover:text-slate-900"
             onClick={onRefresh}
             disabled={isFetching}
           >
-            새로고침
+            {t("userComments.refresh")}
           </button>
         </div>
       </div>
 
-      {isLoading && <p className="text-xs text-slate-500">댓글을 불러오는 중입니다…</p>}
-      {hasNoComments && <p className="text-xs text-slate-500">작성한 댓글이 아직 없습니다.</p>}
+      {isLoading && <p className="text-xs text-slate-500">{t("userComments.loading")}</p>}
+      {hasNoComments && <p className="text-xs text-slate-500">{t("userComments.empty")}</p>}
 
       <div className="space-y-3">
         {comments.map((comment) => (
@@ -58,7 +59,7 @@ export function UserCommentsList({
           onClick={() => onPageChange(Math.max(1, page - 1))}
           disabled={page === 1}
         >
-          이전
+          {t("userComments.previous")}
         </button>
         <span>
           {page} / {totalPages}
@@ -69,7 +70,7 @@ export function UserCommentsList({
           onClick={() => onPageChange(page + 1)}
           disabled={page >= totalPages}
         >
-          다음
+          {t("userComments.next")}
         </button>
       </div>
     </section>

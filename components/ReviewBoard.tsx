@@ -20,6 +20,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { browser } from "wxt/browser";
 import { CommentItem } from "./review/types";
 import StarIcons from "./StarIcon";
+import { t } from "@/locales";
 
 const DEFAULT_SCORE = 8;
 const COMMENTS_PAGE_SIZE = 10;
@@ -72,7 +73,7 @@ export function ReviewBoard() {
     const message =
       productQuery.error instanceof Error
         ? productQuery.error.message
-        : "리뷰를 가져오는 데 실패했습니다.";
+        : t("messages.fetchReviewFailed");
     showErrorToast(message);
   }, [productQuery.error, productQuery.isError]);
 
@@ -115,9 +116,9 @@ export function ReviewBoard() {
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 400) {
-        showErrorToast("내용을 확인해주세요.");
+        showErrorToast(t("messages.checkContent"));
       } else {
-        showErrorToast("댓글을 저장하는 동안 오류가 발생했습니다.");
+        showErrorToast(t("messages.reviewSaveError"));
       }
     },
   });
@@ -130,7 +131,7 @@ export function ReviewBoard() {
       setFormState({ content: "", score: DEFAULT_SCORE });
     },
     onError() {
-      showErrorToast("댓글을 삭제하는 동안 오류가 발생했습니다.");
+      showErrorToast(t("messages.reviewDeleteError"));
     },
   });
 
@@ -152,17 +153,17 @@ export function ReviewBoard() {
         const error = JSON.parse(e.message);
         switch(error.message) {
           case 'cannot upvote your own comment':
-            showErrorToast("자신의 리뷰에는 추천을 할 수 없습니다.");
+            showErrorToast(t("messages.voteOwnUp"));
             break;
           case 'cannot downvote your own comment':
-            showErrorToast("자신의 리뷰에는 비추천을 할 수 없습니다.");
+            showErrorToast(t("messages.voteOwnDown"));
             break;
           default:
-            showErrorToast("투표 중 오류가 발생했습니다.");
+            showErrorToast(t("messages.voteError"));
             break;
         }
       } catch {
-        showErrorToast("투표 중 오류가 발생했습니다.");
+        showErrorToast(t("messages.voteError"));
       }
     },
   });
@@ -193,7 +194,7 @@ export function ReviewBoard() {
       await closeSidePanel();
       setFormState({ content: "", score: DEFAULT_SCORE });
     } catch {
-      showErrorToast("로그아웃 중 오류가 발생했습니다.");
+      showErrorToast(t("messages.logoutError"));
     }
   };
 
@@ -204,13 +205,13 @@ export function ReviewBoard() {
     }
 
     if (!user) {
-      showErrorToast("로그인이 필요합니다.");
+      showErrorToast(t("messages.loginRequired"));
       return;
     }
 
     const trimmed = formState.content.trim();
     if (!trimmed) {
-      showErrorToast("내용을 입력해주세요.");
+      showErrorToast(t("messages.emptyContent"));
       return;
     }
 
@@ -238,7 +239,7 @@ export function ReviewBoard() {
 
   const handleVote = (comment: CommentItem, direction: "upvote" | "downvote") => {
     if (!isAuthenticated) {
-      showErrorToast("로그인이 필요합니다.");
+      showErrorToast(t("messages.loginRequired"));
       return;
     }
 
@@ -267,7 +268,7 @@ export function ReviewBoard() {
   if (productQuery.isLoading) {
     return (
       <div className="rounded-3xl bg-white p-5 shadow">
-        <p className="text-sm text-slate-500">리뷰를 불러오는 중입니다…</p>
+        <p className="text-sm text-slate-500">{t("reviewBoard.loading")}</p>
       </div>
     );
   }
@@ -277,28 +278,28 @@ export function ReviewBoard() {
       <div className="rounded-3xl bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] text-slate-400">
-              최신순으로 정렬되며 좋아요/싫어요 정보도 표시됩니다.
-            </p>
+            <p className="text-[11px] text-slate-400">{t("reviewBoard.info")}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#fc4d50]">댓글 {commentCount}</span>
-            <button
-              type="button"
-              className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
-              onClick={isAuthenticated ? handleLogout : handleLogin}
-              disabled={isBusy}
-            >
-              {isAuthenticated ? `로그아웃` : "로그인"}
-            </button>
-            {isAuthenticated && (
-              <button          
+            <span className="text-xs font-semibold text-[#fc4d50]">
+              {t("reviewBoard.commentsCount", { count: commentCount })}
+            </span>
+              <button
                 type="button"
                 className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
-                onClick={isAuthenticated && openSidePanel}>
-                계정 설정
+                onClick={isAuthenticated ? handleLogout : handleLogin}
+                disabled={isBusy}
+              >
+                {isAuthenticated ? t("reviewBoard.button.logout") : t("reviewBoard.button.login")}
               </button>
-            )}
+              {isAuthenticated && (
+                <button          
+                  type="button"
+                  className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
+                  onClick={isAuthenticated && openSidePanel}>
+                  {t("reviewBoard.button.accountSettings")}
+                </button>
+              )}
           </div>
         </div>
 
@@ -322,7 +323,7 @@ export function ReviewBoard() {
           )}
 
           {showEmptyComments && (
-            <p className="text-xs text-slate-500">아직 댓글이 없습니다. 첫 경험을 공유해 보세요.</p>
+            <p className="text-xs text-slate-500">{t("reviewBoard.noComments")}</p>
           )}
 
           {!commentsLoading &&
@@ -363,7 +364,7 @@ export function ReviewBoard() {
                     className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-[#fc4d50] transition hover:border-[#fc4d50]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40 disabled:opacity-60"
                     onClick={() => handleVote(comment, "upvote")}
                     disabled={!isAuthenticated || voteMutation.isPending}
-                    aria-label="댓글 좋아요"
+                    aria-label={t("reviewBoard.vote.like")}
                   >
                     <span>👍</span>
                     <span>{comment.upvotes ?? 0}</span>
@@ -373,7 +374,7 @@ export function ReviewBoard() {
                     className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-500 transition hover:border-[#fc4d50]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40 disabled:opacity-60"
                     onClick={() => handleVote(comment, "downvote")}
                     disabled={!isAuthenticated || voteMutation.isPending}
-                    aria-label="댓글 싫어요"
+                    aria-label={t("reviewBoard.vote.dislike")}
                   >
                     <span>👎</span>
                     <span>{comment.downvotes ?? 0}</span>
@@ -384,7 +385,7 @@ export function ReviewBoard() {
           })}
 
           {isFetchingNextPage && (
-            <p className="text-xs text-slate-500 text-center">다음 페이지를 불러오는 중입니다…</p>
+            <p className="text-xs text-slate-500 text-center">{t("reviewBoard.loader.loadingMore")}</p>
           )}
 
           <div ref={loadMoreTriggerRef} className="h-px" />
@@ -393,7 +394,7 @@ export function ReviewBoard() {
         <form className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
           <div>
             <label className="text-xs font-semibold text-slate-500" htmlFor="review-content">
-              나의 댓글
+              {t("userComments.title")}
             </label>
             <textarea
               id="review-content"
@@ -403,14 +404,14 @@ export function ReviewBoard() {
               onChange={(event) =>
                 setFormState((previous) => ({ ...previous, content: event.target.value }))
               }
-              placeholder="직접 사용한 경험을 솔직하게 공유해보세요."
+              placeholder={t("reviewBoard.placeholder")}
               disabled={!canEdit || isSubmitting}
             />
           </div>
 
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
             <label className="text-[11px]" htmlFor="review-score">
-              평점
+              {t("reviewBoard.rating")}
             </label>
             <div className="flex gap-1">
               <StarIcons
@@ -420,9 +421,7 @@ export function ReviewBoard() {
               />
             </div>
             {!canEdit && (
-              <p className="text-[11px] text-slate-400">
-                로그인하면 댓글을 쓸 수 있어요.
-              </p>
+              <p className="text-[11px] text-slate-400">{t("reviewBoard.loginPrompt")}</p>
             )}
           </div>
 
@@ -432,7 +431,11 @@ export function ReviewBoard() {
               type="submit"
               disabled={!canEdit || isSubmitting}
             >
-              {submitMutation.isPending ? "저장 중…" : myComment ? "댓글 수정" : "댓글 등록"}
+              {submitMutation.isPending
+                ? t("reviewBoard.submit.saving")
+                : myComment
+                  ? t("reviewBoard.submit.edit")
+                  : t("reviewBoard.submit.new")}
             </button>
 
             {myComment && (
@@ -442,7 +445,9 @@ export function ReviewBoard() {
                 onClick={handleDelete}
                 disabled={isSubmitting}
               >
-                {deleteMutation.isPending ? "삭제 중…" : "댓글 삭제"}
+                {deleteMutation.isPending
+                  ? t("reviewBoard.submit.deleting")
+                  : t("reviewBoard.submit.delete")}
               </button>
             )}
           </div>

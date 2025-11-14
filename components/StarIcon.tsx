@@ -4,6 +4,7 @@ import {
   IconStarHalfFilled,
 } from '@tabler/icons-react';
 import { useMemo } from 'react';
+import { t } from "@/locales";
 
 type Props = {
   score?: number;
@@ -39,13 +40,13 @@ const StarIcons = ({ score = 0, size = 24, interactive = false, onSelect }: Prop
                 <button
                   type="button"
                   className="absolute inset-y-0 left-0 w-1/2 cursor-pointer bg-transparent"
-                  aria-label={`${baseValue + 1}.0 점`}
+                  aria-label={t("aria.scorePoint", { value: baseValue + 1 })}
                   onClick={() => onSelect(baseValue + 1)}
                 />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 w-1/2 cursor-pointer bg-transparent"
-                  aria-label={`${baseValue + 2}.0 점`}
+                  aria-label={t("aria.scorePoint", { value: baseValue + 2 })}
                   onClick={() => onSelect(baseValue + 2)}
                 />
               </>

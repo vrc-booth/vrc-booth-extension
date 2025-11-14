@@ -1,0 +1,85 @@
+common:
+  on: "ON"
+  off: "OFF"
+reviewBoard:
+  header: "Product Reviews"
+  loading: "Loading reviews…"
+  info: "Sorted by recency with like/dislike counts."
+  commentsCount: "Comments {count}"
+  button:
+    login: "Log in"
+    logout: "Log out"
+    accountSettings: "Account settings"
+  noComments: "No comments yet. Share your first experience."
+  placeholder: "Share your honest experience using the product."
+  rating: "Rating"
+  loginPrompt: "Log in to write a comment."
+  submit:
+    new: "Post comment"
+    edit: "Edit comment"
+    saving: "Saving…"
+    deleting: "Deleting…"
+    delete: "Delete comment"
+  vote:
+    like: "Like comment"
+    dislike: "Dislike comment"
+  loader:
+    loadingMore: "Loading next page…"
+userComments:
+  title: "My comments"
+  total: "Total {count} comments"
+  refresh: "Refresh"
+  loading: "Loading comments…"
+  empty: "You haven’t written any comments yet."
+  previous: "Previous"
+  next: "Next"
+messages:
+  fetchReviewFailed: "Failed to load reviews."
+  checkContent: "Please review your content."
+  reviewSaveError: "An error occurred while saving your comment."
+  reviewDeleteError: "An error occurred while deleting your comment."
+  voteOwnUp: "You can’t like your own review."
+  voteOwnDown: "You can’t dislike your own review."
+  voteError: "An error occurred while voting."
+  logoutError: "An error occurred while logging out."
+  loginRequired: "Login is required."
+  emptyContent: "Please enter some text."
+  usernameRequired: "Please enter a username."
+userPanel:
+  title: "User management"
+  description: "Manage the profile and settings for the signed-in user."
+  loading: "Loading user information…"
+  notLoggedIn: "You are not logged into the review dashboard. Please finish logging in on the review page first."
+  checkLogin: "Recheck login status"
+  labels:
+    userId: "User ID"
+    discord: "Discord"
+    admin: "Admin rights"
+  adminValue:
+    yes: "Yes"
+    no: "No"
+  sections:
+    settings: "Basic settings"
+    profile: "Profile"
+  toggles:
+    adult: "Allow adult content"
+    hideAvatar: "Hide profile avatar"
+    autoCollapse: "Auto-expand descriptions"
+  profileFields:
+    username: "Username"
+    bio: "Bio"
+    save: "Save"
+    refresh: "Reload"
+  statuses:
+    adultSaved: "Adult content preference saved."
+    adultError: "Failed to save adult content setting."
+    autoCollapseSaved: "Auto-collapse setting saved."
+    autoCollapseError: "Failed to save auto-collapse setting."
+    hideAvatarSaved: "Avatar visibility preference saved."
+    hideAvatarError: "Failed to save avatar visibility preference."
+    usernameSaved: "Username saved."
+    usernameError: "Failed to save username."
+    bioSaved: "Bio saved."
+    bioError: "Failed to save bio."
+aria:
+  scorePoint: "{value}.0 points"

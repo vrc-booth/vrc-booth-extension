@@ -1,0 +1,85 @@
+common:
+  on: "ON"
+  off: "OFF"
+reviewBoard:
+  header: "상품 리뷰"
+  loading: "리뷰를 불러오는 중입니다…"
+  info: "최신순으로 정렬되며 좋아요/싫어요 정보도 표시됩니다."
+  commentsCount: "댓글 {count}"
+  button:
+    login: "로그인"
+    logout: "로그아웃"
+    accountSettings: "계정 설정"
+  noComments: "아직 댓글이 없습니다. 첫 경험을 공유해 보세요."
+  placeholder: "직접 사용한 경험을 솔직하게 공유해보세요."
+  rating: "평점"
+  loginPrompt: "로그인하면 댓글을 쓸 수 있어요."
+  submit:
+    new: "댓글 등록"
+    edit: "댓글 수정"
+    saving: "저장 중…"
+    deleting: "삭제 중…"
+    delete: "댓글 삭제"
+  vote:
+    like: "댓글 좋아요"
+    dislike: "댓글 싫어요"
+  loader:
+    loadingMore: "다음 페이지를 불러오는 중입니다…"
+userComments:
+  title: "나의 댓글"
+  total: "총 {count}개"
+  refresh: "새로고침"
+  loading: "댓글을 불러오는 중입니다…"
+  empty: "작성한 댓글이 아직 없습니다."
+  previous: "이전"
+  next: "다음"
+messages:
+  fetchReviewFailed: "리뷰를 가져오는 데 실패했습니다."
+  checkContent: "내용을 확인해주세요."
+  reviewSaveError: "댓글을 저장하는 동안 오류가 발생했습니다."
+  reviewDeleteError: "댓글을 삭제하는 동안 오류가 발생했습니다."
+  voteOwnUp: "자신의 리뷰에는 추천을 할 수 없습니다."
+  voteOwnDown: "자신의 리뷰에는 비추천을 할 수 없습니다."
+  voteError: "투표 중 오류가 발생했습니다."
+  logoutError: "로그아웃 중 오류가 발생했습니다."
+  loginRequired: "로그인이 필요합니다."
+  emptyContent: "내용을 입력해주세요."
+  usernameRequired: "사용자명을 입력해주세요."
+userPanel:
+  title: "사용자 관리"
+  description: "현재 로그인한 사용자의 프로필과 설정을 관리합니다."
+  loading: "사용자 정보를 불러오는 중입니다…"
+  notLoggedIn: "리뷰 관리 패널에 로그인되어 있지 않습니다. 먼저 리뷰 페이지에서 로그인을 완료해 주세요."
+  checkLogin: "로그인 상태 다시 확인"
+  labels:
+    userId: "유저 ID"
+    discord: "디스코드"
+    admin: "관리자 권한"
+  adminValue:
+    yes: "예"
+    no: "아니오"
+  sections:
+    settings: "기본 설정"
+    profile: "프로필"
+  toggles:
+    adult: "성인 콘텐츠 허용"
+    hideAvatar: "프로필 아바타 숨김"
+    autoCollapse: "설명 자동 펼침"
+  profileFields:
+    username: "사용자명"
+    bio: "소개글"
+    save: "저장"
+    refresh: "다시 불러오기"
+  statuses:
+    adultSaved: "성인 콘텐츠 설정이 저장되었습니다."
+    adultError: "성인 콘텐츠 설정 저장에 실패했습니다."
+    autoCollapseSaved: "자동 접기 설정이 저장되었습니다."
+    autoCollapseError: "자동 접기 설정 저장에 실패했습니다."
+    hideAvatarSaved: "아바타 숨김 설정이 저장되었습니다."
+    hideAvatarError: "아바타 숨김 설정 저장에 실패했습니다."
+    usernameSaved: "사용자명이 저장되었습니다."
+    usernameError: "사용자명 저장에 실패했습니다."
+    bioSaved: "소개글이 저장되었습니다."
+    bioError: "소개글 저장에 실패했습니다."
+aria:
+  scorePoint: "{value}.0 점"
