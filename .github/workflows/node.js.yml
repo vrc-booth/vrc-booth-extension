@@ -33,7 +33,7 @@ jobs:
       - name: Read package.json
         uses: zvonimirsun/read-package-version-actions@v2
         with: 
-          path: "./package.json"
+          path: "./"
         id: package-version
 
       - name: Show version number
