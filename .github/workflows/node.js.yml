@@ -1,51 +1,29 @@
-# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
-
-name: Node.js CI
-
+# For more information see: https://pnpm.io/ko/next/continuous-integration#github-actions
+name: pnpm Workflow
 on:
+  push:
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-
+  build:
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [24.x]
-
+        node-version: [24]
     steps:
-    - name: ✅ 체크아웃 source code.
-      uses: actions/checkout@v4
-
-    - name: ⚙️ 빌드 버전 저장합니다.
-      id: get_version
-      run: |
-        content=`cat ./package.json`
-        # the following lines are only required for multi line json
-        content="${content//'%'/'%25'}"
-        content="${content//$'\n'/'%0A'}"
-        content="${content//$'\r'/'%0D'}"
-        # end of optional handling for multi line json
-        echo "::set-output name=packageJson::$content"
-
-    - name: ⚙️ ${{ matrix.node-version }} 버전의 노드로 세팅합니다.
-      uses: actions/setup-node@v3
-      with:
-        node-version: ${{ matrix.node-version }}
-
-    - name: pnpm 활성화
-      run: corepack enable pnpm
-
-    - name: ✨ pnpm 의존성 설치
-      run: pnpm install
-
-    - name: ✨ pnpm run zip
-      run: pnpm run zip
-
-    - name: ✨ 아티팩트 업로드
-      uses: actions/upload-artifact@v3
-      with:
-        name: Booth-Extension-${{ fromJson(steps.get_version.outputs.packageJson).version }}
-        path: .output/*.zip
+      - uses: actions/checkout@v4
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
+      - name: Build Extension
+        run: pnpm run zip
