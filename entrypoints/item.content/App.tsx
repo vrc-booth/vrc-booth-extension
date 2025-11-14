@@ -3,7 +3,7 @@ import { REVIEW_TOAST_CONTAINER_ID } from "@/utils/toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { t } from "@/locales";
+import { i18n } from "#i18n";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +30,7 @@ export default () => (
       </div>
       <div className="text-gray-900">
         <div className="mx-auto max-w-4xl space-y-6">
-          <h1 className="text-2xl font-bold">{t("reviewBoard.header")}</h1>
+          <h1 className="text-2xl font-bold">{i18n.t("reviewBoard.header")}</h1>
           <ReviewBoard />
         </div>
       </div>

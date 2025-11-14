@@ -20,7 +20,7 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { browser } from "wxt/browser";
 import { CommentItem } from "./review/types";
 import StarIcons from "./StarIcon";
-import { t } from "@/locales";
+import { i18n } from "#i18n";
 
 const DEFAULT_SCORE = 8;
 const COMMENTS_PAGE_SIZE = 10;
@@ -73,7 +73,7 @@ export function ReviewBoard() {
     const message =
       productQuery.error instanceof Error
         ? productQuery.error.message
-        : t("messages.fetchReviewFailed");
+        : i18n.t("messages.fetchReviewFailed");
     showErrorToast(message);
   }, [productQuery.error, productQuery.isError]);
 
@@ -116,9 +116,9 @@ export function ReviewBoard() {
     },
     onError: (error) => {
       if (error instanceof ApiError && error.status === 400) {
-        showErrorToast(t("messages.checkContent"));
+        showErrorToast(i18n.t("messages.checkContent"));
       } else {
-        showErrorToast(t("messages.reviewSaveError"));
+        showErrorToast(i18n.t("messages.reviewSaveError"));
       }
     },
   });
@@ -131,7 +131,7 @@ export function ReviewBoard() {
       setFormState({ content: "", score: DEFAULT_SCORE });
     },
     onError() {
-      showErrorToast(t("messages.reviewDeleteError"));
+      showErrorToast(i18n.t("messages.reviewDeleteError"));
     },
   });
 
@@ -153,17 +153,17 @@ export function ReviewBoard() {
         const error = JSON.parse(e.message);
         switch(error.message) {
           case 'cannot upvote your own comment':
-            showErrorToast(t("messages.voteOwnUp"));
+            showErrorToast(i18n.t("messages.voteOwnUp"));
             break;
           case 'cannot downvote your own comment':
-            showErrorToast(t("messages.voteOwnDown"));
+            showErrorToast(i18n.t("messages.voteOwnDown"));
             break;
           default:
-            showErrorToast(t("messages.voteError"));
+            showErrorToast(i18n.t("messages.voteError"));
             break;
         }
       } catch {
-        showErrorToast(t("messages.voteError"));
+        showErrorToast(i18n.t("messages.voteError"));
       }
     },
   });
@@ -194,7 +194,7 @@ export function ReviewBoard() {
       await closeSidePanel();
       setFormState({ content: "", score: DEFAULT_SCORE });
     } catch {
-      showErrorToast(t("messages.logoutError"));
+      showErrorToast(i18n.t("messages.logoutError"));
     }
   };
 
@@ -205,13 +205,13 @@ export function ReviewBoard() {
     }
 
     if (!user) {
-      showErrorToast(t("messages.loginRequired"));
+      showErrorToast(i18n.t("messages.loginRequired"));
       return;
     }
 
     const trimmed = formState.content.trim();
     if (!trimmed) {
-      showErrorToast(t("messages.emptyContent"));
+      showErrorToast(i18n.t("messages.emptyContent"));
       return;
     }
 
@@ -239,7 +239,7 @@ export function ReviewBoard() {
 
   const handleVote = (comment: CommentItem, direction: "upvote" | "downvote") => {
     if (!isAuthenticated) {
-      showErrorToast(t("messages.loginRequired"));
+      showErrorToast(i18n.t("messages.loginRequired"));
       return;
     }
 
@@ -268,7 +268,7 @@ export function ReviewBoard() {
   if (productQuery.isLoading) {
     return (
       <div className="rounded-3xl bg-white p-5 shadow">
-        <p className="text-sm text-slate-500">{t("reviewBoard.loading")}</p>
+        <p className="text-sm text-slate-500">{i18n.t("reviewBoard.loading")}</p>
       </div>
     );
   }
@@ -278,11 +278,11 @@ export function ReviewBoard() {
       <div className="rounded-3xl bg-white p-5 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-[11px] text-slate-400">{t("reviewBoard.info")}</p>
+            <p className="text-[11px] text-slate-400">{i18n.t("reviewBoard.info")}</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#fc4d50]">
-              {t("reviewBoard.commentsCount", { count: commentCount })}
+              {i18n.t("reviewBoard.commentsCount", { count: commentCount })}
             </span>
               <button
                 type="button"
@@ -290,14 +290,14 @@ export function ReviewBoard() {
                 onClick={isAuthenticated ? handleLogout : handleLogin}
                 disabled={isBusy}
               >
-                {isAuthenticated ? t("reviewBoard.button.logout") : t("reviewBoard.button.login")}
+                {isAuthenticated ? i18n.t("reviewBoard.button.logout") : i18n.t("reviewBoard.button.login")}
               </button>
               {isAuthenticated && (
                 <button          
                   type="button"
                   className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
                   onClick={isAuthenticated && openSidePanel}>
-                  {t("reviewBoard.button.accountSettings")}
+                  {i18n.t("reviewBoard.button.accountSettings")}
                 </button>
               )}
           </div>
@@ -323,7 +323,7 @@ export function ReviewBoard() {
           )}
 
           {showEmptyComments && (
-            <p className="text-xs text-slate-500">{t("reviewBoard.noComments")}</p>
+            <p className="text-xs text-slate-500">{i18n.t("reviewBoard.noComments")}</p>
           )}
 
           {!commentsLoading &&
@@ -364,7 +364,7 @@ export function ReviewBoard() {
                     className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-[#fc4d50] transition hover:border-[#fc4d50]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40 disabled:opacity-60"
                     onClick={() => handleVote(comment, "upvote")}
                     disabled={!isAuthenticated || voteMutation.isPending}
-                    aria-label={t("reviewBoard.vote.like")}
+                    aria-label={i18n.t("reviewBoard.vote.like")}
                   >
                     <span>👍</span>
                     <span>{comment.upvotes ?? 0}</span>
@@ -374,7 +374,7 @@ export function ReviewBoard() {
                     className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-500 transition hover:border-[#fc4d50]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40 disabled:opacity-60"
                     onClick={() => handleVote(comment, "downvote")}
                     disabled={!isAuthenticated || voteMutation.isPending}
-                    aria-label={t("reviewBoard.vote.dislike")}
+                    aria-label={i18n.t("reviewBoard.vote.dislike")}
                   >
                     <span>👎</span>
                     <span>{comment.downvotes ?? 0}</span>
@@ -385,7 +385,7 @@ export function ReviewBoard() {
           })}
 
           {isFetchingNextPage && (
-            <p className="text-xs text-slate-500 text-center">{t("reviewBoard.loader.loadingMore")}</p>
+            <p className="text-xs text-slate-500 text-center">{i18n.t("reviewBoard.loader.loadingMore")}</p>
           )}
 
           <div ref={loadMoreTriggerRef} className="h-px" />
@@ -394,7 +394,7 @@ export function ReviewBoard() {
         <form className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
           <div>
             <label className="text-xs font-semibold text-slate-500" htmlFor="review-content">
-              {t("userComments.title")}
+              {i18n.t("userComments.title")}
             </label>
             <textarea
               id="review-content"
@@ -404,14 +404,14 @@ export function ReviewBoard() {
               onChange={(event) =>
                 setFormState((previous) => ({ ...previous, content: event.target.value }))
               }
-              placeholder={t("reviewBoard.placeholder")}
+              placeholder={i18n.t("reviewBoard.placeholder")}
               disabled={!canEdit || isSubmitting}
             />
           </div>
 
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
             <label className="text-[11px]" htmlFor="review-score">
-              {t("reviewBoard.rating")}
+              {i18n.t("reviewBoard.rating")}
             </label>
             <div className="flex gap-1">
               <StarIcons
@@ -421,7 +421,7 @@ export function ReviewBoard() {
               />
             </div>
             {!canEdit && (
-              <p className="text-[11px] text-slate-400">{t("reviewBoard.loginPrompt")}</p>
+              <p className="text-[11px] text-slate-400">{i18n.t("reviewBoard.loginPrompt")}</p>
             )}
           </div>
 
@@ -432,10 +432,10 @@ export function ReviewBoard() {
               disabled={!canEdit || isSubmitting}
             >
               {submitMutation.isPending
-                ? t("reviewBoard.submit.saving")
+                ? i18n.t("reviewBoard.submit.saving")
                 : myComment
-                  ? t("reviewBoard.submit.edit")
-                  : t("reviewBoard.submit.new")}
+                  ? i18n.t("reviewBoard.submit.edit")
+                  : i18n.t("reviewBoard.submit.new")}
             </button>
 
             {myComment && (
@@ -446,8 +446,8 @@ export function ReviewBoard() {
                 disabled={isSubmitting}
               >
                 {deleteMutation.isPending
-                  ? t("reviewBoard.submit.deleting")
-                  : t("reviewBoard.submit.delete")}
+                  ? i18n.t("reviewBoard.submit.deleting")
+                  : i18n.t("reviewBoard.submit.delete")}
               </button>
             )}
           </div>

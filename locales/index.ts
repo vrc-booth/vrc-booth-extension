@@ -102,15 +102,20 @@ const defaultLocale = detectLocale();
 
 export const getLocale = () => defaultLocale;
 
-export const t = (
+const translate = (
   key: string,
   variables?: Record<string, string | number>,
   localeOverride?: LocaleCode,
 ): string => {
   const locale = localeOverride ?? defaultLocale;
-  const translation = getNestedValue(LOCALES[locale], key) ?? getNestedValue(LOCALES[FALLBACK_LOCALE], key);
+  const translation =
+    getNestedValue(LOCALES[locale], key) ?? getNestedValue(LOCALES[FALLBACK_LOCALE], key);
   if (!translation) {
     return key;
   }
   return interpolate(translation, variables);
+};
+
+export const i18n = {
+  t: translate,
 };
