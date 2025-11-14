@@ -292,14 +292,6 @@ export function ReviewBoard() {
               >
                 {isAuthenticated ? i18n.t("reviewBoard.button.logout") : i18n.t("reviewBoard.button.login")}
               </button>
-              {isAuthenticated && (
-                <button          
-                  type="button"
-                  className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
-                  onClick={isAuthenticated && openSidePanel}>
-                  {i18n.t("reviewBoard.button.accountSettings")}
-                </button>
-              )}
           </div>
         </div>
 
