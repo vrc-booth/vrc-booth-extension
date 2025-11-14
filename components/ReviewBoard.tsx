@@ -282,7 +282,7 @@ export function ReviewBoard() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#fc4d50]">
-              {i18n.t("reviewBoard.commentsCount", { count: commentCount })}
+              {i18n.t("reviewBoard.commentsCount", commentCount)}
             </span>
               <button
                 type="button"

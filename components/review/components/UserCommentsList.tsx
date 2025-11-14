@@ -31,7 +31,7 @@ export function UserCommentsList({
       <div className="flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-900">{i18n.t("userComments.title")}</h2>
         <div className="flex items-center gap-2 text-[11px] text-slate-500">
-          <span>{i18n.t("userComments.total", { count })}</span>
+          <span>{i18n.t("userComments.total", count)}</span>
           <button
             type="button"
             className="text-xs text-slate-500 hover:text-slate-900"
