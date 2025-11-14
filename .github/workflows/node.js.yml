@@ -43,8 +43,7 @@ jobs:
         uses: actions/github-script@v7
         with:
           script: |  # 스크립트 시작
-            const pull_request = context.payload.pull_request;   // pull_request 객체 가져오기
-            console.log(JSON.stringify(pull_request));
+            console.log(JSON.stringify(github.event.pull_request));
 
       - uses: ncipollo/release-action@v1
         with:
