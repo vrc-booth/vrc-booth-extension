@@ -42,7 +42,7 @@ export function PurchaseReviewCta() {
 
   return (
     <section
-      className="mb-2 flex items-center gap-1"
+      className="mb-2 flex w-full items-center justify-center gap-1"
       aria-label={i18n.t("purchaseReview.label")}
     >
       <button type="button" className={CHIP_CLASS_NAME} onClick={() => focusReviewForm()}>
