@@ -6,7 +6,7 @@ import {
   readResponseText,
 } from "@/utils/review-utils";
 import { authTokenStorage } from "@/utils/storage";
-import { CommentItem, CommentSort, MyCommentData, ReviewProduct, UserProfile } from "./types";
+import { CommentItem, MyCommentData, ReviewProduct, UserProfile } from "./types";
 
 const API_ORIGIN = "https://vbt.kamyu.me";
 export const API_BASE = `${API_ORIGIN}/api`;
@@ -150,10 +150,9 @@ export const fetchCommentsForProduct = async (
   productId: string,
   page = 1,
   limit = 10,
-  sort: CommentSort = "new",
 ): Promise<{ count: number; comments: CommentItem[]; page: number; pageSize: number }> => {
   const payload = await apiFetch(
-    `/comment?productId=${encodeURIComponent(productId)}&sort=${sort}&page=${page}&limit=${limit}`,
+    `/comment?productId=${encodeURIComponent(productId)}&sort=new&page=${page}&limit=${limit}`,
   );
   return {
     count: typeof payload?.count === "number" ? payload.count : 0,

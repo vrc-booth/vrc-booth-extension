@@ -47,19 +47,10 @@ messages:
   emptyContent: 내용을 입력해주세요.
   usernameRequired: 사용자명을 입력해주세요.
 purchaseReview:
-  title: 구매 전 리뷰 확인
-  reviewCount: 리뷰 $1개
-  viewAll: 리뷰 모두 보기
-  highlightTitle: 평점 하이라이트
-  highlightBest: 가장 높은 평점
-  highlightWorst: 가장 낮은 평점
-  empty:
-    title: 아직 이 상품의 리뷰가 없습니다.
-    description: 먼저 써 본 경험을 남기면 다음 구매자가 판단할 근거가 생깁니다.
-  button:
-    write: 리뷰 작성하기
-    loginAndWrite: 로그인하고 리뷰 쓰기
-    loggingIn: 로그인 중…
+  label: 리뷰 요약
+  reviewCount: 리뷰 $1
+  writeFirst: 첫 리뷰 쓰기
+  dismiss: 리뷰 요약 숨기기
 userPanel:
   title: 사용자 관리
   description: 현재 로그인한 사용자의 프로필과 설정을 관리합니다.

@@ -47,19 +47,10 @@ messages:
   emptyContent: Please enter some text.
   usernameRequired: Please enter a username.
 purchaseReview:
-  title: Reviews before you buy
+  label: Review summary
   reviewCount: $1 reviews
-  viewAll: See all reviews
-  highlightTitle: Rating highlights
-  highlightBest: Highest rated
-  highlightWorst: Lowest rated
-  empty:
-    title: This product has no reviews yet.
-    description: Share your experience so the next buyer has something to go on.
-  button:
-    write: Write a review
-    loginAndWrite: Log in and write a review
-    loggingIn: Logging in…
+  writeFirst: Write the first review
+  dismiss: Hide review summary
 userPanel:
   title: User management
   description: Manage the profile and settings for the signed-in user.

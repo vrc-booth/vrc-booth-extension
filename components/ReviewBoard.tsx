@@ -7,6 +7,7 @@ import {
   upvoteComment,
 } from "@/components/review/api";
 import { loginWithDiscord } from "@/components/review/auth";
+import { COMMENTS_PAGE_SIZE } from "@/components/review/constants";
 import { REVIEW_FORM_FIELD_ID } from "@/components/review/reviewBoardFocus";
 import {
   useMyCommentQuery,
@@ -23,7 +24,6 @@ import { CommentItem } from "./review/types";
 import StarIcons from "./StarIcon";
 
 const DEFAULT_SCORE = 8;
-const COMMENTS_PAGE_SIZE = 10;
 
 type SubmitVariables = {
   productId: string;

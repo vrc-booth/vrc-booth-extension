@@ -14,9 +14,6 @@ export type ReviewProduct = {
   };
 };
 
-/** `GET /api/comment` 가 받는 정렬 값이다. */
-export type CommentSort = "new" | "old" | "score_asc" | "score_desc";
-
 export type CommentItem = {
   id: string;
   content: string;

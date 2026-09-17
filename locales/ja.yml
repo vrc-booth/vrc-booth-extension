@@ -47,19 +47,10 @@ messages:
   emptyContent: 内容を入力してください。
   usernameRequired: ユーザー名を入力してください。
 purchaseReview:
-  title: 購入前のレビュー確認
-  reviewCount: レビュー $1件
-  viewAll: レビューをすべて見る
-  highlightTitle: 評価ハイライト
-  highlightBest: 最高評価
-  highlightWorst: 最低評価
-  empty:
-    title: この商品にはまだレビューがありません。
-    description: 先に使った経験を残すと、次の購入者の判断材料になります。
-  button:
-    write: レビューを書く
-    loginAndWrite: ログインしてレビューを書く
-    loggingIn: ログイン中…
+  label: レビュー要約
+  reviewCount: レビュー $1
+  writeFirst: 最初のレビューを書く
+  dismiss: レビュー要約を隠す
 userPanel:
   title: ユーザー管理
   description: 現在ログイン中のユーザーのプロフィールと設定を管理します。
