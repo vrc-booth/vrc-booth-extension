@@ -42,9 +42,15 @@ messages:
   voteOwnDown: You can’t dislike your own review.
   voteError: An error occurred while voting.
   logoutError: An error occurred while logging out.
+  loginError: An error occurred while logging in.
   loginRequired: Login is required.
   emptyContent: Please enter some text.
   usernameRequired: Please enter a username.
+purchaseReview:
+  label: Review summary
+  reviewCount: $1 reviews
+  writeFirst: Write the first review
+  dismiss: Hide review summary
 userPanel:
   title: User management
   description: Manage the profile and settings for the signed-in user.

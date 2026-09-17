@@ -42,9 +42,15 @@ messages:
   voteOwnDown: 自分のレビューにはよくないねできません。
   voteError: 投票中にエラーが発生しました。
   logoutError: ログアウト中にエラーが発生しました。
+  loginError: ログイン中にエラーが発生しました。
   loginRequired: ログインが必要です。
   emptyContent: 内容を入力してください。
   usernameRequired: ユーザー名を入力してください。
+purchaseReview:
+  label: レビュー要約
+  reviewCount: レビュー $1
+  writeFirst: 最初のレビューを書く
+  dismiss: レビュー要約を隠す
 userPanel:
   title: ユーザー管理
   description: 現在ログイン中のユーザーのプロフィールと設定を管理します。
