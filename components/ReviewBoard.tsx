@@ -6,7 +6,8 @@ import {
   submitComment,
   upvoteComment,
 } from "@/components/review/api";
-import { sendMessage } from "@/components/review/messaging";
+import { loginWithDiscord } from "@/components/review/auth";
+import { REVIEW_FORM_FIELD_ID } from "@/components/review/reviewBoardFocus";
 import {
   useMyCommentQuery,
   useProductCommentsQuery,
@@ -18,7 +19,6 @@ import { authTokenStorage } from "@/utils/storage";
 import { showErrorToast } from "@/utils/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { browser } from "wxt/browser";
 import { CommentItem } from "./review/types";
 import StarIcons from "./StarIcon";
 
@@ -174,12 +174,13 @@ export function ReviewBoard() {
   };
 
   const handleLogin = async () => {
-    const redirectUrl = `https://${browser.runtime.id}.chromiumapp.org/`
-    const authUrl = `${API_BASE}/auth/oauth/discord?redirectUrl=${redirectUrl}`;
-    const code = await sendMessage('loginWithDiscord', authUrl);
-    const response = await fetch(`${API_BASE}/auth/oauth/discord/callback?code=${code}&redirectUrl=${redirectUrl}`);
-    const authToken = await response.json();
-    await authTokenStorage.setValue(authToken);
+    try {
+      await loginWithDiscord();
+    } catch {
+      showErrorToast(i18n.t("messages.loginError"));
+      return;
+    }
+
     await refreshAuthDependentData();
     setFormState({ content: "", score: DEFAULT_SCORE });
   };
@@ -275,7 +276,7 @@ export function ReviewBoard() {
           </div>
           <div className="flex items-center gap-2">
             <span className="text-xs font-semibold text-[#fc4d50]">
-              {i18n.t("reviewBoard.commentsCount", commentCount)}
+              {i18n.t("reviewBoard.commentsCount", [commentCount])}
             </span>
               <button
                 type="button"
@@ -378,11 +379,11 @@ export function ReviewBoard() {
 
         <form className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
           <div>
-            <label className="text-xs font-semibold text-slate-500" htmlFor="review-content">
+            <label className="text-xs font-semibold text-slate-500" htmlFor={REVIEW_FORM_FIELD_ID}>
               {i18n.t("userComments.title")}
             </label>
             <textarea
-              id="review-content"
+              id={REVIEW_FORM_FIELD_ID}
               rows={4}
               className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-inner transition focus:border-[#fc4d50]/80 focus:outline-none"
               value={formState.content}

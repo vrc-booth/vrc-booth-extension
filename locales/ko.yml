@@ -42,9 +42,24 @@ messages:
   voteOwnDown: 자신의 리뷰에는 비추천을 할 수 없습니다.
   voteError: 투표 중 오류가 발생했습니다.
   logoutError: 로그아웃 중 오류가 발생했습니다.
+  loginError: 로그인 중 오류가 발생했습니다.
   loginRequired: 로그인이 필요합니다.
   emptyContent: 내용을 입력해주세요.
   usernameRequired: 사용자명을 입력해주세요.
+purchaseReview:
+  title: 구매 전 리뷰 확인
+  reviewCount: 리뷰 $1개
+  viewAll: 리뷰 모두 보기
+  highlightTitle: 평점 하이라이트
+  highlightBest: 가장 높은 평점
+  highlightWorst: 가장 낮은 평점
+  empty:
+    title: 아직 이 상품의 리뷰가 없습니다.
+    description: 먼저 써 본 경험을 남기면 다음 구매자가 판단할 근거가 생깁니다.
+  button:
+    write: 리뷰 작성하기
+    loginAndWrite: 로그인하고 리뷰 쓰기
+    loggingIn: 로그인 중…
 userPanel:
   title: 사용자 관리
   description: 현재 로그인한 사용자의 프로필과 설정을 관리합니다.
