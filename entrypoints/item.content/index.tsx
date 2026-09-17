@@ -4,9 +4,7 @@ import ReactDOM from "react-dom/client";
 import "~/assets/tailwind.css";
 import App from "./App.tsx";
 import PurchaseApp from "./PurchaseApp.tsx";
-
-/** 구매 CTA(가격·장바구니 목록)의 앵커다. booth.pm 본 도메인과 상점 서브도메인에 모두 있다. */
-const PURCHASE_ANCHOR = "#variations";
+import { resolvePurchaseAnchor } from "./purchaseAnchor";
 
 export default defineContentScript({
   matches: ["*://booth.pm/*/items/*", "*://*.booth.pm/items/*"],
@@ -42,18 +40,19 @@ export default defineContentScript({
 });
 
 /**
- * 구매 버튼 바로 위에 리뷰 요약을 얹는다. 앵커가 없는 페이지에서는 마운트가
- * 예외를 던지므로, 앵커가 실제로 있을 때에만 UI를 만든다.
+ * 가격·장바구니 블록 바로 위에 리뷰 요약 칩을 얹는다. 앵커가 없는 페이지에서는
+ * 마운트가 예외를 던지므로, 앵커를 실제로 찾았을 때에만 UI를 만든다.
  */
 const mountPurchaseReviewCta = async (ctx: ContentScriptContext) => {
-  if (!document.querySelector(PURCHASE_ANCHOR)) {
+  const anchor = resolvePurchaseAnchor();
+  if (!anchor) {
     return;
   }
 
   const ui = await createShadowRootUi(ctx, {
     name: "booth-purchase-review",
     position: "inline",
-    anchor: PURCHASE_ANCHOR,
+    anchor: () => anchor,
     append: "before",
     onMount: (container) => {
       const wrapper = document.createElement("div");
