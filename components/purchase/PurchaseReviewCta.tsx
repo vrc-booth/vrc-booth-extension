@@ -7,10 +7,17 @@ import { IconStar, IconStarFilled, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { i18n } from "#i18n";
 
-const CHIP_CLASS_NAME =
-  "inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-2.5 py-1 " +
-  "text-[11px] font-semibold text-slate-700 transition " +
-  "hover:border-[#fc4d50]/50 hover:text-[#fc4d50] " +
+/* 바깥 pill은 div로 둔다. button 안에 button을 넣으면 올바른 마크업이 아니다. */
+const PILL_CLASS_NAME =
+  "inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white py-1 pl-2.5 pr-1 " +
+  "text-[11px] font-semibold text-slate-700 transition hover:border-[#fc4d50]/50";
+
+const LABEL_CLASS_NAME =
+  "inline-flex items-center gap-1.5 rounded-full bg-transparent transition " +
+  "hover:text-[#fc4d50] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40";
+
+const DISMISS_CLASS_NAME =
+  "rounded-full p-0.5 text-slate-300 transition hover:text-slate-500 " +
   "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40";
 
 /**
@@ -42,37 +49,39 @@ export function PurchaseReviewCta() {
 
   return (
     <section
-      className="mb-2 flex w-full items-center justify-center gap-1"
+      className="mb-2 flex w-full items-center justify-center"
       aria-label={i18n.t("purchaseReview.label")}
     >
-      <button type="button" className={CHIP_CLASS_NAME} onClick={() => focusReviewForm()}>
-        {hasReviews ? (
-          <>
-            <IconStarFilled className="shrink-0 text-yellow-500" size={12} />
-            <span>{formatScore(product.score)}</span>
-            <span aria-hidden className="text-slate-300">
-              ·
-            </span>
-            <span className="font-medium text-slate-500">
-              {i18n.t("purchaseReview.reviewCount", [reviewCount])}
-            </span>
-          </>
-        ) : (
-          <>
-            <IconStar className="shrink-0 text-slate-400" size={12} />
-            <span className="font-medium">{i18n.t("purchaseReview.writeFirst")}</span>
-          </>
-        )}
-      </button>
+      <div className={PILL_CLASS_NAME}>
+        <button type="button" className={LABEL_CLASS_NAME} onClick={() => focusReviewForm()}>
+          {hasReviews ? (
+            <>
+              <IconStarFilled className="shrink-0 text-yellow-500" size={12} />
+              <span>{formatScore(product.score)}</span>
+              <span aria-hidden className="text-slate-300">
+                ·
+              </span>
+              <span className="font-medium text-slate-500">
+                {i18n.t("purchaseReview.reviewCount", [reviewCount])}
+              </span>
+            </>
+          ) : (
+            <>
+              <IconStar className="shrink-0 text-slate-400" size={12} />
+              <span className="font-medium">{i18n.t("purchaseReview.writeFirst")}</span>
+            </>
+          )}
+        </button>
 
-      <button
-        type="button"
-        className="rounded-full p-1 text-slate-300 transition hover:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40"
-        aria-label={i18n.t("purchaseReview.dismiss")}
-        onClick={handleDismiss}
-      >
-        <IconX size={12} />
-      </button>
+        <button
+          type="button"
+          className={DISMISS_CLASS_NAME}
+          aria-label={i18n.t("purchaseReview.dismiss")}
+          onClick={handleDismiss}
+        >
+          <IconX size={12} />
+        </button>
+      </div>
     </section>
   );
 }
