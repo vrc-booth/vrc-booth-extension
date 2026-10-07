@@ -5,7 +5,10 @@
     "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "~/*": ["./*"],
+      "#i18n": ["./.wxt/i18n/index.ts"],
+      "#imports": ["./.wxt/types/imports-module.d.ts"]
     }
   },
 }
