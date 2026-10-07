@@ -1,7 +1,6 @@
 export type ReviewProduct = {
   id: string;
   title: string;
-  price: string;
   url: string;
   score: number;
   thumbnails: string[];
@@ -49,6 +48,8 @@ export type MyCommentData = {
 };
 
 export type AuthToken = {
+  /** Local login generation; never sent to the API. */
+  sessionId?: string;
   accessToken: string;
   refreshToken: string;
 }

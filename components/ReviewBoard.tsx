@@ -1,14 +1,9 @@
 import { i18n } from "#i18n";
 import {
-  API_BASE,
   deleteComment,
-  downvoteComment,
   submitComment,
-  upvoteComment,
 } from "@/components/review/api";
-import { loginWithDiscord } from "@/components/review/auth";
-import { COMMENTS_PAGE_SIZE } from "@/components/review/constants";
-import { REVIEW_FORM_FIELD_ID } from "@/components/review/reviewBoardFocus";
+import { sendMessage } from "@/components/review/messaging";
 import {
   useMyCommentQuery,
   useProductCommentsQuery,
@@ -16,14 +11,16 @@ import {
   useUserProfileQuery,
 } from "@/components/review/queries";
 import { ApiError, formatDateTime } from "@/utils/review-utils";
-import { authTokenStorage } from "@/utils/storage";
+import { loginWithDiscord } from "@/components/review/auth";
+import { COMMENTS_PAGE_SIZE } from "@/components/review/constants";
+import { REVIEW_FORM_FIELD_ID } from "@/components/review/reviewBoardFocus";
 import { showErrorToast } from "@/utils/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useRef, useState } from "react";
-import { CommentItem } from "./review/types";
 import StarIcons from "./StarIcon";
 
 const DEFAULT_SCORE = 8;
+const MAX_COMMENT_LENGTH = 500;
 
 type SubmitVariables = {
   productId: string;
@@ -33,6 +30,18 @@ type SubmitVariables = {
     score: number;
   };
   isUpdate: boolean;
+};
+
+const isForbiddenWriteError = (error: Error) => {
+  if (!(error instanceof ApiError) || error.status !== 403) {
+    return false;
+  }
+
+  try {
+    return JSON.parse(error.message)?.message === "forbidden";
+  } catch {
+    return false;
+  }
 };
 
 export function ReviewBoard() {
@@ -55,9 +64,11 @@ export function ReviewBoard() {
   const hasMoreComments = Boolean(commentsQuery.hasNextPage);
   const isFetchingNextPage = commentsQuery.isFetchingNextPage;
   const myComment = myCommentQuery.data ?? null;
-  const showEmptyComments = !commentsQuery.isLoading && comments.length === 0;
+  const showEmptyComments = Boolean(product) && commentsQuery.isSuccess && comments.length === 0;
   const commentsLoading = commentsQuery.isLoading;
 
+  const [isAuthPending, setIsAuthPending] = useState(false);
+  const [showUsernameHint, setShowUsernameHint] = useState(false);
   const [formState, setFormState] = useState({
     content: "",
     score: DEFAULT_SCORE,
@@ -73,6 +84,15 @@ export function ReviewBoard() {
         : i18n.t("messages.fetchReviewFailed");
     showErrorToast(message);
   }, [productQuery.error, productQuery.isError]);
+
+  const lastUserId = useRef(user?.id);
+  useEffect(() => {
+    if (lastUserId.current && lastUserId.current !== user?.id) {
+      setFormState({ content: "", score: DEFAULT_SCORE });
+      setShowUsernameHint(false);
+    }
+    lastUserId.current = user?.id;
+  }, [user?.id]);
 
   useEffect(() => {
     if (!myComment) {
@@ -108,11 +128,16 @@ export function ReviewBoard() {
   const submitMutation = useMutation<void, Error, SubmitVariables>({
     mutationFn: ({ productId, method, body }: SubmitVariables) => submitComment(productId, method, body),
     onSuccess(_, variables) {
+      setShowUsernameHint(false);
       queryClient.invalidateQueries({ queryKey: ["comments", variables.productId, COMMENTS_PAGE_SIZE] });
       queryClient.invalidateQueries({ queryKey: ["myComment", variables.productId] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
     },
     onError: (error) => {
-      if (error instanceof ApiError && error.status === 400) {
+      if (isForbiddenWriteError(error)) {
+        setShowUsernameHint(true);
+        showErrorToast(i18n.t("messages.usernameSetupHint"));
+      } else if (error instanceof ApiError && error.status === 400) {
         showErrorToast(i18n.t("messages.checkContent"));
       } else {
         showErrorToast(i18n.t("messages.reviewSaveError"));
@@ -123,45 +148,14 @@ export function ReviewBoard() {
   const deleteMutation = useMutation<void, Error, string>({
     mutationFn: (targetProductId: string) => deleteComment(targetProductId),
     onSuccess(_, targetProductId) {
+      setShowUsernameHint(false);
       queryClient.invalidateQueries({ queryKey: ["comments", targetProductId, COMMENTS_PAGE_SIZE] });
       queryClient.invalidateQueries({ queryKey: ["myComment", targetProductId] });
+      queryClient.invalidateQueries({ queryKey: ["product"] });
       setFormState({ content: "", score: DEFAULT_SCORE });
     },
     onError() {
       showErrorToast(i18n.t("messages.reviewDeleteError"));
-    },
-  });
-
-  const voteMutation = useMutation<
-    void,
-    Error,
-    { comment: CommentItem; direction: "upvote" | "downvote" }
-  >({
-    mutationFn: ({ comment, direction }) =>
-      direction === "upvote" ? upvoteComment(comment) : downvoteComment(comment),
-    onSuccess(_, variables) {
-      if (productId) {
-        queryClient.invalidateQueries({ queryKey: ["comments", productId, COMMENTS_PAGE_SIZE] });
-        queryClient.invalidateQueries({ queryKey: ["myComment", productId] });
-      }
-    },
-    onError(e) {
-      try {
-        const error = JSON.parse(e.message);
-        switch(error.message) {
-          case 'cannot upvote your own comment':
-            showErrorToast(i18n.t("messages.voteOwnUp"));
-            break;
-          case 'cannot downvote your own comment':
-            showErrorToast(i18n.t("messages.voteOwnDown"));
-            break;
-          default:
-            showErrorToast(i18n.t("messages.voteError"));
-            break;
-        }
-      } catch {
-        showErrorToast(i18n.t("messages.voteError"));
-      }
     },
   });
 
@@ -174,24 +168,39 @@ export function ReviewBoard() {
   };
 
   const handleLogin = async () => {
+    if (isAuthPending) return;
+    setIsAuthPending(true);
     try {
       await loginWithDiscord();
-    } catch {
-      showErrorToast(i18n.t("messages.loginError"));
-      return;
-    }
-
-    await refreshAuthDependentData();
-    setFormState({ content: "", score: DEFAULT_SCORE });
-  };
-
-  const handleLogout = async () => {
-    try {
-      await authTokenStorage.setValue(null);
       await refreshAuthDependentData();
       setFormState({ content: "", score: DEFAULT_SCORE });
     } catch {
+      showErrorToast(i18n.t("messages.loginError"));
+    } finally {
+      setIsAuthPending(false);
+    }
+  };
+
+  const handleOpenAccountSettings = async () => {
+    try {
+      await sendMessage("openAccountSettings", undefined);
+    } catch {
+      showErrorToast(i18n.t("messages.accountSettingsError"));
+    }
+  };
+
+  const handleLogout = async () => {
+    if (isAuthPending) return;
+    setIsAuthPending(true);
+    try {
+      await sendMessage("setAuthTokens", null);
+      await refreshAuthDependentData();
+      setShowUsernameHint(false);
+      setFormState({ content: "", score: DEFAULT_SCORE });
+    } catch {
       showErrorToast(i18n.t("messages.logoutError"));
+    } finally {
+      setIsAuthPending(false);
     }
   };
 
@@ -212,6 +221,11 @@ export function ReviewBoard() {
       return;
     }
 
+    if (trimmed.length > MAX_COMMENT_LENGTH) {
+      showErrorToast(i18n.t("messages.contentTooLong", [MAX_COMMENT_LENGTH]));
+      return;
+    }
+
     const method: "POST" | "PUT" = myComment ? "PUT" : "POST";
     submitMutation.mutate({
       productId: product.id,
@@ -225,23 +239,14 @@ export function ReviewBoard() {
   };
 
   const handleDelete = () => {
-    if (!product || !myComment) return;
+    if (!product || !myComment || !canEdit || isSubmitting) return;
     deleteMutation.mutate(product.id);
   };
 
   const isSubmitting = submitMutation.isPending || deleteMutation.isPending;
   const isAuthenticated = Boolean(user);
-  const canEdit = isAuthenticated;
-  const isBusy = isSubmitting || productQuery.isFetching;
-
-  const handleVote = (comment: CommentItem, direction: "upvote" | "downvote") => {
-    if (!isAuthenticated) {
-      showErrorToast(i18n.t("messages.loginRequired"));
-      return;
-    }
-
-    voteMutation.mutate({ comment, direction });
-  };
+  const canEdit = isAuthenticated && Boolean(product) && !isAuthPending && !myCommentQuery.isLoading;
+  const isBusy = isSubmitting || isAuthPending || productQuery.isFetching;
 
   const handleLoadMoreComments = () => {
     if (!hasMoreComments || isFetchingNextPage) {
@@ -270,14 +275,23 @@ export function ReviewBoard() {
   return (
     <div className="space-y-4">
       <div className="rounded-3xl bg-white p-5 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="text-[11px] text-slate-400">{i18n.t("reviewBoard.info")}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-semibold text-[#fc4d50]">
               {i18n.t("reviewBoard.commentsCount", [commentCount])}
             </span>
+            {isAuthenticated && (
+              <button
+                type="button"
+                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-[#fc4d50]/40"
+                onClick={handleOpenAccountSettings}
+              >
+                {i18n.t("reviewBoard.button.accountSettings")}
+              </button>
+            )}
               <button
                 type="button"
                 className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
@@ -308,6 +322,19 @@ export function ReviewBoard() {
             </div>
           )}
 
+          {(productQuery.isError || commentsQuery.isError) && (
+            <div role="alert" className="text-xs text-red-600">
+              <p>{i18n.t("messages.fetchReviewFailed")}</p>
+              <button type="button" className="mt-2 underline" onClick={() => {
+                if (productQuery.isError) void productQuery.refetch();
+                else void commentsQuery.refetch();
+              }}>{i18n.t("userComments.refresh")}</button>
+            </div>
+          )}
+          {productQuery.isSuccess && !product && (
+            <p className="text-xs text-slate-500">{i18n.t("reviewBoard.productUnavailable")}</p>
+          )}
+
           {showEmptyComments && (
             <p className="text-xs text-slate-500">{i18n.t("reviewBoard.noComments")}</p>
           )}
@@ -315,7 +342,6 @@ export function ReviewBoard() {
           {!commentsLoading &&
             comments.map((comment) => {
               const mine = user && comment.user.id === user.id;
-              const avatarUrl = `${API_BASE}/user/avatar/${comment.user.id}`;
             return (
               <article
                 key={comment.id}
@@ -324,13 +350,7 @@ export function ReviewBoard() {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="relative h-10 w-10 overflow-hidden rounded-full bg-slate-100">
-                    <img
-                      src={avatarUrl}
-                      alt={`${comment.user.username} avatar`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
+                  <div aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full bg-slate-200" />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
@@ -344,28 +364,6 @@ export function ReviewBoard() {
                     <p className="mt-2 text-sm leading-relaxed text-slate-900">{comment.content}</p>
                   </div>
                 </div>
-                <footer className="flex flex-wrap items-center gap-3 text-[11px] font-medium text-slate-500">
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-[#fc4d50] transition hover:border-[#fc4d50]/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40 disabled:opacity-60"
-                    onClick={() => handleVote(comment, "upvote")}
-                    disabled={!isAuthenticated || voteMutation.isPending}
-                    aria-label={i18n.t("reviewBoard.vote.like")}
-                  >
-                    <span>👍</span>
-                    <span>{comment.upvotes ?? 0}</span>
-                  </button>
-                  <button
-                    type="button"
-                    className="flex items-center gap-1 rounded-full border border-slate-200 px-2 py-0.5 text-[11px] font-semibold text-slate-500 transition hover:border-[#fc4d50]/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fc4d50]/40 disabled:opacity-60"
-                    onClick={() => handleVote(comment, "downvote")}
-                    disabled={!isAuthenticated || voteMutation.isPending}
-                    aria-label={i18n.t("reviewBoard.vote.dislike")}
-                  >
-                    <span>👎</span>
-                    <span>{comment.downvotes ?? 0}</span>
-                  </button>
-                </footer>
               </article>
             );
           })}
@@ -378,6 +376,18 @@ export function ReviewBoard() {
         </div>
 
         <form className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
+          {showUsernameHint && (
+            <div role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
+              <p>{i18n.t("messages.usernameSetupHint")}</p>
+              <button
+                type="button"
+                className="mt-2 font-semibold underline underline-offset-2"
+                onClick={handleOpenAccountSettings}
+              >
+                {i18n.t("reviewBoard.button.accountSettings")}
+              </button>
+            </div>
+          )}
           <div>
             <label className="text-xs font-semibold text-slate-500" htmlFor={REVIEW_FORM_FIELD_ID}>
               {i18n.t("userComments.title")}
@@ -385,6 +395,9 @@ export function ReviewBoard() {
             <textarea
               id={REVIEW_FORM_FIELD_ID}
               rows={4}
+              maxLength={MAX_COMMENT_LENGTH}
+              aria-describedby="review-content-count"
+              aria-invalid={formState.content.length > MAX_COMMENT_LENGTH}
               className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-inner transition focus:border-[#fc4d50]/80 focus:outline-none"
               value={formState.content}
               onChange={(event) =>
@@ -393,6 +406,14 @@ export function ReviewBoard() {
               placeholder={i18n.t("reviewBoard.placeholder")}
               disabled={!canEdit || isSubmitting}
             />
+            <p
+              id="review-content-count"
+              className={`mt-1 text-right text-[11px] ${
+                formState.content.length > MAX_COMMENT_LENGTH ? "text-red-600" : "text-slate-400"
+              }`}
+            >
+              {i18n.t("reviewBoard.characterCount", [formState.content.length, MAX_COMMENT_LENGTH])}
+            </p>
           </div>
 
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
@@ -429,7 +450,7 @@ export function ReviewBoard() {
                 type="button"
                 className="rounded-2xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
                 onClick={handleDelete}
-                disabled={isSubmitting}
+                disabled={!canEdit || isSubmitting}
               >
                 {deleteMutation.isPending
                   ? i18n.t("reviewBoard.submit.deleting")

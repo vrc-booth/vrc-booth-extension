@@ -1,10 +1,8 @@
-common:
-  on: ON
-  off: OFF
 reviewBoard:
+  productUnavailable: 아직 리뷰 서비스에 등록되지 않은 상품입니다.
   header: 상품 리뷰
   loading: 리뷰를 불러오는 중입니다…
-  info: 최신순으로 정렬되며 좋아요/싫어요 정보도 표시됩니다.
+  info: 리뷰는 최신순으로 표시됩니다. 댓글 추천·비추천 기능은 더 이상 지원되지 않습니다.
   commentsCount: 댓글 $1
   button:
     login: 로그인
@@ -12,6 +10,7 @@ reviewBoard:
     accountSettings: 계정 설정
   noComments: 아직 댓글이 없습니다. 첫 경험을 공유해 보세요.
   placeholder: 직접 사용한 경험을 솔직하게 공유해보세요.
+  characterCount: $1 / $2자
   rating: 평점
   loginPrompt: 로그인하면 댓글을 쓸 수 있어요.
   submit:
@@ -20,9 +19,6 @@ reviewBoard:
     saving: 저장 중…
     deleting: 삭제 중…
     delete: 댓글 삭제
-  vote:
-    like: 댓글 좋아요
-    dislike: 댓글 싫어요
   loader:
     loadingMore: 다음 페이지를 불러오는 중입니다…
 userComments:
@@ -34,17 +30,17 @@ userComments:
   previous: 이전
   next: 다음
 messages:
+  loginError: 로그인이 취소되었거나 완료되지 않았습니다. 다시 시도해 주세요.
+  usernameSetupHint: 요청이 거부되었습니다. 계정 설정에서 사용자명을 저장한 뒤 다시 시도해야 할 수 있습니다.
+  accountSettingsError: 계정 설정을 열지 못했습니다. 브라우저에서 BoothPlus 사이드 패널을 열어주세요.
   fetchReviewFailed: 리뷰를 가져오는 데 실패했습니다.
   checkContent: 내용을 확인해주세요.
   reviewSaveError: 댓글을 저장하는 동안 오류가 발생했습니다.
   reviewDeleteError: 댓글을 삭제하는 동안 오류가 발생했습니다.
-  voteOwnUp: 자신의 리뷰에는 추천을 할 수 없습니다.
-  voteOwnDown: 자신의 리뷰에는 비추천을 할 수 없습니다.
-  voteError: 투표 중 오류가 발생했습니다.
   logoutError: 로그아웃 중 오류가 발생했습니다.
-  loginError: 로그인 중 오류가 발생했습니다.
   loginRequired: 로그인이 필요합니다.
   emptyContent: 내용을 입력해주세요.
+  contentTooLong: 댓글은 $1자 이내로 작성해주세요.
   usernameRequired: 사용자명을 입력해주세요.
 purchaseReview:
   label: 리뷰 요약
@@ -53,7 +49,8 @@ purchaseReview:
   dismiss: 리뷰 요약 숨기기
 userPanel:
   title: 사용자 관리
-  description: 현재 로그인한 사용자의 프로필과 설정을 관리합니다.
+  description: 사용자명을 변경하고 작성한 댓글을 확인합니다.
+  retiredSettings: 소개글, 성인 콘텐츠, 아바타 표시, 설명 펼침 설정은 더 이상 서버에 저장되지 않습니다.
   loading: 사용자 정보를 불러오는 중입니다…
   notLoggedIn: 리뷰 관리 패널에 로그인되어 있지 않습니다. 먼저 리뷰 페이지에서 로그인을 완료해 주세요.
   checkLogin: 로그인 상태 다시 확인
@@ -65,27 +62,13 @@ userPanel:
     yes: 예
     no: 아니오
   sections:
-    settings: 기본 설정
     profile: 프로필
-  toggles:
-    adult: 성인 콘텐츠 허용
-    hideAvatar: 프로필 아바타 숨김
-    autoCollapse: 설명 자동 펼침
   profileFields:
     username: 사용자명
-    bio: 소개글
     save: 저장
     refresh: 다시 불러오기
   statuses:
-    adultSaved: 성인 콘텐츠 설정이 저장되었습니다.
-    adultError: 성인 콘텐츠 설정 저장에 실패했습니다.
-    autoCollapseSaved: 자동 접기 설정이 저장되었습니다.
-    autoCollapseError: 자동 접기 설정 저장에 실패했습니다.
-    hideAvatarSaved: 아바타 숨김 설정이 저장되었습니다.
-    hideAvatarError: 아바타 숨김 설정 저장에 실패했습니다.
     usernameSaved: 사용자명이 저장되었습니다.
     usernameError: 사용자명 저장에 실패했습니다.
-    bioSaved: 소개글이 저장되었습니다.
-    bioError: 소개글 저장에 실패했습니다.
 aria:
   scorePoint: $1.0 점

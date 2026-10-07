@@ -1,64 +1,48 @@
-# For more information see: https://pnpm.io/ko/next/continuous-integration#github-actions
-name: pnpm Workflow
+name: Extension CI
+
 on:
   pull_request:
-    branches: [ "main" ]
-    types: [closed]
+    branches: [main, dev]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main, dev]
+  merge_group:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extension-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        node-version: [24]
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
         with:
-          version: 10
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build Extension
-        run: pnpm run zip
-
-      - name: Read package.json
-        uses: zvonimirsun/read-package-version-actions@v2
-        with: 
-          path: "./"
-        id: package-version
-
-      - name: Show version number
-        run: echo "Version is ${{ steps.package-version.outputs.version }}"
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 24.19.0
+          cache: pnpm
+      - uses: actions/setup-python@v5
         with:
-          tag_name: ${{ steps.package-version.outputs.version }}"
-          release_name: v${{ steps.package-version.outputs.version }}"
-          body: ${{ github.event.pull_request.body }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Assets
-        id: upload-release-assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*.zip
-          asset_name: v${{ steps.package-version.outputs.version }}".zip
-          asset_content_type: application/zip
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit and integration tests
+        run: pnpm test
+      - name: Release guard regression tests
+        run: pnpm test:release
+      - name: TypeScript
+        run: pnpm compile
+      - name: Chrome MV3 build
+        run: pnpm build
+      - name: Firefox MV2 build
+        run: pnpm build:firefox
+      - name: Package and verify both browsers
+        run: pnpm release:package

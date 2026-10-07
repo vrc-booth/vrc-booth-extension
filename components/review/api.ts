@@ -8,68 +8,39 @@ import {
 import { authTokenStorage } from "@/utils/storage";
 import { CommentItem, MyCommentData, ReviewProduct, UserProfile } from "./types";
 
-const API_ORIGIN = "https://vbt.kamyu.me";
-export const API_BASE = `${API_ORIGIN}/api`;
+import { API_BASE } from "./config";
+import { sendMessage } from "./messaging";
+export { API_BASE } from "./config";
 
 const defaultHeaders = {
   "Content-Type": "application/json",
   Accept: 'application/json',
 };
 
-const refreshAccessToken = async (): Promise<boolean> => {
+const performFetch = async (url: string, init: RequestInit, attempt = 0, sessionId?: string): Promise<any> => {
   const tokens = await authTokenStorage.getValue();
-  const refreshToken = tokens?.refreshToken;
-  if (!refreshToken) {
-    await authTokenStorage.setValue(null);
-    return false;
+  if (attempt > 0 && (!tokens || tokens.sessionId !== sessionId)) {
+    throw new ApiError("Authentication session changed. Please try again.", 401);
   }
-
-  try {
-    const response = await fetch(`${API_BASE}/auth/token`, {
-      method: "POST",
-      credentials: "include",
-      mode: "cors",
-      headers: defaultHeaders,
-      body: JSON.stringify({ refreshToken }),
-    });
-
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        await authTokenStorage.setValue(null);
-      }
-      return false;
-    }
-
-    const payload = await response.json();
-    await authTokenStorage.setValue(payload);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const performFetch = async (url: string, init: RequestInit, attempt = 0): Promise<any> => {
-  const tokens = await authTokenStorage.getValue();
   const accessToken = tokens?.accessToken;
+  const headers = new Headers(defaultHeaders);
+  new Headers(init.headers).forEach((value, name) => headers.set(name, value));
+  if (accessToken) headers.set("Authorization", `Bearer ${accessToken}`);
   const response = await fetch(url, {
     credentials: "include",
     mode: "cors",
-    headers: {
-      ...defaultHeaders,
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      ...(init.headers ?? {}),
-    },
     ...init,
+    headers,
   });
 
   if (response.ok) {
-    return response.json();
+    return response.status === 204 ? undefined : response.json();
   }
 
-  if (response.status === 401 && attempt === 0) {
-    const refreshed = await refreshAccessToken();
+  if (response.status === 401 && attempt === 0 && accessToken) {
+    const refreshed = await sendMessage("refreshAccessToken", { accessToken, sessionId: tokens?.sessionId });
     if (refreshed) {
-      return performFetch(url, init, attempt + 1);
+      return performFetch(url, init, attempt + 1, tokens?.sessionId);
     }
   }
 
@@ -191,32 +162,8 @@ export const submitComment = (
   body: Record<string, unknown>,
 ) => apiFetch(`/comment/${productId}`, { method, body: JSON.stringify(body) });
 
-export const deleteComment = async (productId: string) =>{
-  const tokens = await authTokenStorage.getValue();
-  const accessToken = tokens?.accessToken;
-  apiFetch(`/comment/${productId}`, {
-    method: "DELETE",
-    headers: {
-      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-    }
-  });
-}
+export const deleteComment = (productId: string) =>
+  apiFetch(`/comment/${encodeURIComponent(productId)}`, { method: "DELETE" });
 
-const voteComment = (
-  comment: CommentItem,
-  direction: "upvote" | "downvote",
-) => apiFetch(`/comment/${comment.id}/${direction}`, { method: "POST", body: JSON.stringify(comment) });
-
-export const upvoteComment = (comment: CommentItem) => voteComment(comment, "upvote");
-export const downvoteComment = (comment: CommentItem) => voteComment(comment, "downvote");
-
-const updateUserField = (path: string, body: Record<string, unknown>) =>
-  apiFetch(path, { method: "PUT", body: JSON.stringify(body) });
-
-export const updateUserAdult = (adult: boolean) => updateUserField("/user/adult", { adult });
-export const updateUserAutoCollapse = (autoCollapse: boolean) =>
-  updateUserField("/user/autoCollapse", { autoCollapse });
-export const updateUserHideAvatar = (hideAvatar: boolean) =>
-  updateUserField("/user/hideAvatar", { hideAvatar });
-export const updateUsername = (username: string) => updateUserField("/user/username", { username });
-export const updateBio = (bio: string) => updateUserField("/user/bio", { bio });
+export const updateUsername = (username: string) =>
+  apiFetch("/user/username", { method: "PUT", body: JSON.stringify({ username }) });

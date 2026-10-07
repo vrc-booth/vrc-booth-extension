@@ -4,69 +4,76 @@ import ReactDOM from "react-dom/client";
 import "~/assets/tailwind.css";
 import App from "./App.tsx";
 import PurchaseApp from "./PurchaseApp.tsx";
+import { createProductUiLifecycle } from "./lifecycle";
 import { resolvePurchaseAnchor } from "./purchaseAnchor";
+
+let activeLifecycle: ReturnType<typeof createProductUiLifecycle> | undefined;
+let registeredReviewHost: HTMLElement | undefined;
 
 export default defineContentScript({
   matches: ["*://booth.pm/*/items/*", "*://*.booth.pm/items/*"],
   cssInjectionMode: "ui",
 
   async main(ctx: ContentScriptContext) {
-    const ui = await createShadowRootUi(ctx, {
-      name: "booth-review",
-      position: "inline",
-      anchor: ".primary-image-thumbnails",
-      append: "after",
-      onMount: (container, _shadow, shadowHost) => {
-        const wrapper = document.createElement("div");
-        container.append(wrapper);
-
-        registerReviewBoard({ host: shadowHost, root: container });
-
-        const root = ReactDOM.createRoot(wrapper);
-        root.render(<App />);
-        return { root, wrapper };
-      },
-      onRemove: (elements) => {
-        registerReviewBoard(null);
-        elements?.root.unmount();
-        elements?.wrapper.remove();
-      },
+    activeLifecycle?.stop();
+    const lifecycle = createProductUiLifecycle(ctx);
+    activeLifecycle = lifecycle;
+    ctx.onInvalidated(() => {
+      if (activeLifecycle === lifecycle) activeLifecycle = undefined;
     });
+    const resolveReviewAnchor = () => document.querySelector(".primary-image-thumbnails");
 
-    ui.mount();
+    try {
+      await Promise.all([
+        createShadowRootUi(ctx, {
+          name: "booth-review",
+          position: "inline",
+          anchor: resolveReviewAnchor,
+          append: "after",
+          onMount: (container, _shadow, shadowHost) => {
+            const wrapper = document.createElement("div");
+            container.append(wrapper);
 
-    await mountPurchaseReviewCta(ctx);
+            registeredReviewHost = shadowHost;
+            registerReviewBoard({ host: shadowHost, root: container });
+
+            const root = ReactDOM.createRoot(wrapper);
+            root.render(<App />);
+            return { root, wrapper, shadowHost };
+          },
+          onRemove: (elements) => {
+            // WXT can remove an already-removed UI again on invalidation. An old
+            // context must not clear the focus refs of a newer mounted board.
+            if (elements && elements.shadowHost === registeredReviewHost) {
+              registeredReviewHost = undefined;
+              registerReviewBoard(null);
+            }
+            elements?.root.unmount();
+            elements?.wrapper.remove();
+          },
+        }).then((ui) => lifecycle.add(ui, resolveReviewAnchor, "after")),
+        createShadowRootUi(ctx, {
+          name: "booth-purchase-review",
+          position: "inline",
+          anchor: resolvePurchaseAnchor,
+          append: "before",
+          onMount: (container) => {
+            const wrapper = document.createElement("div");
+            container.append(wrapper);
+
+            const root = ReactDOM.createRoot(wrapper);
+            root.render(<PurchaseApp />);
+            return { root, wrapper };
+          },
+          onRemove: (elements) => {
+            elements?.root.unmount();
+            elements?.wrapper.remove();
+          },
+        }).then((ui) => lifecycle.add(ui, resolvePurchaseAnchor, "before")),
+      ]);
+    } catch (error) {
+      lifecycle.stop();
+      throw error;
+    }
   },
 });
-
-/**
- * 가격·장바구니 블록 바로 위에 리뷰 요약 칩을 얹는다. 앵커가 없는 페이지에서는
- * 마운트가 예외를 던지므로, 앵커를 실제로 찾았을 때에만 UI를 만든다.
- */
-const mountPurchaseReviewCta = async (ctx: ContentScriptContext) => {
-  const anchor = resolvePurchaseAnchor();
-  if (!anchor) {
-    return;
-  }
-
-  const ui = await createShadowRootUi(ctx, {
-    name: "booth-purchase-review",
-    position: "inline",
-    anchor: () => anchor,
-    append: "before",
-    onMount: (container) => {
-      const wrapper = document.createElement("div");
-      container.append(wrapper);
-
-      const root = ReactDOM.createRoot(wrapper);
-      root.render(<PurchaseApp />);
-      return { root, wrapper };
-    },
-    onRemove: (elements) => {
-      elements?.root.unmount();
-      elements?.wrapper.remove();
-    },
-  });
-
-  ui.mount();
-};
