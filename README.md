@@ -49,3 +49,5 @@ Chrome 빌드는 `dist/chrome-mv3`, Firefox 빌드는 `dist/firefox-mv2`에 생�
 추가 상호작용·세션·DOM 수명주기 검증과 실제 브라우저 확인 범위는 [2026-10-07 QA 보고서](docs/qa-2026-10-07.md)에 기록했습니다. 테스트 DOM은 happy-dom이며 설치된 확장 검증과 구분합니다.
 
 3.3.0은 미배포 검토 후보입니다. [릴리스 준비·차단 조건·복구 절차](docs/release/README.md)와 [변경 기록](CHANGELOG.md)을 확인하세요.
+
+Chrome 전용 배포 자동화 코드는 [별도 승인·기본 비활성](docs/release/chrome-web-store.md) 상태입니다. 실제 설치 QA와 게시자 설정 없이는 제출하지 않으며, 동결된 artifact를 그대로 승격합니다.

@@ -1,0 +1,128 @@
+name: Chrome Web Store (disabled until separately activated)
+
+on:
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Submit for staged review, or promote the already approved exact package
+        required: true
+        type: choice
+        options: [submit, promote]
+      candidate_sha:
+        description: Full SHA already prepared and tagged on main
+        required: true
+        type: string
+      version:
+        description: Canonical X.Y.Z version
+        required: true
+        type: string
+      source_run_id:
+        description: Successful Prepare immutable Chrome candidate run ID
+        required: true
+        type: string
+      artifact_id:
+        description: Immutable GitHub artifact ID from that run
+        required: true
+        type: string
+      confirm_item_id:
+        description: Type the existing Chrome item ID to confirm this specific action
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# All versions and both stages for this item share a lock. Never interrupt a write.
+concurrency:
+  group: chrome-web-store-item-${{ vars.CWS_ITEM_ID }}
+  cancel-in-progress: false
+
+jobs:
+  activation:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Fail closed unless setup was separately approved and enabled
+        env:
+          ENABLED: ${{ vars.CWS_AUTOMATION_ENABLED }}
+          ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+          CONFIRM_ITEM_ID: ${{ inputs.confirm_item_id }}
+          PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          PROVIDER: ${{ vars.CWS_WIF_PROVIDER }}
+          SERVICE_ACCOUNT: ${{ vars.CWS_SERVICE_ACCOUNT }}
+        run: |
+          test "$ENABLED" = true || { echo 'Chrome publication is not activated'; exit 1; }
+          test "$GITHUB_RUN_ATTEMPT" = 1 || { echo 'Use a new manual dispatch with fresh approval, not rerun'; exit 1; }
+          test "$ITEM_ID" = hafbafjoecfjdlhjilpakabocglkaegj
+          test "$CONFIRM_ITEM_ID" = "$ITEM_ID"
+          [[ "$PUBLISHER_ID" =~ ^[A-Za-z0-9_-]{1,80}$ ]]
+          [[ "$PROVIDER" == projects/*/locations/global/workloadIdentityPools/*/providers/* ]]
+          [[ "$SERVICE_ACCOUNT" == *@*.iam.gserviceaccount.com ]]
+
+  release:
+    needs: activation
+    if: needs.activation.result == 'success' && github.ref == 'refs/heads/main'
+    environment: chrome-web-store
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      actions: read
+      deployments: write # Durable attempt ledger; never writes source refs or tags.
+      id-token: write # Used only after artifact and environment approval checks.
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24.19.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Verify approved environment and trusted immutable artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          CANDIDATE_VERSION: ${{ inputs.version }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          ARTIFACT_ID: ${{ inputs.artifact_id }}
+        run: |
+          test "$GITHUB_RUN_ATTEMPT" = 1 || { echo 'Fresh manual dispatch and approval required'; exit 1; }
+          [[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          [[ "$ARTIFACT_ID" =~ ^[1-9][0-9]*$ ]]
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git merge-base --is-ancestor "$CANDIDATE_SHA" origin/main
+          mkdir -p "$RUNNER_TEMP/cws"
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/approvals" > "$RUNNER_TEMP/cws/approvals.json"
+          node --input-type=module -e 'import { readFileSync } from "node:fs"; import { assertEnvironmentApproval } from "./scripts/cws-publish.mjs"; assertEnvironmentApproval(JSON.parse(readFileSync(process.env.RUNNER_TEMP + "/cws/approvals.json", "utf8")));'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN_ID" > "$RUNNER_TEMP/cws/run.json"
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID" > "$RUNNER_TEMP/cws/artifact.json"
+          node --input-type=module -e 'import { readFileSync,writeFileSync } from "node:fs"; const p=process.env.RUNNER_TEMP+"/cws/"; writeFileSync(p+"provenance.json", JSON.stringify({run:JSON.parse(readFileSync(p+"run.json")),artifact:JSON.parse(readFileSync(p+"artifact.json"))}));'
+          gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$ARTIFACT_ID/zip" > "$RUNNER_TEMP/cws/bundle.zip"
+          python3 -B scripts/cws-artifact.py verify --archive "$RUNNER_TEMP/cws/bundle.zip" --provenance "$RUNNER_TEMP/cws/provenance.json" --run-id "$SOURCE_RUN_ID" --artifact-id "$ARTIFACT_ID" --candidate-sha "$CANDIDATE_SHA" --version "$CANDIDATE_VERSION" --item-id hafbafjoecfjdlhjilpakabocglkaegj --artifact-name "boothplus-chrome-$CANDIDATE_VERSION-$CANDIDATE_SHA" --output-dir "$RUNNER_TEMP/cws/verified" --report "$RUNNER_TEMP/cws/verified-report.json"
+      - name: Obtain a short-lived publisher-linked service account token
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          workload_identity_provider: ${{ vars.CWS_WIF_PROVIDER }}
+          service_account: ${{ vars.CWS_SERVICE_ACCOUNT }}
+          token_format: access_token
+          access_token_scopes: https://www.googleapis.com/auth/chromewebstore
+          access_token_lifetime: 1800s
+          create_credentials_file: false
+          export_environment_variables: false
+      - name: Execute one guarded V2 stage without rebuilding or blind retries
+        env:
+          CWS_AUTOMATION_ENABLED: ${{ vars.CWS_AUTOMATION_ENABLED }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_ITEM_ID: ${{ vars.CWS_ITEM_ID }}
+          CWS_CONFIRM_ITEM_ID: ${{ inputs.confirm_item_id }}
+          CWS_ACCESS_TOKEN: ${{ steps.auth.outputs.access_token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_STAGE: ${{ inputs.stage }}
+        run: node scripts/cws-publish.mjs execute "$RELEASE_STAGE" "$RUNNER_TEMP/cws/verified-report.json"

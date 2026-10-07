@@ -97,14 +97,16 @@ def release_blockers(manifests):
     return blockers
 
 
-def verify(root, normalize=False, release_ready=False):
+def verify(root, normalize=False, release_ready=False, chrome_only=False):
     pkg = json.loads((root / "package.json").read_text())
     version = pkg["version"]
-    check(pkg["name"] == "boothplus" and re.fullmatch(r"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)", version), "Invalid release metadata")
-    names = [f"boothplus-{version}-{target}.zip" for target in ("chrome", "firefox", "sources")]
+    check(pkg["name"] == "boothplus" and re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version), "Invalid release metadata")
+    check(version != "0.0.0" and all(int(part) <= 65535 for part in version.split(".")), "Invalid extension version")
+    targets = ("chrome", "sources") if chrome_only else ("chrome", "firefox", "sources")
+    names = [f"boothplus-{version}-{target}.zip" for target in targets]
     manifests = {}
     artifacts = []
-    for target, name in zip(("chrome", "firefox", "sources"), names):
+    for target, name in zip(targets, names):
         path = root / "dist" / name
         check(path.is_file(), f"Missing expected WXT artifact: {path}")
         contents = archive_contents(path)
@@ -128,19 +130,28 @@ def verify(root, normalize=False, release_ready=False):
         artifacts.append({"file": path.name, "bytes": path.stat().st_size, "sha256": hashlib.sha256(path.read_bytes()).hexdigest()})
     git = lambda *args: subprocess.check_output(["git", *args], cwd=root, text=True).strip()
     dirty = bool(git("status", "--porcelain", "--untracked-files=normal"))
-    blockers = release_blockers(manifests)
+    blockers = [] if chrome_only else release_blockers(manifests)
     if dirty:
         blockers.append("Working tree has uncommitted changes; artifacts are local candidates, not a verified release commit")
     qa_path = root / "dist" / "release-qa.json"
     if not qa_path.is_file():
-        blockers.append("Installed Chrome/Firefox QA attestation for the exact candidate is missing")
+        blockers.append(f"Installed {'Chrome' if chrome_only else 'Chrome/Firefox'} QA attestation for the exact candidate is missing")
     if release_ready:
         check(not blockers, "Release blocked: " + "; ".join(blockers))
         qa = json.loads(qa_path.read_text())
         check(qa.get("source_commit") == git("rev-parse", "HEAD") and qa.get("version") == version, "QA evidence is stale")
         check(qa["browsers"]["chrome"]["extension_id"] == CHROME_ID, "Chrome QA used a different extension ID")
         check(qa["browsers"]["chrome"]["oauth_redirect"].startswith(f"https://{CHROME_ID}.chromiumapp.org/"), "Chrome QA redirect differs from stable identity")
-        check(qa["browsers"]["firefox"]["extension_id"] == manifests["firefox"]["browser_specific_settings"]["gecko"]["id"], "Firefox QA used a different extension ID")
+        if chrome_only:
+            # Revalidate every installed-browser scenario; a matching commit/ID
+            # alone is not a passing QA record. This never executes source ZIP code.
+            import importlib.util
+            spec = importlib.util.spec_from_file_location("cws_artifact", Path(__file__).with_name("cws-artifact.py"))
+            verifier = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(verifier)
+            verifier.validate_qa(qa, version, git("rev-parse", "HEAD"), CHROME_ID)
+        else:
+            check(qa["browsers"]["firefox"]["extension_id"] == manifests["firefox"]["browser_specific_settings"]["gecko"]["id"], "Firefox QA used a different extension ID")
     report = {"version": version, "proposed_tag": f"v{version}", "source_commit": git("rev-parse", "HEAD"),
               "working_tree_dirty": dirty, "publication_performed": False,
               "chrome_extension_id": CHROME_ID, "release_blockers": blockers,
@@ -155,8 +166,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--normalize", action="store_true")
     parser.add_argument("--release-ready", action="store_true")
+    parser.add_argument("--chrome-only", action="store_true", help="Verify only Chrome and sources; Firefox preparation remains separate")
     args = parser.parse_args()
-    print(json.dumps(verify(Path.cwd(), args.normalize, args.release_ready), indent=2))
+    print(json.dumps(verify(Path.cwd(), args.normalize, args.release_ready, args.chrome_only), indent=2))
 
 
 if __name__ == "__main__":

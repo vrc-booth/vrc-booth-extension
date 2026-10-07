@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
-import { QA_SCENARIOS, releaseMetadata, validateQaRecord } from "../scripts/release.mjs";
+import { CHROME_ID, CHROME_REDIRECT, CHROME_QA_SCENARIOS, QA_SCENARIOS, releaseMetadata, validateChromeQaRecord, validateQaRecord } from "../scripts/release.mjs";
 
 const read = (name: string) => readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
 const commit = "1".repeat(40);
@@ -28,7 +28,7 @@ describe("release metadata and explicit QA gate", () => {
       firefox: "dist/boothplus-3.3.0-firefox.zip", sources: "dist/boothplus-3.3.0-sources.zip",
     });
   });
-  it.each(['3.3.0"', "v3.3.0", "3.3.0-beta.1", "03.3.0", "65536.0.0", "3.3.0\nBAD=value"])("rejects unsafe/unsupported version %s", (version) => {
+  it.each(['0.0.0', '3.3.0"', "v3.3.0", "3.3.0-beta.1", "03.3.0", "65536.0.0", "3.3.0\nBAD=value", "3.3.0\n", "3.3.0\r"])("rejects unsafe/unsupported version %s", (version) => {
     expect(() => releaseMetadata({ name: "boothplus", version })).toThrow();
   });
   it("accepts a complete attestation for the exact commit", () => {
@@ -97,5 +97,41 @@ describe("workflow publication safety", () => {
     expect(read("pnpm-workspace.yaml")).not.toContain("dangerouslyAllowAllBuilds");
     expect(read("pnpm-workspace.yaml")).toMatch(/^  spawn-sync: false$/m);
     expect(read("pnpm-workspace.yaml")).not.toContain("set this to true or false");
+  });
+});
+
+
+describe("independent Chrome preparation gate", () => {
+  const chromeRecord = () => {
+    const record = validRecord();
+    delete record.browsers.firefox;
+    record.browsers.chrome.extension_id = CHROME_ID;
+    record.browsers.chrome.oauth_redirect = CHROME_REDIRECT;
+    record.browsers.chrome.scenarios = Object.fromEntries(CHROME_QA_SCENARIOS.map((scenario) => [scenario, "passed"]));
+    return record;
+  };
+  it("selects Chrome QA independently without changing the default both-browser gate", () => {
+    const qa = chromeRecord();
+    expect(validateQaRecord(qa, { ...candidate, browsers: ["chrome"] })).toBe(qa);
+    expect(validateChromeQaRecord(qa, candidate)).toBe(qa);
+    expect(() => validateQaRecord(qa, candidate)).toThrow(/firefox/);
+    expect(() => validateQaRecord(qa, { ...candidate, browsers: [] })).toThrow(/browsers/);
+  });
+  it.each(CHROME_QA_SCENARIOS)("requires installed Chrome scenario %s", (scenario) => {
+    const qa = chromeRecord();
+    qa.browsers.chrome.scenarios[scenario] = "not_run";
+    expect(() => validateChromeQaRecord(qa, candidate)).toThrow(scenario);
+  });
+  it("rejects wrong Chrome identity and any altered redirect", () => {
+    const qa = chromeRecord();
+    qa.browsers.chrome.extension_id = "another-id";
+    expect(() => validateChromeQaRecord(qa, candidate)).toThrow(/ID/);
+    qa.browsers.chrome.extension_id = CHROME_ID;
+    qa.browsers.chrome.oauth_redirect += "other";
+    expect(() => validateChromeQaRecord(qa, candidate)).toThrow(/redirect/);
+  });
+  it("still rejects Chrome blockers and the uncompleted checked-in Chrome template", () => {
+    expect(() => validateChromeQaRecord({ ...chromeRecord(), blockers: ["Chrome QA pending"] }, candidate)).toThrow(/blockers/);
+    expect(() => validateChromeQaRecord(JSON.parse(read("docs/release/chrome-qa-record.example.json")), candidate)).toThrow();
   });
 });

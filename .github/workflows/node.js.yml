@@ -38,6 +38,8 @@ jobs:
         run: pnpm test
       - name: Release guard regression tests
         run: pnpm test:release
+      - name: Chrome publication guard regressions (offline only)
+        run: pnpm test:cws
       - name: TypeScript
         run: pnpm compile
       - name: Chrome MV3 build

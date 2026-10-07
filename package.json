@@ -20,7 +20,9 @@
     "release:package": "wxt zip && wxt zip -b firefox && python3 -B scripts/release-packages.py --normalize",
     "release:verify": "python3 -B scripts/release-packages.py",
     "test:release": "vitest run tests/release.test.ts && python3 -B -m unittest discover -s tests -p \"release_*.py\"",
-    "check": "vitest run && tsc --noEmit && wxt build && wxt build -b firefox"
+    "check": "vitest run && tsc --noEmit && wxt build && wxt build -b firefox",
+    "test:cws": "vitest run tests/cws-*.test.ts && python3 -B -m unittest discover -s tests -p \"cws_*.py\"",
+    "release:chrome:package": "wxt zip --sources && python3 -B scripts/release-packages.py --normalize --chrome-only"
   },
   "dependencies": {
     "@tabler/icons-react": "^3.35.0",
