@@ -2,4 +2,4 @@
 # A new package/version with install scripts must be reviewed explicitly.
 allowBuilds:
   esbuild@0.25.12: true
-  spawn-sync: set this to true or false
+  spawn-sync: false

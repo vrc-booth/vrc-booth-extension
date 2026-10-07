@@ -95,5 +95,7 @@ describe("workflow publication safety", () => {
     expect(pkg.packageManager).toBe("pnpm@11.19.0");
     expect(read("pnpm-workspace.yaml")).toMatch(/allowBuilds:\s+esbuild@0\.25\.12: true/);
     expect(read("pnpm-workspace.yaml")).not.toContain("dangerouslyAllowAllBuilds");
+    expect(read("pnpm-workspace.yaml")).toMatch(/^  spawn-sync: false$/m);
+    expect(read("pnpm-workspace.yaml")).not.toContain("set this to true or false");
   });
 });
