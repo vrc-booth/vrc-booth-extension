@@ -9,7 +9,7 @@ This is a web preview, not an installed extension or a live API test.
 From the repository root:
 
 ```sh
-npm run preview
+bun run preview
 ```
 
 Open http://localhost:4173/ or http://127.0.0.1:4173/.
@@ -38,7 +38,7 @@ credentials, browser extension permissions, or persistent storage are used.
 
 ```sh
 ./node_modules/.bin/vite build --config preview.vite.config.ts
-npm run compile
+bun run compile
 ./node_modules/.bin/vitest run preview/preview.test.ts
 ```
 

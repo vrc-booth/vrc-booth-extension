@@ -73,8 +73,8 @@ class ChromeOnlyPackagingTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
         sources = {
-            "package.json": json.dumps({"name": "boothplus", "version": self.version, "packageManager": "pnpm@11.19.0"}).encode(),
-            "pnpm-lock.yaml": b"lockfile", "pnpm-workspace.yaml": b"allowBuilds", "wxt.config.ts": b"fixture",
+            "package.json": json.dumps({"name": "boothplus", "version": self.version, "packageManager": "bun@1.4.2"}).encode(),
+            "bun.lock": b"lockfile", "bunfig.toml": b'[install]\nlinker = "isolated"\n', "wxt.config.ts": b"fixture",
             "scripts/release-packages.py": b"fixture", "CHANGELOG.md": b"## 3.3.0\nCandidate\n",
         }
         for name, content in sources.items():
@@ -111,6 +111,27 @@ class ChromeOnlyPackagingTests(unittest.TestCase):
         self.assertEqual(report["release_blockers"], [])
         self.assertEqual([row["file"] for row in report["artifacts"]], ["boothplus-3.3.0-chrome.zip", "boothplus-3.3.0-sources.zip"])
         self.assertFalse(report["publication_performed"])
+
+    def test_bun_lock_digest_and_manager_are_recorded(self):
+        report = self.verify()
+        self.assertEqual(report["package_manager"], "bun@1.4.2")
+        self.assertEqual(report["lockfile_sha256"], release.hashlib.sha256((self.root / "bun.lock").read_bytes()).hexdigest())
+
+    def test_source_archive_requires_exact_bun_lock_and_config(self):
+        path = self.root / "dist" / f"boothplus-{self.version}-sources.zip"
+        original = release.archive_contents(path)
+        for name in ("bun.lock", "bunfig.toml"):
+            for content in (None, b"tampered"):
+                files = dict(original)
+                if content is None:
+                    files.pop(name)
+                else:
+                    files[name] = content
+                with zipfile.ZipFile(path, "w") as target:
+                    for member, data in files.items():
+                        target.writestr(member, data)
+                with self.subTest(name=name, content=content), self.assertRaisesRegex(ValueError, "missing|differs"):
+                    self.verify()
 
     def test_default_path_still_requires_firefox(self):
         with self.assertRaisesRegex(ValueError, "firefox"):

@@ -41,11 +41,12 @@ jobs:
           [[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]
           test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
           git merge-base --is-ancestor "$CANDIDATE_SHA" origin/main
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24.19.0
-          cache: pnpm
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -58,15 +59,15 @@ jobs:
           mkdir -p dist
           node scripts/release.mjs gate
       - name: Install locked dependencies
-        run: pnpm install --frozen-lockfile
+        run: test -f bun.lock && bun install --frozen-lockfile
       - name: Revalidate tests and both browser builds
         run: |
-          pnpm test
-          pnpm test:release
-          pnpm compile
-          pnpm build
-          pnpm build:firefox
-          pnpm release:package
+          bun run test
+          bun run test:release
+          bun run compile
+          bun run build
+          bun run build:firefox
+          bun run release:package
           python3 scripts/release-packages.py --release-ready
       - name: Read verified package names
         id: release

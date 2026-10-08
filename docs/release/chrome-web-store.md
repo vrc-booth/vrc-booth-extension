@@ -46,6 +46,6 @@ main push나 PR 병합만으로 Chrome 게시가 실행되는 경로는 없다. 
 
 ## 검사와 남은 조건
 
-`pnpm test:cws`는 정책·모의 HTTP·상태 머신·워크플로 안전장치와 Python artifact 공격/불일치 검사를 실행한다. 모든 네트워크 경계는 fixture이며 실제 Chrome Web Store API를 호출하지 않는다. 실제 설치/OAuth QA와 게시자 연결을 확인하기 전에는 활성화할 수 없다. Firefox 게시 절차는 독립적으로 미완료 상태를 유지한다.
+`bun run test:cws`는 정책·모의 HTTP·상태 머신·워크플로 안전장치와 Python artifact 공격/불일치 검사를 실행한다. 모든 네트워크 경계는 fixture이며 실제 Chrome Web Store API를 호출하지 않는다. 실제 설치/OAuth QA와 게시자 연결을 확인하기 전에는 활성화할 수 없다. Firefox 게시 절차는 독립적으로 미완료 상태를 유지한다.
 
 참고: [V2 API](https://developer.chrome.com/docs/webstore/api/reference/rest), [fetchStatus](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/fetchStatus), [publish](https://developer.chrome.com/docs/webstore/api/reference/rest/v2/publishers.items/publish), [서비스 계정](https://developer.chrome.com/docs/webstore/service-accounts), [GitHub OIDC 인증 action](https://github.com/google-github-actions/auth), [GitHub 환경 승인 이력](https://docs.github.com/en/rest/actions/workflow-runs#get-the-review-history-for-a-workflow-run)

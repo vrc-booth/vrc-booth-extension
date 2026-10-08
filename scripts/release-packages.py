@@ -111,7 +111,7 @@ def verify(root, normalize=False, release_ready=False, chrome_only=False):
         check(path.is_file(), f"Missing expected WXT artifact: {path}")
         contents = archive_contents(path)
         if target == "sources":
-            for required in ("package.json", "pnpm-lock.yaml", "pnpm-workspace.yaml", "wxt.config.ts", "scripts/release-packages.py"):
+            for required in ("package.json", "bun.lock", "bunfig.toml", "wxt.config.ts", "scripts/release-packages.py"):
                 check(required in contents, f"Source archive missing {required}")
             check(json.loads(contents["package.json"])["version"] == version, "Source package version mismatch")
             for name_in_zip, data in contents.items():
@@ -155,7 +155,7 @@ def verify(root, normalize=False, release_ready=False, chrome_only=False):
     report = {"version": version, "proposed_tag": f"v{version}", "source_commit": git("rev-parse", "HEAD"),
               "working_tree_dirty": dirty, "publication_performed": False,
               "chrome_extension_id": CHROME_ID, "release_blockers": blockers,
-              "lockfile_sha256": hashlib.sha256((root / "pnpm-lock.yaml").read_bytes()).hexdigest(),
+              "lockfile_sha256": hashlib.sha256((root / "bun.lock").read_bytes()).hexdigest(),
               "package_manager": pkg.get("packageManager"), "artifacts": artifacts}
     (root / "dist" / "release-manifest.json").write_text(json.dumps(report, indent=2) + "\n")
     (root / "dist" / "SHA256SUMS").write_text("".join(f"{item['sha256']}  {item['file']}\n" for item in artifacts))

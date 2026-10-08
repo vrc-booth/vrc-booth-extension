@@ -39,16 +39,17 @@ def archive(files):
 
 
 def fixture():
-    source_files = {"package.json": encoded({"name": "boothplus", "version": VERSION, "packageManager": "pnpm@11.19.0"}),
+    source_files = {"package.json": encoded({"name": "boothplus", "version": VERSION, "packageManager": "bun@1.4.2"}),
                     "CHANGELOG.md": f"# Changes\n\n## {VERSION} — candidate\n\nChange\n".encode(),
-                    "pnpm-lock.yaml": b"lockfileVersion: '9.0'\n"}
+                    "bun.lock": b'{"lockfileVersion":2}\n',
+                    "bunfig.toml": b'[install]\nlinker = "isolated"\n'}
     files = {CHROME: archive({"manifest.json": encoded({"name": "boothplus", "version": VERSION,
                                                        "manifest_version": 3, "key": KEY})}),
              SOURCES: archive(source_files)}
     report = {"version": VERSION, "proposed_tag": f"v{VERSION}", "source_commit": SHA,
               "working_tree_dirty": False, "publication_performed": False,
               "chrome_extension_id": verifier.CHROME_ID, "release_blockers": [],
-              "package_manager": "pnpm@11.19.0", "lockfile_sha256": verifier.sha256(source_files["pnpm-lock.yaml"]),
+              "package_manager": "bun@1.4.2", "lockfile_sha256": verifier.sha256(source_files["bun.lock"]),
               "artifacts": [{"file": name, "bytes": len(content), "sha256": verifier.sha256(content)} for name, content in files.items()]}
     files["release-manifest.json"] = encoded(report)
     files["release-qa.json"] = encoded({"schema_version": 1, "version": VERSION, "source_commit": SHA,
@@ -91,7 +92,10 @@ class ImmutableChromeArtifactTests(unittest.TestCase):
 
     def mutate_inner(self, name, member, content):
         inner = verifier.safe_archive(self.files[name], "fixture")
-        inner[member] = content
+        if content is None:
+            inner.pop(member)
+        else:
+            inner[member] = content
         self.files[name] = archive(inner)
         report = json.loads(self.files["release-manifest.json"])
         for item in report["artifacts"]:
@@ -197,7 +201,7 @@ class ImmutableChromeArtifactTests(unittest.TestCase):
         for field, value in (("source_commit", "2" * 40), ("version", "3.3.1"), ("proposed_tag", "v3.3.1"),
                              ("working_tree_dirty", True), ("publication_performed", True),
                              ("chrome_extension_id", "a" * 32), ("release_blockers", ["pending"]),
-                             ("artifacts", []), ("package_manager", "pnpm@0.0.0"), ("lockfile_sha256", "0" * 64)):
+                             ("artifacts", []), ("package_manager", "bun@0.0.0"), ("lockfile_sha256", "0" * 64)):
             self.files = copy.deepcopy(original)
             self.mutate_json("release-manifest.json", lambda report: report.update({field: value}))
             with self.subTest(field=field), self.assertRaises(ValueError):
@@ -217,11 +221,26 @@ class ImmutableChromeArtifactTests(unittest.TestCase):
         original = copy.deepcopy(self.files)
         for name, content in (("package.json", encoded({"name": "boothplus", "version": "3.3.1"})),
                               ("CHANGELOG.md", b"## 3.3.1\nWrong candidate\n"),
-                              ("pnpm-lock.yaml", b"different-lockfile")):
+                              ("bun.lock", b"different-lockfile")):
             self.files = copy.deepcopy(original)
             self.mutate_inner(SOURCES, name, content)
             with self.subTest(name=name), self.assertRaises(ValueError):
                 self.verify()
+
+    def test_sources_require_bun_lock_and_install_configuration(self):
+        original = copy.deepcopy(self.files)
+        for name in ("bun.lock", "bunfig.toml"):
+            self.files = copy.deepcopy(original)
+            self.mutate_inner(SOURCES, name, None)
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "lockfile missing"):
+                self.verify()
+
+    def test_matching_legacy_manager_metadata_is_not_a_bun_candidate(self):
+        package = {"name": "boothplus", "version": VERSION, "packageManager": "pnpm@11.19.0"}
+        self.mutate_inner(SOURCES, "package.json", encoded(package))
+        self.mutate_json("release-manifest.json", lambda report: report.update(package_manager=package["packageManager"]))
+        with self.assertRaisesRegex(ValueError, "must pin Bun"):
+            self.verify()
 
     def test_all_chrome_qa_scenarios_remain_mandatory(self):
         original = copy.deepcopy(self.files)

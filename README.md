@@ -15,15 +15,19 @@
 
 ## 개발 및 검증
 
-Node.js 24와 pnpm을 사용합니다.
+Bun 1.4.2와 Node.js 24.19.0을 사용합니다. Bun 버전은 `package.json`의 `packageManager`에 고정되어 있습니다. [Bun 설치 방법](https://bun.sh/docs/installation)을 참고하세요.
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm test
-pnpm compile
-pnpm build
-pnpm build:firefox
+bun install --frozen-lockfile
+bun run test
+bun run compile
+bun run build
+bun run build:firefox
 ```
+
+Bun은 의존성 설치와 스크립트 실행에 사용하며, WXT·Vite·Vitest는 기존 Node.js 런타임을 유지합니다. `bun test` / `bun build`는 다른 내장 명령이므로 반드시 `bun run test` / `bun run build`를 사용하세요. 기존 체크아웃에서 전환할 때는 생성된 `node_modules`를 지운 뒤 위 설치 명령을 실행합니다.
+
+개발 서버는 `bun run dev` / `bun run dev:firefox`, 미리보기는 `bun run preview`로 시작합니다. `bun run check`는 단위 검사·타입 검사·양쪽 브라우저 빌드를 실행합니다.
 
 Chrome 빌드는 `dist/chrome-mv3`, Firefox 빌드는 `dist/firefox-mv2`에 생성됩니다.
 

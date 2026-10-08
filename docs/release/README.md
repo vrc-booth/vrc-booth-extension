@@ -4,17 +4,17 @@
 
 ## 고정 입력과 검증
 
-Node.js 24.19.0, packageManager의 pnpm 11.19.0, 커밋된 lockfile을 사용한다. pnpm-workspace.yaml은 잠긴 esbuild 설치 스크립트만 허용한다. Python 3.12는 ZIP 내용 검사와 메타데이터 정규화에 사용한다.
+Node.js 24.19.0, `packageManager`의 Bun 1.4.2, 커밋된 `bun.lock`을 사용한다. `bunfig.toml`은 isolated 설치를 고정한다. `trustedDependencies`는 esbuild만 허용하고 `overrides`는 검토된 0.25.12로 고정하여 다른 버전의 설치 스크립트가 실행되지 않도록 한다. 버전 또는 허용 목록 변경은 별도 검토가 필요하다. 레거시 spawn-sync 설치 스크립트는 실행하지 않는다. Python 3.12는 ZIP 내용 검사와 메타데이터 정규화에 사용한다.
 
 ```sh
-pnpm install --frozen-lockfile
-pnpm test
-pnpm test:release
-pnpm compile
-pnpm build
-pnpm build:firefox
-pnpm release:package
-pnpm release:verify
+bun install --frozen-lockfile
+bun run test
+bun run test:release
+bun run compile
+bun run build
+bun run build:firefox
+bun run release:package
+bun run release:verify
 ```
 
 산출물은 `boothplus-3.3.0-chrome.zip`, `boothplus-3.3.0-firefox.zip`, `boothplus-3.3.0-sources.zip`이다. `dist/release-manifest.json`에 커밋·작업 트리 상태·버전·해시·배포 차단 항목을 기록하고 `dist/SHA256SUMS`와 함께 검토한다. WXT ZIP의 시간/순서를 정규화하되 도구나 플랫폼이 다른 빌드까지 비트 단위로 같다고 보장하지 않는다.

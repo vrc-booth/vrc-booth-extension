@@ -142,7 +142,7 @@ describe("publication workflow stays opt-in and promotes immutable files", () =>
     expect(workflow).toContain("create_credentials_file: false"); expect(workflow).toContain("export_environment_variables: false");
   });
   it("never rebuilds, creates a tag, cancels a submission, or deploys Firefox during promotion", () => {
-    expect(workflow).not.toMatch(/pnpm |npm |wxt |git push|git tag|cancelSubmission|setPublishedDeployPercentage|web-ext sign/);
+    expect(workflow).not.toMatch(/bun |pnpm |npm |wxt |git push|git tag|cancelSubmission|setPublishedDeployPercentage|web-ext sign/);
     expect(prepare).toContain('test "$CANDIDATE_SHA" = "$GITHUB_SHA"');
     expect(prepare).toContain("--chrome-only --release-ready");
   });

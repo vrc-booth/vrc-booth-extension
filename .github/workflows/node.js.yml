@@ -24,27 +24,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24.19.0
-          cache: pnpm
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Install locked dependencies
-        run: pnpm install --frozen-lockfile
+        run: test -f bun.lock && bun install --frozen-lockfile
       - name: Unit and integration tests
-        run: pnpm test
+        run: bun run test
       - name: Release guard regression tests
-        run: pnpm test:release
+        run: bun run test:release
       - name: Chrome publication guard regressions (offline only)
-        run: pnpm test:cws
+        run: bun run test:cws
       - name: TypeScript
-        run: pnpm compile
+        run: bun run compile
       - name: Chrome MV3 build
-        run: pnpm build
+        run: bun run build
       - name: Firefox MV2 build
-        run: pnpm build:firefox
+        run: bun run build:firefox
       - name: Package and verify both browsers
-        run: pnpm release:package
+        run: bun run release:package

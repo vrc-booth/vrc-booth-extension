@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { CHROME_ID, CHROME_REDIRECT, CHROME_QA_SCENARIOS, QA_SCENARIOS, releaseMetadata, validateChromeQaRecord, validateQaRecord } from "../scripts/release.mjs";
 
 const read = (name: string) => readFileSync(new URL(`../${name}`, import.meta.url), "utf8");
@@ -66,7 +66,7 @@ describe("workflow publication safety", () => {
     expect(ci).toContain("branches: [main, dev]");
     expect(ci).toContain("types: [opened, synchronize, reopened, ready_for_review]");
     expect(ci).not.toMatch(/\bclosed\b|pull_request_target/);
-    for (const command of ["pnpm install --frozen-lockfile", "pnpm test", "pnpm test:release", "pnpm compile", "pnpm build", "pnpm build:firefox", "pnpm release:package"]) {
+    for (const command of ["bun install --frozen-lockfile", "bun run test", "bun run test:release", "bun run compile", "bun run build", "bun run build:firefox", "bun run release:package"]) {
       expect(ci).toContain(command);
     }
   });
@@ -90,13 +90,31 @@ describe("workflow publication safety", () => {
     expect(prepare).toContain("steps.release.outputs.firefox");
     expect(prepare).toContain("steps.release.outputs.sources");
   });
-  it("pins the verified pnpm and only the reviewed esbuild installer", () => {
+  it("pins Bun and only the reviewed esbuild installer", () => {
     const pkg = JSON.parse(read("package.json"));
-    expect(pkg.packageManager).toBe("pnpm@11.19.0");
-    expect(read("pnpm-workspace.yaml")).toMatch(/allowBuilds:\s+esbuild@0\.25\.12: true/);
-    expect(read("pnpm-workspace.yaml")).not.toContain("dangerouslyAllowAllBuilds");
-    expect(read("pnpm-workspace.yaml")).toMatch(/^  spawn-sync: false$/m);
-    expect(read("pnpm-workspace.yaml")).not.toContain("set this to true or false");
+    expect(pkg.packageManager).toBe("bun@1.4.2");
+    expect(pkg.engines.node).toBe("24.x");
+    expect(pkg.trustedDependencies).toEqual(["esbuild"]);
+    expect(pkg.overrides).toEqual({ esbuild: "0.25.12" });
+    expect(read("bunfig.toml")).toMatch(/linker\s*=\s*"isolated"/);
+    const resolutions = [...read("bun.lock").matchAll(/\["(esbuild@[^"]+)"/g)].map((match) => match[1]);
+    expect(resolutions).toEqual(["esbuild@0.25.12"]);
+    for (const name of ["pnpm-lock.yaml", "pnpm-workspace.yaml", "package-lock.json", "yarn.lock", "bun.lockb"]) {
+      expect(existsSync(new URL(`../${name}`, import.meta.url))).toBe(false);
+    }
+  });
+  it("uses the same pinned Bun and frozen lockfile in every build workflow", () => {
+    const chromePrepare = read(".github/workflows/prepare-chrome-release.yml");
+    for (const workflow of [ci, prepare, chromePrepare]) {
+      expect(workflow).toContain("oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6");
+      expect(workflow).toContain("bun-version-file: package.json");
+      expect(workflow).toContain("node-version: 24.19.0");
+      expect(workflow).toContain("test -f bun.lock && bun install --frozen-lockfile");
+      expect(workflow).not.toMatch(/pnpm|corepack|bun (test|build)\b|--bun|--ignore-scripts/);
+    }
+    expect(JSON.parse(read("package.json")).scripts.test).toBe("vitest run");
+    expect(JSON.parse(read("package.json")).scripts.build).toBe("wxt build");
+    expect(JSON.parse(read("package.json")).scripts.postinstall).toBe("wxt prepare");
   });
 });
 
