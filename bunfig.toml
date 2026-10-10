@@ -1,0 +1,3 @@
+# Preserve explicit dependency boundaries when migrating from pnpm.
+[install]
+linker = "isolated"

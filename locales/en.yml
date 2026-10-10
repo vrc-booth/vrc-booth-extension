@@ -1,10 +1,11 @@
-common:
-  on: ON
-  off: OFF
 reviewBoard:
+  anonymous: Anonymous
+  deactivated: Deleted user
+  blinded: This review is hidden.
+  productUnavailable: This product is not registered with the review service yet.
   header: Product Reviews
   loading: Loading reviews…
-  info: Sorted by recency with like/dislike counts.
+  info: Reviews are shown newest first. Comment voting is no longer supported.
   commentsCount: Comments $1
   button:
     login: Log in
@@ -12,6 +13,7 @@ reviewBoard:
     accountSettings: Account settings
   noComments: No comments yet. Share your first experience.
   placeholder: Share your honest experience using the product.
+  characterCount: $1 / $2 characters
   rating: Rating
   loginPrompt: Log in to write a comment.
   submit:
@@ -20,9 +22,6 @@ reviewBoard:
     saving: Saving…
     deleting: Deleting…
     delete: Delete comment
-  vote:
-    like: Like comment
-    dislike: Dislike comment
   loader:
     loadingMore: Loading next page…
 userComments:
@@ -34,17 +33,17 @@ userComments:
   previous: Previous
   next: Next
 messages:
+  loginError: Login was cancelled or could not be completed. Please try again.
+  usernameSetupHint: This action was denied. You may need to save a username in Account settings, then try again.
+  accountSettingsError: Could not open account settings. Open the BoothPlus side panel from your browser.
   fetchReviewFailed: Failed to load reviews.
   checkContent: Please review your content.
   reviewSaveError: An error occurred while saving your comment.
   reviewDeleteError: An error occurred while deleting your comment.
-  voteOwnUp: You can’t like your own review.
-  voteOwnDown: You can’t dislike your own review.
-  voteError: An error occurred while voting.
   logoutError: An error occurred while logging out.
-  loginError: An error occurred while logging in.
   loginRequired: Login is required.
   emptyContent: Please enter some text.
+  contentTooLong: Keep your comment within $1 characters.
   usernameRequired: Please enter a username.
 purchaseReview:
   label: Review summary
@@ -53,7 +52,8 @@ purchaseReview:
   dismiss: Hide review summary
 userPanel:
   title: User management
-  description: Manage the profile and settings for the signed-in user.
+  description: Update your username and view your comments.
+  retiredSettings: Bio, adult-content, and description display settings are no longer saved by the service.
   loading: Loading user information…
   notLoggedIn: You are not logged into the review dashboard. Please finish logging in on the review page first.
   checkLogin: Recheck login status
@@ -65,27 +65,28 @@ userPanel:
     yes: Yes
     no: No
   sections:
-    settings: Basic settings
     profile: Profile
-  toggles:
-    adult: Allow adult content
-    hideAvatar: Hide profile avatar
-    autoCollapse: Auto-expand descriptions
   profileFields:
     username: Username
-    bio: Bio
     save: Save
     refresh: Reload
   statuses:
-    adultSaved: Adult content preference saved.
-    adultError: Failed to save adult content setting.
-    autoCollapseSaved: Auto-collapse setting saved.
-    autoCollapseError: Failed to save auto-collapse setting.
-    hideAvatarSaved: Avatar visibility preference saved.
-    hideAvatarError: Failed to save avatar visibility preference.
     usernameSaved: Username saved.
     usernameError: Failed to save username.
-    bioSaved: Bio saved.
-    bioError: Failed to save bio.
 aria:
   scorePoint: $1.0 points
+
+reviewImages:
+  label: Attached images $1 / $2
+  help: Up to 5 JPEG, PNG or WebP images, 8 MiB each. Still images only; at least 64×64 px, up to 8000 px per side and 40 megapixels. Uploaded when you save the review.
+  add: Choose images
+  remove: Remove image $1
+  imageAlt: Review image $1
+  countError: You can attach up to 5 images.
+  typeError: Choose JPEG, PNG or WebP images.
+  sizeError: Choose non-empty images up to 8 MiB each.
+  invalidError: Check the image format, size and dimensions. Animated images are unsupported. Your draft is preserved.
+  pendingError: The image upload limit was reached. Try again later. Your draft is preserved.
+  moderationError: An attachment did not pass the service’s image checks. Choose another image.
+  uploadError: Could not save the images. Your draft is preserved; please try again.
+  removeError: Could not delete the uploaded image. Please try again.

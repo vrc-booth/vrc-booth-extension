@@ -1,0 +1,88 @@
+name: Prepare release artifacts (no publication)
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_sha:
+        description: Full 40-character commit SHA already on main
+        required: true
+        type: string
+      expected_version:
+        description: Numeric package version, without v prefix
+        required: true
+        type: string
+      qa_record:
+        description: Completed JSON attestation using docs/release/qa-record.example.json for this exact commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prepare-release-${{ inputs.expected_version }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Validate candidate branch and SHA
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+        run: |
+          [[ "$CANDIDATE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          test "$(git rev-parse HEAD)" = "$CANDIDATE_SHA"
+          git merge-base --is-ancestor "$CANDIDATE_SHA" origin/main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version-file: package.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate browser QA and unused version
+        env:
+          CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+          EXPECTED_VERSION: ${{ inputs.expected_version }}
+          QA_RECORD: ${{ inputs.qa_record }}
+        run: |
+          mkdir -p dist
+          node scripts/release.mjs gate
+      - name: Install locked dependencies
+        run: test -f bun.lock && bun install --frozen-lockfile
+      - name: Revalidate tests and both browser builds
+        run: |
+          bun run test
+          bun run test:release
+          bun run compile
+          bun run build
+          bun run build:firefox
+          bun run release:package
+          python3 scripts/release-packages.py --release-ready
+      - name: Read verified package names
+        id: release
+        run: node scripts/release.mjs metadata
+      - name: Upload candidate artifacts only
+        uses: actions/upload-artifact@v4
+        with:
+          name: boothplus-${{ steps.release.outputs.version }}-${{ inputs.candidate_sha }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            ${{ steps.release.outputs.chrome }}
+            ${{ steps.release.outputs.firefox }}
+            ${{ steps.release.outputs.sources }}
+            dist/release-manifest.json
+            dist/SHA256SUMS
+            dist/release-qa.json
+            CHANGELOG.md

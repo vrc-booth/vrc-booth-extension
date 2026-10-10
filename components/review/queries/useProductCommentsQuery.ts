@@ -1,3 +1,4 @@
+import { COMMENTS_PAGE_SIZE } from "../constants";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchCommentsForProduct } from "@/components/review/api";
 import type { CommentItem } from "@/components/review/types";
@@ -9,7 +10,7 @@ export type ProductCommentsResult = {
   pageSize: number;
 };
 
-export const useProductCommentsQuery = (productId: string | null, limit = 10) => {
+export const useProductCommentsQuery = (productId: string | null, limit = COMMENTS_PAGE_SIZE) => {
   const resolvedEnabled = Boolean(productId);
 
   const queryKey: readonly ["comments", string, number] = ["comments", productId ?? "unknown", limit];
