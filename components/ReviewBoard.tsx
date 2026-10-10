@@ -2,6 +2,10 @@ import { i18n } from "#i18n";
 import {
   deleteComment,
   submitComment,
+  captureReviewSession,
+  fetchUserComment,
+  uploadReviewImage,
+  deleteReviewImage,
 } from "@/components/review/api";
 import { sendMessage } from "@/components/review/messaging";
 import {
@@ -17,10 +21,17 @@ import { REVIEW_FORM_FIELD_ID } from "@/components/review/reviewBoardFocus";
 import { showErrorToast } from "@/utils/toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useRef, useState } from "react";
+import { authTokenStorage } from "@/utils/storage";
+import { normalizeReviewImages, validateReviewFiles } from "@/components/review/images";
+import { useReviewImageDraft, type DraftReviewImage } from "@/components/review/image-draft";
+import { ReviewImages } from "@/components/review/components/ReviewImages";
+import { ReviewImageInput } from "@/components/review/components/ReviewImageInput";
 import StarIcons from "./StarIcon";
 
 const DEFAULT_SCORE = 8;
 const MAX_COMMENT_LENGTH = 500;
+
+type ReviewOperation = { controller: AbortController; sessionGeneration: string | null | undefined };
 
 type SubmitVariables = {
   productId: string;
@@ -28,8 +39,12 @@ type SubmitVariables = {
   body: {
     content: string;
     score: number;
+    anonymous?: boolean;
   };
-  isUpdate: boolean;
+  phase?: "upload" | "save";
+  images: DraftReviewImage[];
+  removedImageIds: string[];
+  operation: ReviewOperation;
 };
 
 const isForbiddenWriteError = (error: Error) => {
@@ -67,6 +82,48 @@ export function ReviewBoard() {
   const showEmptyComments = Boolean(product) && commentsQuery.isSuccess && comments.length === 0;
   const commentsLoading = commentsQuery.isLoading;
 
+  const imageDraft = useReviewImageDraft();
+  const skipHydration = useRef<string | null>(null);
+  // A ref closes the same-event-loop gap before React renders pending state.
+  const activeOperation = useRef<ReviewOperation | null>(null);
+  const [isImageRemoving, setIsImageRemoving] = useState(false);
+  const observedGeneration = useRef<string | null | undefined>(undefined);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [sessionRevision, setSessionRevision] = useState(0);
+  const invalidateOperation = () => {
+    activeOperation.current?.controller.abort();
+    activeOperation.current = null;
+  };
+  useEffect(() => {
+    let stopped = false;
+    let events = 0;
+    const stop = authTokenStorage.watch((next, previous) => {
+      events++;
+      observedGeneration.current = next ? next.sessionId ?? "legacy" : null;
+      setSessionReady(true);
+      if ((next ? next.sessionId ?? "legacy" : null) !== (previous ? previous.sessionId ?? "legacy" : null)) {
+        invalidateOperation();
+        skipHydration.current = null;
+        setSessionRevision((revision) => revision + 1);
+        imageDraft.reset();
+        setFormState({ content: "", score: DEFAULT_SCORE });
+        setShowUsernameHint(false);
+      }
+    });
+    void authTokenStorage.getValue().then((tokens) => {
+      if (!stopped && events === 0) {
+        observedGeneration.current = tokens ? tokens.sessionId ?? "legacy" : null;
+        setSessionReady(true);
+      }
+    }).catch(() => undefined);
+    return () => { stopped = true; stop(); invalidateOperation(); };
+  }, []);
+  useEffect(() => {
+    imageDraft.reset();
+    setFormState({ content: "", score: DEFAULT_SCORE });
+    return invalidateOperation;
+  }, [productId]);
+
   const [isAuthPending, setIsAuthPending] = useState(false);
   const [showUsernameHint, setShowUsernameHint] = useState(false);
   const [formState, setFormState] = useState({
@@ -88,6 +145,8 @@ export function ReviewBoard() {
   const lastUserId = useRef(user?.id);
   useEffect(() => {
     if (lastUserId.current && lastUserId.current !== user?.id) {
+      invalidateOperation();
+      imageDraft.reset();
       setFormState({ content: "", score: DEFAULT_SCORE });
       setShowUsernameHint(false);
     }
@@ -99,12 +158,17 @@ export function ReviewBoard() {
       return;
     }
 
+    if (skipHydration.current === myComment.id) {
+      skipHydration.current = null;
+      return;
+    }
+    imageDraft.reset(normalizeReviewImages(myComment.images));
     setFormState((previous) => ({
       ...previous,
       content: myComment.content,
       score: typeof myComment.score === "number" ? myComment.score : previous.score,
     }));
-  }, [myComment?.id]);
+  }, [myComment?.id, sessionRevision, productId]);
 
   useEffect(() => {
     const element = loadMoreTriggerRef.current;
@@ -125,37 +189,109 @@ export function ReviewBoard() {
     return () => observer.disconnect();
   }, [hasMoreComments, isFetchingNextPage, commentsQuery.fetchNextPage, productId]);
 
+  const refreshReviewData = (targetProductId: string) => Promise.all([
+    queryClient.invalidateQueries({ queryKey: ["comments", targetProductId, COMMENTS_PAGE_SIZE] }),
+    queryClient.invalidateQueries({ queryKey: ["myComment", targetProductId] }),
+    queryClient.invalidateQueries({ queryKey: ["myComments"] }),
+    queryClient.invalidateQueries({ queryKey: ["product"] }),
+  ]);
+
   const submitMutation = useMutation<void, Error, SubmitVariables>({
-    mutationFn: ({ productId, method, body }: SubmitVariables) => submitComment(productId, method, body),
-    onSuccess(_, variables) {
-      setShowUsernameHint(false);
-      queryClient.invalidateQueries({ queryKey: ["comments", variables.productId, COMMENTS_PAGE_SIZE] });
-      queryClient.invalidateQueries({ queryKey: ["myComment", variables.productId] });
-      queryClient.invalidateQueries({ queryKey: ["product"] });
+    retry: false,
+    mutationFn: async (variables) => {
+      const { productId, method, body, operation } = variables;
+      const context = await captureReviewSession(operation.controller.signal, operation.sessionGeneration);
+      const completed: DraftReviewImage[] = [];
+      for (const entry of variables.images) {
+        operation.controller.signal.throwIfAborted();
+        variables.phase = "upload";
+        const image = entry.image ?? await uploadReviewImage(entry.file!, context);
+        operation.controller.signal.throwIfAborted();
+        const uploaded = { ...entry, image, uploadContext: entry.uploadContext ?? context };
+        completed.push(uploaded);
+        // Successful uploads survive a later upload/save failure, so retrying the
+        // draft does not upload the same file twice or consume the pending quota.
+        imageDraft.replace(imageDraft.current.current.map((item) => item.key === entry.key ? uploaded : item));
+      }
+      variables.phase = "save";
+      const imageIds = completed.map((entry) => entry.image!.id);
+      try {
+        await submitComment(productId, method, { ...body, imageIds }, context);
+      } catch (error) {
+        operation.controller.signal.throwIfAborted();
+        // A lost response may still have committed. Reconcile with a scoped read,
+        // never automatically repeat the write or discard the editable draft.
+        if (!(error instanceof ApiError) || error.status >= 500 || error.status === 409) {
+          const saved = await fetchUserComment(productId, context).catch(() => undefined);
+          operation.controller.signal.throwIfAborted();
+          if (saved) {
+            const savedImages = normalizeReviewImages(saved.images);
+            const matches = saved.content === body.content && saved.score === body.score
+              && (body.anonymous === undefined || saved.anonymous === body.anonymous)
+              && JSON.stringify(savedImages.map((image) => image.id)) === JSON.stringify(imageIds);
+            imageDraft.baseline.current = savedImages;
+            if (saved.id !== myComment?.id) skipHydration.current = saved.id;
+            queryClient.setQueryData(["myComment", productId], saved);
+            if (!matches) throw error;
+          } else {
+            throw error;
+          }
+        } else {
+          throw error;
+        }
+      }
+      operation.controller.signal.throwIfAborted();
+      imageDraft.reset(completed.map((entry) => entry.image!));
+      // PUT has detached these images. Never delete an existing attachment first.
+      await Promise.all(variables.removedImageIds.map((id) => deleteReviewImage(id, context).catch(() => undefined)));
     },
-    onError: (error) => {
+    async onSuccess(_, variables) {
+      if (activeOperation.current !== variables.operation) return;
+      setShowUsernameHint(false);
+      await refreshReviewData(variables.productId);
+    },
+    onError: (error, variables) => {
+      if (activeOperation.current !== variables.operation || variables.operation.controller.signal.aborted) return;
       if (isForbiddenWriteError(error)) {
         setShowUsernameHint(true);
         showErrorToast(i18n.t("messages.usernameSetupHint"));
+      } else if (variables.phase === "upload" && error instanceof ApiError) {
+        showErrorToast(i18n.t(error.status === 429 ? "reviewImages.pendingError"
+          : error.status === 422 ? "reviewImages.moderationError"
+          : [400, 413, 415].includes(error.status) ? "reviewImages.invalidError" : "reviewImages.uploadError"));
       } else if (error instanceof ApiError && error.status === 400) {
         showErrorToast(i18n.t("messages.checkContent"));
       } else {
         showErrorToast(i18n.t("messages.reviewSaveError"));
       }
     },
+    onSettled: (_, __, variables) => {
+      if (activeOperation.current === variables.operation) activeOperation.current = null;
+    },
   });
 
-  const deleteMutation = useMutation<void, Error, string>({
-    mutationFn: (targetProductId: string) => deleteComment(targetProductId),
-    onSuccess(_, targetProductId) {
-      setShowUsernameHint(false);
-      queryClient.invalidateQueries({ queryKey: ["comments", targetProductId, COMMENTS_PAGE_SIZE] });
-      queryClient.invalidateQueries({ queryKey: ["myComment", targetProductId] });
-      queryClient.invalidateQueries({ queryKey: ["product"] });
-      setFormState({ content: "", score: DEFAULT_SCORE });
+  type DeleteVariables = { productId: string; operation: ReviewOperation; pendingImageIds: string[] };
+  const deleteMutation = useMutation<void, Error, DeleteVariables>({
+    retry: false,
+    mutationFn: async ({ productId, operation, pendingImageIds }) => {
+      const context = await captureReviewSession(operation.controller.signal, operation.sessionGeneration);
+      await deleteComment(productId, context);
+      await Promise.all(pendingImageIds.map((id) => deleteReviewImage(id, context).catch(() => undefined)));
     },
-    onError() {
-      showErrorToast(i18n.t("messages.reviewDeleteError"));
+    async onSuccess(_, variables) {
+      if (activeOperation.current !== variables.operation) return;
+      setShowUsernameHint(false);
+      imageDraft.reset();
+      setFormState({ content: "", score: DEFAULT_SCORE });
+      await refreshReviewData(variables.productId);
+    },
+    onError(_, variables) {
+      if (activeOperation.current === variables.operation && !variables.operation.controller.signal.aborted) {
+        showErrorToast(i18n.t("messages.reviewDeleteError"));
+      }
+    },
+    onSettled: (_, __, variables) => {
+      if (activeOperation.current === variables.operation) activeOperation.current = null;
     },
   });
 
@@ -173,7 +309,6 @@ export function ReviewBoard() {
     try {
       await loginWithDiscord();
       await refreshAuthDependentData();
-      setFormState({ content: "", score: DEFAULT_SCORE });
     } catch {
       showErrorToast(i18n.t("messages.loginError"));
     } finally {
@@ -194,9 +329,9 @@ export function ReviewBoard() {
     setIsAuthPending(true);
     try {
       await sendMessage("setAuthTokens", null);
+      // Storage/user transitions own draft resets. A newer login can complete
+      // while these reads are pending; never clear its draft on this return.
       await refreshAuthDependentData();
-      setShowUsernameHint(false);
-      setFormState({ content: "", score: DEFAULT_SCORE });
     } catch {
       showErrorToast(i18n.t("messages.logoutError"));
     } finally {
@@ -215,6 +350,8 @@ export function ReviewBoard() {
       return;
     }
 
+    if (!canEdit || activeOperation.current || isSubmitting) return;
+
     const trimmed = formState.content.trim();
     if (!trimmed) {
       showErrorToast(i18n.t("messages.emptyContent"));
@@ -227,26 +364,72 @@ export function ReviewBoard() {
     }
 
     const method: "POST" | "PUT" = myComment ? "PUT" : "POST";
+    const operation = { controller: new AbortController(), sessionGeneration: observedGeneration.current };
+    activeOperation.current = operation;
     submitMutation.mutate({
       productId: product.id,
       method,
       body: {
         content: trimmed,
         score: formState.score,
+        ...(typeof myComment?.anonymous === "boolean" ? { anonymous: myComment.anonymous } : {}),
       },
-      isUpdate: Boolean(myComment),
+      images: [...imageDraft.current.current],
+      removedImageIds: imageDraft.baseline.current.filter((saved) => !imageDraft.current.current.some((entry) => entry.image?.id === saved.id)).map((image) => image.id),
+      operation,
     });
   };
 
   const handleDelete = () => {
-    if (!product || !myComment || !canEdit || isSubmitting) return;
-    deleteMutation.mutate(product.id);
+    if (!product || !myComment || !canEdit || isSubmitting || activeOperation.current) return;
+    const operation = { controller: new AbortController(), sessionGeneration: observedGeneration.current };
+    activeOperation.current = operation;
+    deleteMutation.mutate({ productId: product.id, operation, pendingImageIds: imageDraft.current.current
+      .filter((entry) => entry.image && entry.uploadContext && !imageDraft.baseline.current.some((image) => image.id === entry.image!.id))
+      .map((entry) => entry.image!.id) });
   };
 
-  const isSubmitting = submitMutation.isPending || deleteMutation.isPending;
+  const isSubmitting = submitMutation.isPending || deleteMutation.isPending || isImageRemoving;
   const isAuthenticated = Boolean(user);
-  const canEdit = isAuthenticated && Boolean(product) && !isAuthPending && !myCommentQuery.isLoading;
+  const canEdit = isAuthenticated && sessionReady && observedGeneration.current !== null && Boolean(product) && !isAuthPending && myCommentQuery.isSuccess;
   const isBusy = isSubmitting || isAuthPending || productQuery.isFetching;
+
+  const handleAddImages = (files: File[]) => {
+    if (!canEdit || isSubmitting || activeOperation.current || !files.length) return;
+    const invalid = validateReviewFiles(files, imageDraft.current.current.length);
+    if (invalid) {
+      showErrorToast(i18n.t(invalid === "count" ? "reviewImages.countError" : invalid === "type" ? "reviewImages.typeError" : "reviewImages.sizeError"));
+      return;
+    }
+    imageDraft.replace([...imageDraft.current.current, ...files.map((file) => ({
+      key: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file),
+    }))]);
+  };
+
+  const handleRemoveImage = async (key: string) => {
+    if (!canEdit || isSubmitting || activeOperation.current) return;
+    const entry = imageDraft.current.current.find((image) => image.key === key);
+    if (!entry) return;
+    const isPendingUpload = entry.image && entry.uploadContext && !imageDraft.baseline.current.some((image) => image.id === entry.image!.id);
+    const operation = { controller: new AbortController(), sessionGeneration: observedGeneration.current };
+    activeOperation.current = operation;
+    setIsImageRemoving(true);
+    try {
+      if (isPendingUpload) {
+        await deleteReviewImage(entry.image!.id, { ...entry.uploadContext!, signal: operation.controller.signal }).catch((error) => {
+          // Already absent/expired is an idempotent local removal, including a
+          // retry after the first successful DELETE response was lost.
+          if (!(error instanceof ApiError) || error.status !== 404) throw error;
+        });
+      }
+      if (activeOperation.current === operation) imageDraft.replace(imageDraft.current.current.filter((image) => image.key !== key));
+    } catch {
+      if (!operation.controller.signal.aborted) showErrorToast(i18n.t("reviewImages.removeError"));
+    } finally {
+      if (activeOperation.current === operation) activeOperation.current = null;
+      setIsImageRemoving(false);
+    }
+  };
 
   const handleLoadMoreComments = () => {
     if (!hasMoreComments || isFetchingNextPage) {
@@ -311,7 +494,6 @@ export function ReviewBoard() {
                   key={index}
                   className="flex animate-pulse gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
                 >
-                  <span className="h-10 w-10 rounded-full bg-slate-100" />
                   <div className="flex-1 space-y-2">
                     <span className="block h-3 w-1/3 rounded-full bg-slate-200" />
                     <span className="block h-4 rounded-full bg-slate-200" />
@@ -322,11 +504,12 @@ export function ReviewBoard() {
             </div>
           )}
 
-          {(productQuery.isError || commentsQuery.isError) && (
+          {(productQuery.isError || commentsQuery.isError || (isAuthenticated && myCommentQuery.isError)) && (
             <div role="alert" className="text-xs text-red-600">
               <p>{i18n.t("messages.fetchReviewFailed")}</p>
               <button type="button" className="mt-2 underline" onClick={() => {
                 if (productQuery.isError) void productQuery.refetch();
+                else if (myCommentQuery.isError) void myCommentQuery.refetch();
                 else void commentsQuery.refetch();
               }}>{i18n.t("userComments.refresh")}</button>
             </div>
@@ -350,18 +533,18 @@ export function ReviewBoard() {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div aria-hidden="true" className="h-10 w-10 shrink-0 rounded-full bg-slate-200" />
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">{comment.user.username}</p>
+                        <p className="text-sm font-semibold text-slate-900">{comment.user.anonymous ? i18n.t("reviewBoard.anonymous") : comment.user.deactivated ? i18n.t("reviewBoard.deactivated") : comment.user.username}</p>
                         <p className="text-[11px] text-slate-500">{formatDateTime(comment.updatedAt)}</p>
                       </div>
                       <span className="text-xs font-semibold text-slate-600">
                         <StarIcons score={comment.score} size={12} />
                       </span>
                     </div>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-900">{comment.content}</p>
+                    <p className="mt-2 text-sm leading-relaxed text-slate-900">{comment.blinded ? i18n.t("reviewBoard.blinded") : comment.content}</p>
+                    <ReviewImages images={comment.images} blinded={comment.blinded} />
                   </div>
                 </div>
               </article>
@@ -416,6 +599,8 @@ export function ReviewBoard() {
             </p>
           </div>
 
+          <ReviewImageInput images={imageDraft.images} disabled={!canEdit || isSubmitting} onAdd={handleAddImages} onRemove={handleRemoveImage} />
+
           <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
             <label className="text-[11px]" htmlFor="review-score">
               {i18n.t("reviewBoard.rating")}
@@ -427,7 +612,7 @@ export function ReviewBoard() {
                 onSelect={(value) => handleStarSelect(value)}
               />
             </div>
-            {!canEdit && (
+            {!isAuthenticated && (
               <p className="text-[11px] text-slate-400">{i18n.t("reviewBoard.loginPrompt")}</p>
             )}
           </div>

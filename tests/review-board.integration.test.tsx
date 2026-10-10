@@ -14,13 +14,18 @@ const mocks = vi.hoisted(() => ({
   fetchMyComment: vi.fn(),
   submitComment: vi.fn(),
   deleteComment: vi.fn(),
+  captureSession: vi.fn(),
+  uploadImage: vi.fn(),
+  deleteImage: vi.fn(),
   login: vi.fn(),
   sendMessage: vi.fn(),
   errorToast: vi.fn(),
   storageWatch: vi.fn(),
+  createObjectURL: vi.fn(),
+  revokeObjectURL: vi.fn(),
 }));
 
-vi.mock("@/utils/storage", () => ({ authTokenStorage: { watch: mocks.storageWatch, getValue: async () => null } }));
+vi.mock("@/utils/storage", () => ({ authTokenStorage: { watch: mocks.storageWatch, getValue: async () => ({ accessToken: "test", refreshToken: "refresh", sessionId: "A" }) } }));
 vi.mock("#i18n", () => ({
   i18n: { t: (key: string, substitutions?: unknown[]) => `${key}${substitutions ? `:${substitutions.join(",")}` : ""}` },
 }));
@@ -32,6 +37,9 @@ vi.mock("@/components/review/api", () => ({
   fetchMyComments: vi.fn(() => { throw new Error("Unexpected personal-comments query"); }),
   submitComment: mocks.submitComment,
   deleteComment: mocks.deleteComment,
+  captureReviewSession: mocks.captureSession,
+  uploadReviewImage: mocks.uploadImage,
+  deleteReviewImage: mocks.deleteImage,
 }));
 vi.mock("@/components/review/auth", () => ({ loginWithDiscord: mocks.login }));
 vi.mock("@/components/review/messaging", () => ({ sendMessage: mocks.sendMessage }));
@@ -46,14 +54,14 @@ const product: ReviewProduct = {
 };
 const profile: UserProfile = {
   id: "me", username: "Tester", discord: "test", adult: false,
-  hideAvatar: false, autoCollapse: false, admin: false, bio: "",
+  autoCollapse: false, admin: false, bio: "",
 };
 const existingReview: MyCommentData = { id: "my-review", content: "My saved review", score: 6 };
 const publicComment = (id: string): CommentItem => ({
   id, content: `Review ${id}`, score: 8, updatedAt: "2026-01-01T12:00:00.000Z",
   user: { id: `user-${id}`, username: `Reviewer ${id}` },
 });
-const emptyPage = { count: 0, comments: [] as CommentItem[], page: 1, pageSize: 10 };
+const emptyPage = { count: 0, comments: [] as CommentItem[], page: 1, pageSize: 20 };
 
 function deferred<T>() {
   let resolve!: (value: T | PromiseLike<T>) => void;
@@ -91,12 +99,18 @@ beforeEach(() => {
   vi.stubGlobal("XMLHttpRequest", class { constructor() { throw new Error("XHR is forbidden in synthetic integration tests"); } });
   vi.stubGlobal("WebSocket", class { constructor() { throw new Error("WebSockets are forbidden in synthetic integration tests"); } });
   mocks.storageWatch.mockReturnValue(() => undefined);
+  let imageSequence = 0;
+  mocks.createObjectURL.mockImplementation(() => `blob:synthetic-${++imageSequence}`);
+  Object.defineProperty(URL, "createObjectURL", { configurable: true, value: mocks.createObjectURL });
+  Object.defineProperty(URL, "revokeObjectURL", { configurable: true, value: mocks.revokeObjectURL });
   mocks.findProduct.mockResolvedValue(product);
   mocks.fetchProfile.mockResolvedValue(profile);
   mocks.fetchComments.mockResolvedValue(emptyPage);
   mocks.fetchMyComment.mockResolvedValue(null);
   mocks.submitComment.mockResolvedValue(undefined);
   mocks.deleteComment.mockResolvedValue(undefined);
+  mocks.captureSession.mockImplementation(async (signal) => ({ sessionId: "A", signal }));
+  mocks.deleteImage.mockResolvedValue(undefined);
   mocks.login.mockResolvedValue(undefined);
   mocks.sendMessage.mockImplementation(async (name: string) => {
     if (name !== "openAccountSettings" && name !== "setAuthTokens") throw new Error(`Unexpected runtime message: ${name}`);
@@ -166,7 +180,7 @@ describe("ReviewBoard React DOM integration", () => {
       expect(container.textContent).toContain("reviewBoard.noComments");
       expect(textarea().disabled).toBe(false);
     });
-    expect(mocks.fetchComments).toHaveBeenCalledWith(product.id, 1, 10);
+    expect(mocks.fetchComments).toHaveBeenCalledWith(product.id, 1, 20);
   });
 
   it("does not show an empty list while comments are still loading", async () => {
@@ -258,12 +272,12 @@ describe("ReviewBoard React DOM integration", () => {
     expect(textarea().disabled).toBe(true);
     await click(button("reviewBoard.submit.saving"));
     expect(mocks.submitComment).toHaveBeenCalledTimes(1);
-    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "POST", { content: "x".repeat(500), score: 7 });
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "POST", { content: "x".repeat(500), score: 7, imageIds: [] }, expect.objectContaining({ sessionId: "A" }));
     await act(async () => save.resolve());
     await eventually(() => expect(button("reviewBoard.submit.new").disabled).toBe(false));
     await typeReview("  Trim this review  ");
     await submitForm();
-    expect(mocks.submitComment).toHaveBeenLastCalledWith(product.id, "POST", { content: "Trim this review", score: 7 });
+    expect(mocks.submitComment).toHaveBeenLastCalledWith(product.id, "POST", { content: "Trim this review", score: 7, imageIds: [] }, expect.objectContaining({ sessionId: "A" }));
   });
 
   it("rejects empty and over-limit input before starting a mutation", async () => {
@@ -286,7 +300,7 @@ describe("ReviewBoard React DOM integration", () => {
     expect(button("reviewBoard.submit.edit")).toBeDefined();
     await typeReview("Edited review");
     await submitForm();
-    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "PUT", { content: "Edited review", score: 6 });
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "PUT", { content: "Edited review", score: 6, imageIds: [] }, expect.objectContaining({ sessionId: "A" }));
     await eventually(() => {
       expect(mocks.findProduct).toHaveBeenCalledTimes(2);
       expect(mocks.fetchComments).toHaveBeenCalledTimes(2);
@@ -314,7 +328,7 @@ describe("ReviewBoard React DOM integration", () => {
     expect(mocks.errorToast).toHaveBeenCalledWith("messages.reviewDeleteError");
     expect(mocks.fetchComments).toHaveBeenCalledTimes(1);
     await submitForm();
-    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "PUT", { content: "Unsaved edit worth keeping", score: 3 });
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "PUT", { content: "Unsaved edit worth keeping", score: 3, imageIds: [] }, expect.objectContaining({ sessionId: "A" }));
   });
 
   it("clears a deleted review only after the delete promise succeeds and then resets the score", async () => {
@@ -338,7 +352,7 @@ describe("ReviewBoard React DOM integration", () => {
     expect(container.textContent).not.toContain("reviewBoard.submit.delete");
     await typeReview("A new review");
     await submitForm();
-    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "POST", { content: "A new review", score: 8 });
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "POST", { content: "A new review", score: 8, imageIds: [] }, expect.objectContaining({ sessionId: "A" }));
   });
 
   it("allows a fresh login after cancellation while preventing repeated clicks during each pending attempt", async () => {
@@ -479,7 +493,7 @@ describe("ReviewBoard React DOM integration", () => {
   it("loads the next comments page and cleans up observers across unmount and remount", async () => {
     const page2 = deferred<{ count: number; comments: CommentItem[]; page: number; pageSize: number }>();
     mocks.fetchComments.mockImplementation((_id: string, page: number) => page === 1
-      ? Promise.resolve({ count: 11, comments: [publicComment("first")], page: 1, pageSize: 10 })
+      ? Promise.resolve({ count: 21, comments: [publicComment("first")], page: 1, pageSize: 20 })
       : page2.promise);
     await ready();
     await eventually(() => expect(observers.length).toBeGreaterThan(0));
@@ -487,8 +501,8 @@ describe("ReviewBoard React DOM integration", () => {
     expect(firstObserver.observe).toHaveBeenCalledTimes(1);
     await act(async () => firstObserver.intersect());
     await eventually(() => expect(container.textContent).toContain("reviewBoard.loader.loadingMore"));
-    expect(mocks.fetchComments).toHaveBeenCalledWith(product.id, 2, 10);
-    await act(async () => page2.resolve({ count: 11, comments: [publicComment("last")], page: 2, pageSize: 10 }));
+    expect(mocks.fetchComments).toHaveBeenCalledWith(product.id, 2, 20);
+    await act(async () => page2.resolve({ count: 21, comments: [publicComment("last")], page: 2, pageSize: 20 }));
     await eventually(() => expect(container.textContent).toContain("Review last"));
     expect(container.textContent).toContain("Review first");
     expect(firstObserver.disconnect).toHaveBeenCalledTimes(1);
@@ -496,7 +510,7 @@ describe("ReviewBoard React DOM integration", () => {
     root = undefined;
     expect(observers.every((observer) => observer.disconnect.mock.calls.length === 1)).toBe(true);
     queryClient.clear();
-    mocks.fetchComments.mockResolvedValue({ count: 11, comments: [publicComment("remount")], page: 1, pageSize: 10 });
+    mocks.fetchComments.mockResolvedValue({ count: 21, comments: [publicComment("remount")], page: 1, pageSize: 20 });
     const previousObserverCount = observers.length;
     await renderBoard();
     await eventually(() => expect(observers.length).toBeGreaterThan(previousObserverCount));
@@ -526,4 +540,280 @@ it("clears the prior account's form when another tab changes the stored session"
     expect(queryClient.getQueryData<{ id: string }>(["userProfile"])?.id).toBe("other-user");
     expect(container.querySelector("textarea")?.value).toBe("");
   });
+});
+
+const imageOne = { id: "image-one", url: "https://cdn.example.invalid/reviews/one.webp", width: 128, height: 96 };
+const imageTwo = { id: "image-two", url: "https://cdn.example.invalid/reviews/two.webp", width: 96, height: 128 };
+function imageFile(name = "synthetic.png", type = "image/png", size = 20) {
+  return new File([new Uint8Array(size)], name, { type });
+}
+async function selectFiles(files: File[]) {
+  await act(async () => {
+    const input = container.querySelector<HTMLInputElement>('input[type="file"]')!;
+    Object.defineProperty(input, "files", { configurable: true, value: files });
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+const draftImages = () => container.querySelectorAll('fieldset img');
+async function sessionChange(nextSession = "B", previousSession = "A") {
+  await act(async () => {
+    for (const [callback] of mocks.storageWatch.mock.calls) callback(
+      { accessToken: "new", refreshToken: "new-r", sessionId: nextSession },
+      { accessToken: "old", refreshToken: "old-r", sessionId: previousSession },
+    );
+  });
+}
+
+describe("review image authoring and safe rendering (synthetic DOM only)", () => {
+  it("previews files locally without uploading and revokes removed/unmounted previews", async () => {
+    await ready();
+    await selectFiles([imageFile(), imageFile("second.webp", "image/webp")]);
+    expect(draftImages()).toHaveLength(2);
+    expect(mocks.uploadImage).not.toHaveBeenCalled();
+    await click(button("reviewImages.remove:1"));
+    expect(draftImages()).toHaveLength(1);
+    expect(mocks.revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-1");
+    expect(mocks.deleteImage).not.toHaveBeenCalled();
+    await act(async () => root!.unmount()); root = undefined;
+    expect(mocks.revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-2");
+  });
+
+  it("rejects unsupported/oversized/too-many images atomically and permits reselecting files", async () => {
+    await ready();
+    await selectFiles([imageFile("one.gif", "image/gif")]);
+    expect(mocks.errorToast).toHaveBeenLastCalledWith("reviewImages.typeError");
+    await selectFiles([imageFile("big.png", "image/png", 8 * 1024 * 1024 + 1)]);
+    expect(mocks.errorToast).toHaveBeenLastCalledWith("reviewImages.sizeError");
+    await selectFiles(Array.from({ length: 6 }, () => imageFile()));
+    expect(mocks.errorToast).toHaveBeenLastCalledWith("reviewImages.countError");
+    expect(draftImages()).toHaveLength(0);
+    await selectFiles([imageFile()]);
+    await selectFiles([imageFile()]);
+    expect(draftImages()).toHaveLength(2);
+    expect(mocks.createObjectURL).toHaveBeenCalledTimes(2);
+  });
+
+  it("uploads only on save, locks same-tick repeated submits, and uses uploaded IDs", async () => {
+    const upload = deferred<typeof imageOne>();
+    mocks.uploadImage.mockReturnValue(upload.promise);
+    await ready();
+    await typeReview("With an image");
+    const file = imageFile();
+    await selectFiles([file]);
+    await act(async () => {
+      container.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+      container.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+    expect(mocks.uploadImage).toHaveBeenCalledOnce();
+    expect(mocks.submitComment).not.toHaveBeenCalled();
+    await eventually(() => expect(container.querySelector('fieldset')?.disabled).toBe(true));
+    await act(async () => upload.resolve(imageOne));
+    await eventually(() => expect(mocks.submitComment).toHaveBeenCalledOnce());
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "POST", { content: "With an image", score: 8, imageIds: [imageOne.id] }, expect.objectContaining({ sessionId: "A" }));
+    await eventually(() => expect(mocks.revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-1"));
+  });
+
+  it("preserves the full draft after partial upload failure and reuses successful uploads on retry", async () => {
+    mocks.uploadImage.mockResolvedValueOnce(imageOne).mockRejectedValueOnce(new ApiError("busy", 503)).mockResolvedValueOnce(imageTwo);
+    await ready();
+    await typeReview("Preserve my image draft");
+    await click(button("aria.scorePoint:5"));
+    await selectFiles([imageFile(), imageFile("second.png")]);
+    await submitForm();
+    await eventually(() => expect(mocks.errorToast).toHaveBeenCalledWith("reviewImages.uploadError"));
+    expect(mocks.submitComment).not.toHaveBeenCalled();
+    expect(textarea().value).toBe("Preserve my image draft");
+    expect(draftImages()).toHaveLength(2);
+    expect(mocks.revokeObjectURL).not.toHaveBeenCalled();
+    await submitForm();
+    await eventually(() => expect(mocks.submitComment).toHaveBeenCalledOnce());
+    expect(mocks.uploadImage).toHaveBeenCalledTimes(3);
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "POST", { content: "Preserve my image draft", score: 5, imageIds: [imageOne.id, imageTwo.id] }, expect.any(Object));
+  });
+
+  it("retains uploaded files after save rejection, supports deleting pending uploads, and treats 404 as removed", async () => {
+    mocks.uploadImage.mockResolvedValue(imageOne);
+    mocks.submitComment.mockRejectedValue(new ApiError("validation", 400));
+    await ready(); await typeReview("Unsaved"); await selectFiles([imageFile()]); await submitForm();
+    await eventually(() => expect(mocks.errorToast).toHaveBeenCalledWith("messages.checkContent"));
+    expect(draftImages()).toHaveLength(1);
+    mocks.deleteImage.mockRejectedValueOnce(new Error("lost delete response"));
+    await click(button("reviewImages.remove:1"));
+    await eventually(() => expect(mocks.errorToast).toHaveBeenCalledWith("reviewImages.removeError"));
+    expect(draftImages()).toHaveLength(1);
+    mocks.deleteImage.mockRejectedValueOnce(new ApiError("not found", 404));
+    await click(button("reviewImages.remove:1"));
+    await eventually(() => expect(draftImages()).toHaveLength(0));
+    expect(mocks.deleteImage).toHaveBeenCalledTimes(2);
+    expect(mocks.revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-1");
+  });
+
+  it("keeps existing IDs and anonymous state, and deletes detached images only after successful PUT", async () => {
+    const save = deferred<void>();
+    mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne, imageTwo], anonymous: true });
+    mocks.submitComment.mockReturnValue(save.promise);
+    await ready(); await eventually(() => expect(draftImages()).toHaveLength(2));
+    await click(button("reviewImages.remove:1"));
+    expect(mocks.deleteImage).not.toHaveBeenCalled();
+    await submitForm();
+    expect(mocks.submitComment).toHaveBeenCalledWith(product.id, "PUT", { content: existingReview.content, score: existingReview.score, anonymous: true, imageIds: [imageTwo.id] }, expect.any(Object));
+    expect(mocks.deleteImage).not.toHaveBeenCalled();
+    mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageTwo], anonymous: true });
+    await act(async () => save.resolve());
+    await eventually(() => expect(mocks.deleteImage).toHaveBeenCalledWith(imageOne.id, expect.objectContaining({ sessionId: "A" })));
+    expect(mocks.uploadImage).not.toHaveBeenCalled();
+    expect(draftImages()).toHaveLength(1);
+  });
+
+  it("does not delete existing images after a failed edit and preserves removals for retry", async () => {
+    mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
+    mocks.submitComment.mockRejectedValueOnce(new ApiError("rejected", 400)).mockResolvedValue(undefined);
+    await ready(); await eventually(() => expect(draftImages()).toHaveLength(1));
+    await click(button("reviewImages.remove:1")); await submitForm();
+    await eventually(() => expect(mocks.errorToast).toHaveBeenCalled());
+    expect(mocks.deleteImage).not.toHaveBeenCalled(); expect(draftImages()).toHaveLength(0);
+    await submitForm();
+    await eventually(() => expect(mocks.deleteImage).toHaveBeenCalledOnce());
+  });
+
+  it("reconciles a committed create after a lost response without repeating the write", async () => {
+    mocks.uploadImage.mockResolvedValue(imageOne);
+    mocks.submitComment.mockRejectedValue(new TypeError("lost response"));
+    await ready(); await typeReview("Committed remotely"); await selectFiles([imageFile()]);
+    mocks.fetchMyComment.mockResolvedValue({ id: "created-id", content: "Committed remotely", score: 8, images: [imageOne] });
+    await submitForm();
+    await eventually(() => expect(button("reviewBoard.submit.edit").disabled).toBe(false));
+    expect(mocks.submitComment).toHaveBeenCalledOnce();
+    expect(mocks.errorToast).not.toHaveBeenCalled();
+    expect(textarea().value).toBe("Committed remotely"); expect(draftImages()).toHaveLength(1);
+  });
+
+  it("reconciles a conflicting create's identity without overwriting the edited draft", async () => {
+    mocks.submitComment.mockRejectedValue(new ApiError("already exists", 409));
+    await ready(); await typeReview("My current draft");
+    mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
+    await submitForm();
+    await eventually(() => expect(mocks.errorToast).toHaveBeenCalledWith("messages.reviewSaveError"));
+    expect(textarea().value).toBe("My current draft"); expect(draftImages()).toHaveLength(0);
+    mocks.submitComment.mockResolvedValue(undefined);
+    await submitForm();
+    await eventually(() => expect(mocks.submitComment).toHaveBeenCalledTimes(2));
+    expect(mocks.submitComment.mock.calls[1][1]).toBe("PUT");
+  });
+
+  it("aborts interrupted uploads on unmount and never submits their late results", async () => {
+    const upload = deferred<typeof imageOne>(); mocks.uploadImage.mockReturnValue(upload.promise);
+    await ready(); await typeReview("Interrupted"); await selectFiles([imageFile()]); await submitForm();
+    const context = mocks.uploadImage.mock.calls[0][1];
+    await act(async () => root!.unmount()); root = undefined;
+    expect(context.signal.aborted).toBe(true);
+    await act(async () => upload.resolve(imageOne));
+    expect(mocks.submitComment).not.toHaveBeenCalled();
+    expect(mocks.revokeObjectURL).toHaveBeenCalledWith("blob:synthetic-1");
+  });
+
+  it("clears and aborts the old account draft when another account logs in during an upload", async () => {
+    const upload = deferred<typeof imageOne>(); mocks.uploadImage.mockReturnValue(upload.promise);
+    await ready(); await typeReview("Account A draft"); await selectFiles([imageFile()]); await submitForm();
+    mocks.fetchProfile.mockResolvedValue({ ...profile, id: "account-b" });
+    await sessionChange();
+    await act(async () => upload.resolve(imageOne));
+    await eventually(() => expect(textarea().value).toBe(""));
+    expect(draftImages()).toHaveLength(0); expect(mocks.submitComment).not.toHaveBeenCalled();
+    expect(mocks.errorToast).not.toHaveBeenCalled();
+  });
+
+  it("rehydrates the same saved review ID after a fast same-user new-session refetch", async () => {
+    mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
+    await ready(); await eventually(() => expect(draftImages()).toHaveLength(1));
+    await typeReview("Old session draft");
+    await sessionChange();
+    await eventually(() => {
+      expect(textarea().value).toBe(existingReview.content);
+      expect(draftImages()).toHaveLength(1);
+    });
+  });
+
+  it("keeps local image/text drafts on token rotation within the same session", async () => {
+    await ready(); await typeReview("Same session"); await selectFiles([imageFile()]);
+    await sessionChange("A", "A");
+    expect(textarea().value).toBe("Same session"); expect(draftImages()).toHaveLength(1);
+    expect(mocks.revokeObjectURL).not.toHaveBeenCalled();
+  });
+
+  it("does not erase existing images when login's public-comments refetch finishes last", async () => {
+    const slowComments = deferred<typeof emptyPage>();
+    mocks.fetchProfile.mockResolvedValue(null);
+    await renderBoard(); await eventually(() => expect(button("reviewBoard.button.login").disabled).toBe(false));
+    mocks.fetchProfile.mockResolvedValue(profile);
+    mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
+    mocks.fetchComments.mockReturnValue(slowComments.promise);
+    await click(button("reviewBoard.button.login"));
+    await eventually(() => expect(draftImages()).toHaveLength(1));
+    await act(async () => slowComments.resolve(emptyPage));
+    await eventually(() => expect(button("reviewBoard.submit.edit").disabled).toBe(false));
+    expect(textarea().value).toBe(existingReview.content); expect(draftImages()).toHaveLength(1);
+  });
+
+  it("shows a retry for failed own-review reads without allowing a destructive create", async () => {
+    mocks.fetchMyComment.mockRejectedValueOnce(new Error("read unavailable")).mockResolvedValue(existingReview);
+    await renderBoard(); await eventually(() => expect(container.querySelector('[role="alert"]')).not.toBeNull());
+    expect(textarea().disabled).toBe(true);
+    expect(container.textContent).not.toContain("reviewBoard.loginPrompt");
+    await submitForm(); expect(mocks.submitComment).not.toHaveBeenCalled();
+    await click(button("userComments.refresh"));
+    await eventually(() => expect(textarea().value).toBe(existingReview.content));
+    expect(textarea().disabled).toBe(false);
+  });
+
+  it("renders safe public images and anonymous names while suppressing hidden/unsafe images", async () => {
+    mocks.fetchComments.mockResolvedValue({ ...emptyPage, count: 3, comments: [
+      { ...publicComment("safe"), images: [imageOne], user: { id: "", username: "", anonymous: true } },
+      { ...publicComment("hidden"), blinded: true, images: [imageTwo] },
+      { ...publicComment("unsafe"), images: [{ ...imageOne, url: "javascript:alert(1)" }] },
+    ] });
+    await ready();
+    const images = container.querySelectorAll("article img");
+    expect(images).toHaveLength(1); expect(images[0].getAttribute("src")).toBe(imageOne.url);
+    expect(images[0].getAttribute("referrerpolicy")).toBe("no-referrer");
+    expect(images[0].parentElement?.getAttribute("rel")).toBe("noopener noreferrer");
+    expect(container.textContent).toContain("reviewBoard.anonymous");
+    expect(container.textContent).toContain("reviewBoard.blinded");
+    expect(container.textContent).not.toContain("Review hidden");
+  });
+});
+
+it("does not clear a new account's images when an older logout refetch completes late", async () => {
+  mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
+  await ready();
+  const slowComments = deferred<typeof emptyPage>();
+  mocks.fetchProfile.mockResolvedValue(null);
+  mocks.fetchMyComment.mockResolvedValue(null);
+  mocks.fetchComments.mockReturnValueOnce(slowComments.promise);
+  await click(button("reviewBoard.button.logout"));
+  await eventually(() => expect(mocks.fetchComments).toHaveBeenCalledTimes(2));
+  mocks.fetchProfile.mockResolvedValue({ ...profile, id: "account-b" });
+  mocks.fetchMyComment.mockResolvedValue({ id: "b-review", content: "B saved text", score: 8, images: [imageTwo] });
+  await sessionChange("B", "A");
+  await eventually(() => {
+    expect(textarea().value).toBe("B saved text");
+    expect(draftImages()).toHaveLength(1);
+  });
+  await act(async () => slowComments.resolve(emptyPage));
+  await eventually(() => expect(button("reviewBoard.button.logout").disabled).toBe(false));
+  expect(textarea().value).toBe("B saved text");
+  expect(draftImages()).toHaveLength(1);
+});
+
+it("cleans only pending uploads after whole-review deletion, leaving attached image retention to the server", async () => {
+  mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
+  mocks.uploadImage.mockResolvedValue(imageTwo);
+  mocks.submitComment.mockRejectedValue(new ApiError("invalid edit", 400));
+  await ready(); await eventually(() => expect(draftImages()).toHaveLength(1));
+  await selectFiles([imageFile()]); await submitForm();
+  await eventually(() => expect(mocks.errorToast).toHaveBeenCalledWith("messages.checkContent"));
+  mocks.fetchMyComment.mockResolvedValue(null);
+  await click(button("reviewBoard.submit.delete"));
+  await eventually(() => expect(draftImages()).toHaveLength(0));
+  expect(mocks.deleteImage).toHaveBeenCalledExactlyOnceWith(imageTwo.id, expect.any(Object));
 });

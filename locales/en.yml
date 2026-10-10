@@ -1,4 +1,7 @@
 reviewBoard:
+  anonymous: Anonymous
+  deactivated: Deleted user
+  blinded: This review is hidden.
   productUnavailable: This product is not registered with the review service yet.
   header: Product Reviews
   loading: Loading reviews…
@@ -50,7 +53,7 @@ purchaseReview:
 userPanel:
   title: User management
   description: Update your username and view your comments.
-  retiredSettings: Bio, adult-content, avatar visibility, and description display settings are no longer saved by the service.
+  retiredSettings: Bio, adult-content, and description display settings are no longer saved by the service.
   loading: Loading user information…
   notLoggedIn: You are not logged into the review dashboard. Please finish logging in on the review page first.
   checkLogin: Recheck login status
@@ -72,3 +75,18 @@ userPanel:
     usernameError: Failed to save username.
 aria:
   scorePoint: $1.0 points
+
+reviewImages:
+  label: Attached images $1 / $2
+  help: Up to 5 JPEG, PNG or WebP images, 8 MiB each. Still images only; at least 64×64 px, up to 8000 px per side and 40 megapixels. Uploaded when you save the review.
+  add: Choose images
+  remove: Remove image $1
+  imageAlt: Review image $1
+  countError: You can attach up to 5 images.
+  typeError: Choose JPEG, PNG or WebP images.
+  sizeError: Choose non-empty images up to 8 MiB each.
+  invalidError: Check the image format, size and dimensions. Animated images are unsupported. Your draft is preserved.
+  pendingError: The image upload limit was reached. Try again later. Your draft is preserved.
+  moderationError: An attachment did not pass the service’s image checks. Choose another image.
+  uploadError: Could not save the images. Your draft is preserved; please try again.
+  removeError: Could not delete the uploaded image. Please try again.

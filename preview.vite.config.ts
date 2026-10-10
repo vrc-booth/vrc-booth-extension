@@ -27,6 +27,7 @@ export default {
   ],
   resolve: {
     alias: [
+      { find: "@/components/review/images", replacement: mock("images.ts") },
       { find: "@/components/review/api", replacement: mock("api.ts") },
       { find: "@/components/review/auth", replacement: mock("auth.ts") },
       { find: "@/components/review/messaging", replacement: mock("messaging.ts") },

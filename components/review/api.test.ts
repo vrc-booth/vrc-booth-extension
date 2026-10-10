@@ -52,12 +52,12 @@ describe("legacy API requests", () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
     await expect(deleteComment("42")).resolves.toBeUndefined();
   });
-  it("keeps legacy wrappers and one-based pagination", async () => {
+  it("keeps legacy product wrappers and adapts v2 reviews with fixed one-based pages", async () => {
     fetchMock.mockResolvedValueOnce(Response.json({ product: { id: "42", title: "Product" } }))
-      .mockResolvedValueOnce(Response.json({ count: 12, comments: [{ id: "review" }] }));
+      .mockResolvedValueOnce(Response.json({ count: 12, reviews: [{ id: "review" }] }));
     await expect(fetchProductById("42")).resolves.toEqual({ id: "42", title: "Product" });
-    await expect(fetchCommentsForProduct("42", 2, 10)).resolves.toEqual({ count: 12, comments: [{ id: "review" }], page: 2, pageSize: 10 });
-    expect(fetchMock.mock.calls[1][0]).toBe("https://vbt.kamyu.me/api/comment?productId=42&sort=new&page=2&limit=10");
+    await expect(fetchCommentsForProduct("42", 2, 10)).resolves.toEqual({ count: 12, comments: [{ id: "review", images: [] }], page: 2, pageSize: 20 });
+    expect(fetchMock.mock.calls[1][0]).toBe("https://vbt.kamyu.me/api/v2/review?productId=42&sort=new&page=2");
   });
 });
 

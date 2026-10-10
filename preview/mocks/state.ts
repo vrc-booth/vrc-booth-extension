@@ -4,6 +4,7 @@ export type PreviewScenario = "signed-out" | "signed-in" | "account" | "empty";
 export const PREVIEW_EVENT = "boothplus:preview-change";
 export const ACCOUNT_EVENT = "boothplus:preview-account";
 export const MOCK_TOKEN: AuthToken = {
+  sessionId: "synthetic-preview-session",
   accessToken: "synthetic-preview-token-not-a-credential",
   refreshToken: "synthetic-preview-refresh-not-a-credential",
 };
@@ -22,7 +23,6 @@ const makeProfile = (): UserProfile => ({
   username: "미리보기 사용자",
   discord: "demo_user (simulated)",
   adult: false,
-  hideAvatar: false,
   autoCollapse: false,
   admin: false,
   bio: "Synthetic account for local preview only.",
@@ -48,6 +48,7 @@ export const state = {
   profile: makeProfile(),
   comments: makeComments(),
   myComments: [] as CommentItem[],
+  imageUrls: new Map<string, string>(),
 };
 export const notify = () => window.dispatchEvent(new Event(PREVIEW_EVENT));
 export const setSignedIn = (value: boolean) => {
@@ -55,6 +56,8 @@ export const setSignedIn = (value: boolean) => {
   notify();
 };
 export const resetScenario = (scenario: PreviewScenario) => {
+  for (const url of state.imageUrls.values()) URL.revokeObjectURL(url);
+  state.imageUrls.clear();
   state.scenario = scenario;
   state.signedIn = scenario !== "signed-out";
   state.profile = makeProfile();

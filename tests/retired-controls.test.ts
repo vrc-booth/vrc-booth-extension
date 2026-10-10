@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -15,7 +15,9 @@ describe("legacy-compatible review UI", () => {
   it("does not expose the retired voting or avatar endpoints", () => {
     expect(reviewBoard).not.toMatch(/upvoteComment|downvoteComment|voteMutation|handleVote/);
     expect(reviewBoard).not.toMatch(/comment\.(upvotes|downvotes)|reviewBoard\.vote|\/user\/avatar\//);
-    expect(reviewBoard).toContain('aria-hidden="true"');
+    expect(reviewBoard).not.toContain('h-10 w-10');
+    expect(readSource("components/review/types.ts")).not.toContain("hideAvatar");
+    expect(existsSync(fileURLToPath(new URL("../public/no_profile.png", import.meta.url)))).toBe(false);
     expect(reviewBoard).toContain("submitComment");
     expect(reviewBoard).toContain("deleteComment");
     expect(reviewBoard).toContain("handleLogin");
@@ -43,18 +45,10 @@ describe("legacy-compatible review UI", () => {
       .toContain('showErrorToast(i18n.t("messages.contentTooLong", [MAX_COMMENT_LENGTH]));\n      return;');
   });
 
-  it("refreshes aggregate product data after both comment write operations", () => {
-    const submitSuccess = reviewBoard.slice(
-      reviewBoard.indexOf("onSuccess(_, variables)"),
-      reviewBoard.indexOf("onError: (error)"),
-    );
-    const deleteSuccess = reviewBoard.slice(
-      reviewBoard.indexOf("onSuccess(_, targetProductId)"),
-      reviewBoard.indexOf("onError(error)"),
-    );
-    for (const handler of [submitSuccess, deleteSuccess]) {
-      expect(handler).toContain('queryClient.invalidateQueries({ queryKey: ["product"] })');
-    }
+  it("refreshes shared product, public and private review caches after writes", () => {
+    expect(reviewBoard).toContain('queryClient.invalidateQueries({ queryKey: ["product"] })');
+    expect(reviewBoard).toContain('queryClient.invalidateQueries({ queryKey: ["myComments"] })');
+    expect(reviewBoard.match(/await refreshReviewData\(variables.productId\)/g)).toHaveLength(2);
   });
 
   it("offers account settings for the verified forbidden response", () => {

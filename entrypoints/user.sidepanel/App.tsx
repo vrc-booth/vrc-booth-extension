@@ -1,3 +1,4 @@
+import { COMMENTS_PAGE_SIZE } from "@/components/review/constants";
 import { updateUsername } from "@/components/review/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -36,7 +37,7 @@ function App() {
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState<Status>(null);
 
-  const PAGE_SIZE = 5;
+  const PAGE_SIZE = COMMENTS_PAGE_SIZE;
   const commentsQuery = useMyCommentsQuery(page, PAGE_SIZE, {
     enabled: Boolean(profileQuery.data) && page > 0,
     refetchOnWindowFocus: false,

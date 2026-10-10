@@ -1,4 +1,7 @@
 reviewBoard:
+  anonymous: 匿名
+  deactivated: 退会したユーザー
+  blinded: このレビューは非表示です。
   productUnavailable: この商品はまだレビューサービスに登録されていません。
   header: 商品レビュー
   loading: レビューを読み込んでいます…
@@ -50,7 +53,7 @@ purchaseReview:
 userPanel:
   title: ユーザー管理
   description: ユーザー名の変更と、自分のコメントの確認ができます。
-  retiredSettings: 自己紹介、アダルトコンテンツ、アバター表示、説明の展開設定は、サービスに保存されなくなりました。
+  retiredSettings: 自己紹介、アダルトコンテンツ、説明の展開設定は、サービスに保存されなくなりました。
   loading: ユーザー情報を読み込んでいます…
   notLoggedIn: レビュー管理パネルにログインしていません。まずレビュー画面でログインを完了してください。
   checkLogin: ログイン状態を再確認
@@ -72,3 +75,18 @@ userPanel:
     usernameError: ユーザー名の保存に失敗しました。
 aria:
   scorePoint: $1.0 点
+
+reviewImages:
+  label: 添付画像 $1 / $2
+  help: JPEG・PNG・WebPを最大5枚、1枚8MiBまで。静止画のみ、最小64×64px、1辺最大8000px・4000万画素。レビュー保存時にアップロードします。
+  add: 画像を選択
+  remove: 画像 $1 を削除
+  imageAlt: レビュー画像 $1
+  countError: 画像は最大5枚まで添付できます。
+  typeError: JPEG・PNG・WebP画像を選択してください。
+  sizeError: 空でない8MiB以下の画像を選択してください。
+  invalidError: 画像の形式・サイズ・解像度を確認してください。動画画像は非対応です。下書きは保持されます。
+  pendingError: 画像のアップロード上限に達しました。しばらくして再試行してください。下書きは保持されます。
+  moderationError: 添付画像がサービスの画像審査を通過しませんでした。別の画像を選択してください。
+  uploadError: 画像を保存できませんでした。下書きは保持されているので再試行してください。
+  removeError: アップロード済み画像を削除できませんでした。再試行してください。

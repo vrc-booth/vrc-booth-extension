@@ -16,7 +16,7 @@ const mocks = vi.hoisted(() => ({
   submitComment: vi.fn(), deleteComment: vi.fn(), login: vi.fn(), sendMessage: vi.fn(), errorToast: vi.fn(),
   messages: {} as Record<string, unknown>,
 }));
-vi.mock("@/utils/storage", () => ({ authTokenStorage: { watch: () => () => undefined, getValue: async () => null } }));
+vi.mock("@/utils/storage", () => ({ authTokenStorage: { watch: () => () => undefined, getValue: async () => ({ accessToken: "test", refreshToken: "refresh", sessionId: "A" }) } }));
 vi.mock("#i18n", () => ({ i18n: { t: (key: string, substitutions: Array<string | number> = []) => {
   const value = key.split(".").reduce<unknown>((entry, part) =>
     entry && typeof entry === "object" ? (entry as Record<string, unknown>)[part] : undefined, mocks.messages);
@@ -27,6 +27,8 @@ vi.mock("@/components/review/api", () => ({
   findProductForCurrentPage: mocks.findProduct, fetchUserProfile: mocks.fetchProfile,
   fetchCommentsForProduct: mocks.fetchComments, fetchUserComment: mocks.fetchMyComment,
   submitComment: mocks.submitComment, deleteComment: mocks.deleteComment,
+  captureReviewSession: async (signal?: AbortSignal) => ({ sessionId: "A", signal }),
+  uploadReviewImage: vi.fn(), deleteReviewImage: vi.fn(),
 }));
 vi.mock("@/components/review/auth", () => ({ loginWithDiscord: mocks.login }));
 vi.mock("@/components/review/messaging", () => ({ sendMessage: mocks.sendMessage }));
@@ -50,7 +52,7 @@ const product: ReviewProduct = {
 };
 const profile: UserProfile = {
   id: "me", username: "Synthetic reviewer", discord: "test", adult: false,
-  hideAvatar: false, autoCollapse: false, admin: false, bio: "",
+  autoCollapse: false, admin: false, bio: "",
 };
 const comment = (id: string): CommentItem => ({
   id, content: `Synthetic review ${id}`, score: 8, updatedAt: "2026-01-01T12:00:00Z",
