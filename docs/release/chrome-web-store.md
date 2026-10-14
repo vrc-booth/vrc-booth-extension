@@ -21,6 +21,8 @@ main push나 PR 병합만으로 Chrome 게시가 실행되는 경로는 없다. 
 - 같은 버전 재실행은 같은 커밋·ZIP digest·준비 artifact/run이 영속 이력으로 증명되고 상태가 허용할 때만 가능하다. 다른 바이트/커밋/artifact로 같은 버전을 재사용하지 않는다.
 - 이미 바인딩하거나 제출한 후보를 수정해야 하면 새 PATCH를 만든다. 복구도 과거 코드를 더 높은 PATCH로 재패키징한다. 버전 다운그레이드·태그 덮어쓰기·동일 버전 ZIP 교체는 하지 않는다.
 
+기존 [`latest` 릴리스](https://github.com/vrc-booth/vrc-booth-extension/releases/tag/latest)는 `vrc-booth/vrc-booth-extension`의 릴리스 ID `105354274`와 태그가 일치하고, GitHub에서 매번 조회한 lightweight 태그가 커밋 `f8df81c35160f6720ec38b2e467f19f481e51ff3`을 가리킬 때만 `1.1.1`로 해석한다. 버전의 근거는 [해당 커밋의 manifest.json](https://github.com/vrc-booth/vrc-booth-extension/blob/f8df81c35160f6720ec38b2e467f19f481e51ff3/manifest.json)이며, 변경 가능한 릴리스 이름이나 `target_commitish`는 사용하지 않는다. 이 버전도 후보의 버전 비교에 포함한다. 태그 이동·삭제·조회 실패나 다른 비숫자 태그는 자동 진행하지 않으며, 검증된 이력을 바탕으로 별도 호환 처리가 필요하다.
+
 ## 활성화 전에 따로 승인할 설정
 
 현재 아래 값은 코드에서 참조할 뿐 설정하지 않았다.

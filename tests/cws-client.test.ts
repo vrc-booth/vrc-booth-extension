@@ -310,6 +310,16 @@ describe("durable GitHub deployment journal", () => {
 });
 
 describe("pre-automation GitHub release version floor", () => {
+  const legacyRepository = "vrc-booth/vrc-booth-extension";
+  const legacyBase = `https://api.github.com/repos/${legacyRepository}`;
+  const legacyRelease = { id: 105354274, tag_name: "latest", name: "1.1.1", prerelease: true };
+  const legacyRef = {
+    ref: "refs/tags/latest",
+    object: { type: "commit", sha: "f8df81c35160f6720ec38b2e467f19f481e51ff3" },
+  };
+  const legacyJournal = (fetchImpl: typeof fetch, repo = legacyRepository) =>
+    new GithubJournal({ repository: repo, itemId, token: githubToken, fetchImpl });
+
   it("includes every page, including drafts and prereleases, without inventing hashes", async () => {
     const base = `https://api.github.com/repos/${repository}/releases`;
     const fetchImpl = queuedFetch(
@@ -320,7 +330,56 @@ describe("pre-automation GitHub release version floor", () => {
     expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([1, 2, 3].map((page) => `${base}?per_page=100&page=${page}`));
   });
 
-  it.each(["v3.3.0-beta.1", "release-3.3.0", "vv3.3.0", "3.3.0.0.1", "v3.3.0\n", ""])("fails closed on unsupported release tag %s", async (tag_name) => {
+  it.each([105354274, "105354274"])("reconciles the verified legacy release %s while retaining every page", async (id) => {
+    const fetchImpl = queuedFetch(
+      response([{ id: 133186274, tag_name: "2.1.0" }]),
+      response([{ ...legacyRelease, id, name: "9.9.9", target_commitish: "main" }, { id: 3, tag_name: "v3.4.0", draft: true }]),
+      response(legacyRef), response([]),
+    );
+    expect(await legacyJournal(fetchImpl).listReleaseVersions()).toEqual(["2.1.0", "1.1.1", "3.4.0"]);
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+      `${legacyBase}/releases?per_page=100&page=1`, `${legacyBase}/releases?per_page=100&page=2`,
+      `${legacyBase}/git/ref/tags/latest`, `${legacyBase}/releases?per_page=100&page=3`,
+    ]);
+    for (const [, init] of fetchImpl.mock.calls) expect(init).toMatchObject({ method: "GET", redirect: "error" });
+  });
+
+  it.each([
+    { repo: repository, release: legacyRelease },
+    { repo: legacyRepository, release: { ...legacyRelease, id: 105354275 } },
+    { repo: legacyRepository, release: { ...legacyRelease, tag_name: "nightly" } },
+  ])("does not trust a legacy alias with a different repository, release ID or tag: %j", async ({ repo, release }) => {
+    const fetchImpl = queuedFetch(response([release]));
+    await expect(legacyJournal(fetchImpl, repo).listReleaseVersions()).rejects.toMatchObject({ code: "JOURNAL_UNSUPPORTED_RELEASE_TAG" });
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    null,
+    { ...legacyRef, ref: "refs/heads/latest" },
+    { ...legacyRef, object: null },
+    { ...legacyRef, object: { type: "commit", sha: "a".repeat(40) } },
+    { ...legacyRef, object: { ...legacyRef.object, type: "tag" } },
+    { ...legacyRef, object: { ...legacyRef.object, sha: `${legacyRef.object.sha}\n` } },
+  ])("rejects a moved or unproven legacy tag: %j", async (ref) => {
+    const fetchImpl = queuedFetch(response([legacyRelease]), response(ref));
+    await expect(legacyJournal(fetchImpl).listReleaseVersions()).rejects.toMatchObject({ code: "JOURNAL_LEGACY_RELEASE_MISMATCH" });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([404, 503])("stops without retrying when the legacy tag lookup returns HTTP %s", async (status) => {
+    const fetchImpl = queuedFetch(response([legacyRelease]), response({ message: "unavailable" }, status));
+    await expect(legacyJournal(fetchImpl).listReleaseVersions()).rejects.toMatchObject({ code: "JOURNAL_HTTP_ERROR", status, uncertain: false });
+    expect(fetchImpl).toHaveBeenCalledTimes(2);
+  });
+
+  it("detects repeated legacy releases without skipping them", async () => {
+    const fetchImpl = queuedFetch(response([legacyRelease]), response(legacyRef), response([legacyRelease]));
+    await expect(legacyJournal(fetchImpl).listReleaseVersions()).rejects.toMatchObject({ code: "JOURNAL_TRUNCATED_HISTORY" });
+    expect(fetchImpl).toHaveBeenCalledTimes(3);
+  });
+
+  it.each(["latest", "v3.3.0-beta.1", "release-3.3.0", "vv3.3.0", "3.3.0.0.1", "v3.3.0\n", ""])("fails closed on unsupported release tag %s", async (tag_name) => {
     await expect(journal(queuedFetch(response([{ id: 1, tag_name }]))).listReleaseVersions()).rejects.toMatchObject({ code: "JOURNAL_UNSUPPORTED_RELEASE_TAG" });
   });
 

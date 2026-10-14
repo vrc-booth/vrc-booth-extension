@@ -60,7 +60,7 @@ class ChromeOnlyPackagingTests(unittest.TestCase):
         key = re.search(r'undefined : "([A-Za-z0-9+/=]+)"', (actual_root / "wxt.config.ts").read_text()).group(1)
         self.manifest = {
             "name": "boothplus", "version": self.version, "manifest_version": 3,
-            "default_locale": "ko", "permissions": ["identity", "tabs", "storage", "sidePanel"],
+            "default_locale": "ko", "permissions": ["identity", "storage", "sidePanel"],
             "host_permissions": list(release.HOSTS), "content_scripts": [{"matches": list(release.MATCHES)}],
             "background": {"service_worker": "background.js"}, "key": key,
             "side_panel": {"default_path": "account.html"},

@@ -8,6 +8,16 @@ const CWS_ORIGIN = "https://chromewebstore.googleapis.com";
 const GITHUB_ORIGIN = "https://api.github.com";
 const LEDGER_ENVIRONMENT = "chrome-web-store-ledger";
 const MAX_JOURNAL_PAGES = 1000;
+// This historical release's pinned manifest.json records version 1.1.1.
+// Revalidate the lightweight tag on every read; mutable release names and
+// target_commitish values are not evidence of a released version.
+const LEGACY_RELEASE = {
+  repository: "vrc-booth/vrc-booth-extension",
+  id: "105354274",
+  tag: "latest",
+  commit: "f8df81c35160f6720ec38b2e467f19f481e51ff3",
+  version: "1.1.1",
+};
 const ITEM_ID = /^[a-p]{32}$/;
 const PHASES = new Set([
   "prepared", "upload_started", "upload_succeeded", "upload_uncertain",
@@ -307,6 +317,20 @@ export class GithubJournal {
     fail("JOURNAL_TRUNCATED_HISTORY");
   }
 
+  async #releaseVersion(id, tag) {
+    if (/^v?[0-9]+(?:\.[0-9]+){0,3}$/.test(tag)) return tag.replace(/^v/, "");
+    const legacy = LEGACY_RELEASE;
+    if (this.#path !== `/repos/${legacy.repository}/deployments` || id !== legacy.id || tag !== legacy.tag) {
+      fail("JOURNAL_UNSUPPORTED_RELEASE_TAG");
+    }
+    const { data: ref } = await this.#request(`/repos/${legacy.repository}/git/ref/tags/${legacy.tag}`);
+    if (!object(ref) || ref.ref !== `refs/tags/${legacy.tag}` || !object(ref.object) ||
+        ref.object.type !== "commit" || ref.object.sha !== legacy.commit) {
+      fail("JOURNAL_LEGACY_RELEASE_MISMATCH");
+    }
+    return legacy.version;
+  }
+
   async listReleaseVersions() {
     const path = this.#path.replace(/\/deployments$/, "/releases");
     const versions = [];
@@ -317,14 +341,13 @@ export class GithubJournal {
       this.#checkPagination(headers, page, data.length, path, false);
       if (data.length === 0) return versions;
       for (const release of data) {
-        if (!object(release) || !positiveId(release.id) || !cleanString(release.tag_name) ||
-            !/^v?[0-9]+(?:\.[0-9]+){0,3}$/.test(release.tag_name)) fail("JOURNAL_UNSUPPORTED_RELEASE_TAG");
+        if (!object(release) || !positiveId(release.id) || !cleanString(release.tag_name)) fail("JOURNAL_UNSUPPORTED_RELEASE_TAG");
         const id = positiveId(release.id);
         if (seen.has(id)) fail("JOURNAL_TRUNCATED_HISTORY");
         seen.add(id);
         // Drafts and prereleases also consume versions. Bounds/canonicalization
-        // are checked by policy, and unsupported tags require reconciliation.
-        versions.push(release.tag_name.replace(/^v/, ""));
+        // are checked by policy; unknown aliases still require reconciliation.
+        versions.push(await this.#releaseVersion(id, release.tag_name));
       }
     }
     fail("JOURNAL_TRUNCATED_HISTORY");

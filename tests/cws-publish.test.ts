@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 import { executeRelease, assertActivation, assertEnvironmentApproval, assertTagHistory, ITEM_ID, REPOSITORY } from "../scripts/cws-publish.mjs";
-import { TransportError } from "../scripts/cws-client.mjs";
+import { GithubJournal, TransportError } from "../scripts/cws-client.mjs";
 
 const bytes = Buffer.from("synthetic verified ZIP bytes");
 const candidate = { version: "3.3.0", commit: "1".repeat(40), sha256: createHash("sha256").update(bytes).digest("hex"), itemId: ITEM_ID, artifactId: "20", runId: "30" };
@@ -28,6 +28,17 @@ function fixture(stage = "submit", initial: any[] = [], status: any = prior) {
   return { client, journal, calls, records, options: { enabled: true, stage, candidate, identity, zipBytes: bytes, client, journal } };
 }
 
+function legacyReleaseHistory() {
+  const fetchImpl = vi.fn<typeof fetch>();
+  for (const data of [
+    [{ id: 105354274, tag_name: "latest", name: "1.1.1", prerelease: true }],
+    { ref: "refs/tags/latest", object: { type: "commit", sha: "f8df81c35160f6720ec38b2e467f19f481e51ff3" } },
+    [],
+  ]) fetchImpl.mockResolvedValueOnce(new Response(JSON.stringify(data), { status: 200 }));
+  const journal = new GithubJournal({ repository: REPOSITORY, itemId: ITEM_ID, token: "fixture-token", fetchImpl });
+  return () => journal.listReleaseVersions();
+}
+
 describe("guarded CWS orchestration with no live requests", () => {
   it("is disabled before any status, history or store call", async () => {
     const f = fixture();
@@ -51,6 +62,25 @@ describe("guarded CWS orchestration with no live requests", () => {
     await expect(executeRelease(f.options)).resolves.toMatchObject({ action: "published" });
     expect(f.client.upload).not.toHaveBeenCalled(); expect(f.journal.reserve).not.toHaveBeenCalled();
     expect(f.client.publish).toHaveBeenCalledWith("DEFAULT_PUBLISH");
+  });
+  it.each(["submit", "promote"])("allows %s after verifying the repository's legacy release", async (stage) => {
+    const f = stage === "submit" ? fixture() : fixture(stage, [{ ...candidate, id: "10", phase: "staged" }], current("STAGED"));
+    f.journal.listReleaseVersions.mockImplementation(legacyReleaseHistory());
+    await expect(executeRelease(f.options)).resolves.toMatchObject({ action: stage === "submit" ? "submitted" : "published" });
+    expect(f.client.publish).toHaveBeenCalledExactlyOnceWith(stage === "submit" ? "STAGED_PUBLISH" : "DEFAULT_PUBLISH");
+    expect(f.client.upload).toHaveBeenCalledTimes(stage === "submit" ? 1 : 0);
+  });
+  it.each([
+    ["1.1.0", "NON_MONOTONIC"], ["1.1.1", "UNTRUSTED_RESUME"],
+  ])("retains the legacy version floor for candidate %s before any write", async (version, code) => {
+    const f = fixture("submit", [], { name, itemId: ITEM_ID });
+    f.journal.listReleaseVersions.mockImplementation(legacyReleaseHistory());
+    await expect(executeRelease({ ...f.options, candidate: { ...candidate, version }, identity: {
+      ...identity, packageVersion: version, manifestVersion: version, tag: `v${version}`,
+    } })).rejects.toMatchObject({ code });
+    expect(f.client.upload).not.toHaveBeenCalled();
+    expect(f.client.publish).not.toHaveBeenCalled();
+    expect(f.journal.reserve).not.toHaveBeenCalled();
   });
   it("waits for the same exact pending review without writing", async () => {
     const f = fixture("submit", [{ ...candidate, id: "10", phase: "submitted" }], current("PENDING_REVIEW"));

@@ -62,7 +62,7 @@ def validate_extension(contents, manifest, version, browser):
     permissions = set(manifest.get("permissions", []))
     check(set(manifest.get("host_permissions", [])) == (HOSTS if browser == "chrome" else set()),
           f"{browser}: host_permissions changed; review scope before packaging")
-    expected = {"identity", "tabs", "storage"} | ({"sidePanel"} if browser == "chrome" else HOSTS)
+    expected = {"identity", "storage"} | ({"sidePanel"} if browser == "chrome" else HOSTS)
     check(permissions == expected, f"{browser}: permission scope changed: {sorted(permissions)}")
     scripts = manifest.get("content_scripts", [])
     check(len(scripts) == 1 and set(scripts[0].get("matches", [])) == MATCHES,
