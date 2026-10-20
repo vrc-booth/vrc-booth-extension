@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "version": "3.3.0",
+  "source_commit": null,
+  "integration_issue": "https://github.com/vrc-booth/vrc-booth-extension/issues/30",
+  "qa_issue": "https://github.com/vrc-booth/vrc-booth-extension/issues/31",
+  "tester": "",
+  "tested_at": null,
+  "blockers": [
+    "Installed extension QA is not complete",
+    "Firefox stable identity, OAuth registration, disclosure, and signing need publisher review"
+  ],
+  "browsers": {
+    "chrome": {
+      "browser_version": "",
+      "extension_id": "",
+      "oauth_redirect": "",
+      "evidence_url": "",
+      "scenarios": {
+        "booth_main_and_shop": "not_run",
+        "late_anchor_and_navigation": "not_run",
+        "oauth_login_cancel_retry": "not_run",
+        "session_refresh_and_logout": "not_run",
+        "account_settings": "not_run",
+        "review_crud_test_account": "not_run",
+        "new_install": "not_run",
+        "upgrade_from_previous": "not_run",
+        "rollback_plan": "not_run",
+        "permissions_and_identity": "not_run"
+      }
+    },
+    "firefox": {
+      "browser_version": "",
+      "extension_id": "",
+      "oauth_redirect": "",
+      "evidence_url": "",
+      "scenarios": {
+        "booth_main_and_shop": "not_run",
+        "late_anchor_and_navigation": "not_run",
+        "oauth_login_cancel_retry": "not_run",
+        "session_refresh_and_logout": "not_run",
+        "account_settings": "not_run",
+        "review_crud_test_account": "not_run",
+        "new_install": "not_run",
+        "upgrade_from_previous": "not_run",
+        "rollback_plan": "not_run",
+        "permissions_and_identity": "not_run"
+      }
+    }
+  }
+}
