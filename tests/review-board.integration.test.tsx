@@ -168,6 +168,33 @@ async function ready() {
 }
 
 describe("ReviewBoard React DOM integration", () => {
+  it("shows session checking instead of a Discord login prompt and restores the form automatically", async () => {
+    mocks.fetchProfile.mockRejectedValueOnce(new ApiError("temporary refresh failure", 503)).mockResolvedValue(profile);
+    await renderBoard();
+    await eventually(() => expect(container.textContent).toContain("reviewBoard.sessionChecking"));
+    expect(container.querySelector("#review-login-button")).toBeNull();
+    expect(container.querySelector("form")?.hidden).toBe(true);
+    await eventually(() => expect(textarea().disabled).toBe(false));
+    expect(container.querySelector("form")?.hidden).toBe(false);
+    expect(mocks.login).not.toHaveBeenCalled();
+    expect(mocks.fetchProfile).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps the draft and signed-in form during profile recovery", async () => {
+    await ready();
+    await typeReview("Keep this unsaved review");
+    const recovering = deferred<UserProfile>();
+    mocks.fetchProfile.mockRejectedValueOnce(new ApiError("temporary refresh failure", 503))
+      .mockReturnValueOnce(recovering.promise);
+    await act(async () => { void queryClient.invalidateQueries({ queryKey: ["userProfile"] }); });
+    await eventually(() => expect(mocks.fetchProfile).toHaveBeenCalledTimes(3));
+    expect(textarea().value).toBe("Keep this unsaved review");
+    expect(container.querySelector("form")?.hidden).toBe(false);
+    expect(container.querySelector("#review-login-button")).toBeNull();
+    await act(async () => recovering.resolve(profile));
+    expect(textarea().value).toBe("Keep this unsaved review");
+    expect(mocks.login).not.toHaveBeenCalled();
+  });
   it("shows loading until the product resolves, then shows the empty state and editable form", async () => {
     const pendingProduct = deferred<ReviewProduct>();
     mocks.findProduct.mockReturnValue(pendingProduct.promise);

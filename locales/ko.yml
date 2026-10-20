@@ -1,4 +1,6 @@
 reviewBoard:
+  sessionChecking: 로그인 상태를 확인하고 있어요…
+  sessionUnavailable: 로그인 상태를 확인하지 못했어요. 연결이 복구되면 다시 확인합니다.
   anonymous: 익명
   deactivated: 탈퇴한 사용자
   blinded: 숨김 처리된 리뷰입니다.

@@ -88,6 +88,12 @@ export const fetchUserProfile = async (): Promise<UserProfile | null> => {
     return response ?? null;
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
+      // A failed refresh can be a timeout/5xx, not a rejected login. The
+      // background owner clears credentials only on a definitive rejection.
+      // Do not cache "signed out" while it still holds a recoverable session.
+      if ((await authTokenStorage.getValue())?.accessToken) {
+        throw new ApiError("Session verification is temporarily unavailable", 503);
+      }
       return null;
     }
     throw error;

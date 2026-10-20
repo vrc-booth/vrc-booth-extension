@@ -21,6 +21,50 @@ beforeEach(() => {
 });
 
 describe("API requests and background session owner together (network and runtime simulated)", () => {
+  it.each(["offline", "timeout", "malformed", 429, 500, 503])("preserves login after refresh %s and recovers without Discord", async failure => {
+    let recovered = false;
+    network.mockImplementation(async (url: string, init: RequestInit) => {
+      if (url.endsWith("/auth/token")) {
+        if (recovered) return Response.json({ accessToken: "current", refreshToken: "rotated" });
+        if (failure === "offline") throw new TypeError("Failed to fetch");
+        if (failure === "timeout") throw new DOMException("Timed out", "TimeoutError");
+        if (failure === "malformed") return Response.json({ message: "unexpected" });
+        return new Response("unavailable", { status: failure as number });
+      }
+      if (new Headers(init.headers).get("Authorization") === "Bearer current") return Response.json({ id: "same-user" });
+      return new Response("expired", { status: 401 });
+    });
+    await expect(fetchUserProfile()).rejects.toMatchObject({ status: 503 });
+    expect(tokens?.refreshToken).toBe("old-refresh");
+    expect(bridge.setValue).not.toHaveBeenCalled();
+    recovered = true;
+    await expect(fetchUserProfile()).resolves.toEqual({ id: "same-user" });
+    expect(tokens?.sessionId).toBe("fixture-login");
+    expect(bridge.sendMessage.mock.calls.every(([name]) => name === "refreshAccessToken")).toBe(true);
+  });
+
+  it.each([401, 403])("requires login only after refresh credentials are rejected with %s", async status => {
+    network.mockImplementation(async (url: string) =>
+      new Response("rejected", { status: url.endsWith("/auth/token") ? status : 401 }));
+    await expect(fetchUserProfile()).resolves.toBeNull();
+    expect(tokens).toBeNull();
+    expect(network).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not cache an old request as signed out after a new login", async () => {
+    let finishRefresh!: (value: Response) => void;
+    network.mockImplementation(async (url: string) => {
+      if (url.endsWith("/auth/token")) return new Promise<Response>(resolve => { finishRefresh = resolve; });
+      return new Response("expired", { status: 401 });
+    });
+    const request = fetchUserProfile();
+    const assertion = expect(request).rejects.toMatchObject({ status: 503 });
+    await vi.waitFor(() => expect(network).toHaveBeenCalledTimes(2));
+    await setAuthTokens({ accessToken: "other-user", refreshToken: "other-refresh" });
+    finishRefresh(new Response("revoked", { status: 401 }));
+    await assertion;
+    expect(tokens?.accessToken).toBe("other-user");
+  });
   it("refreshes one rotated token for simultaneous profile/comment/delete requests and retries each once", async () => {
     let finishRefresh!: (value: Response) => void;
     const refreshResponse = new Promise<Response>(resolve => { finishRefresh = resolve; });

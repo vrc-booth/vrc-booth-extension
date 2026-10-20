@@ -1,4 +1,6 @@
 reviewBoard:
+  sessionChecking: Checking your sign-in status…
+  sessionUnavailable: Could not verify your sign-in status. We will check again when the connection returns.
   loginTitle: Have you tried this item?
   loginDescription: Sign in to share your experience with a rating and photos.
   loginAction: Sign in with Discord to write a review

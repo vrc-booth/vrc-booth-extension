@@ -477,14 +477,14 @@ export function ReviewBoard() {
                 {i18n.t("reviewBoard.button.accountSettings")}
               </button>
             )}
-              <button
+              {(isAuthenticated || userQuery.isSuccess) && <button
                 type="button"
                 className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
                 onClick={isAuthenticated ? handleLogout : handleLogin}
                 disabled={isBusy}
               >
                 {isAuthenticated ? i18n.t("reviewBoard.button.logout") : i18n.t("reviewBoard.button.login")}
-              </button>
+              </button>}
           </div>
         </div>
 
@@ -560,7 +560,16 @@ export function ReviewBoard() {
           <div ref={loadMoreTriggerRef} className="h-px" />
         </div>
 
-        {!isAuthenticated && (
+        {(userQuery.isPending || userQuery.isError) && (
+          <section role="status" className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center">
+            <p className="text-sm text-slate-600">{i18n.t(userQuery.isFetching || userQuery.isPending ? "reviewBoard.sessionChecking" : "reviewBoard.sessionUnavailable")}</p>
+            {userQuery.isError && <button type="button" onClick={() => void userQuery.refetch()} disabled={userQuery.isFetching}
+              className="mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60">
+              {i18n.t("userPanel.checkLogin")}
+            </button>}
+          </section>
+        )}
+        {!isAuthenticated && userQuery.isSuccess && (
           <section className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center" aria-labelledby="review-login-title">
             <h3 id="review-login-title" className="text-sm font-semibold text-slate-800">{i18n.t("reviewBoard.loginTitle")}</h3>
             <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{i18n.t("reviewBoard.loginDescription")}</p>

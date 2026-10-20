@@ -1,4 +1,6 @@
 reviewBoard:
+  sessionChecking: ログイン状態を確認しています…
+  sessionUnavailable: ログイン状態を確認できませんでした。接続が回復したら再確認します。
   loginTitle: この商品を使ってみましたか？
   loginDescription: ログインして、評価や写真と一緒に使用感を共有しましょう。
   loginAction: Discordでログインしてレビューを書く

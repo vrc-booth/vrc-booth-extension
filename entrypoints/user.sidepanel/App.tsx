@@ -67,7 +67,7 @@ function App() {
     usernameMutation.mutate(username.trim());
   };
 
-  if (profileQuery.isLoading) {
+  if (profileQuery.isPending) {
     return (
       <div className="p-6 text-sm text-slate-500">
         {i18n.t("userPanel.loading")}
@@ -78,7 +78,7 @@ function App() {
   if (!profileQuery.data) {
     return (
       <div className="p-6 text-sm text-slate-500">
-        {i18n.t("userPanel.notLoggedIn")}
+        {i18n.t(profileQuery.isError ? "reviewBoard.sessionUnavailable" : "userPanel.notLoggedIn")}
         <div className="mt-3">
           <button
             type="button"
