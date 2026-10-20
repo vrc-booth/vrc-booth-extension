@@ -1,4 +1,8 @@
 reviewBoard:
+  loginTitle: この商品を使ってみましたか？
+  loginDescription: ログインして、評価や写真と一緒に使用感を共有しましょう。
+  loginAction: Discordでログインしてレビューを書く
+  loginPending: ログイン中…
   anonymous: 匿名
   deactivated: 退会したユーザー
   blinded: このレビューは非表示です。
@@ -79,7 +83,10 @@ aria:
 reviewImages:
   label: 添付画像 $1 / $2
   help: JPEG・PNG・WebPを最大5枚、1枚8MiBまで。静止画のみ、最小64×64px、1辺最大8000px・4000万画素。レビュー保存時にアップロードします。
-  add: 画像を選択
+  add: 画像を追加
+  empty: ボタンを押して添付する画像を選んでください。
+  selected: 画像を$1枚選択済み
+  full: 最大5枚を選択しました。変更するには画像を削除してください。
   remove: 画像 $1 を削除
   imageAlt: レビュー画像 $1
   countError: 画像は最大5枚まで添付できます。

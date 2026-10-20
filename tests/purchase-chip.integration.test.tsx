@@ -247,14 +247,20 @@ describe("purchase chip and review board in distinct real application roots", ()
     await mountBoth();
     await eventually(() => expect(chip()).not.toBeNull());
     expect(field().disabled).toBe(true);
+    expect(field().closest("form")?.hidden).toBe(true);
+    const loginAction = board.shadow.querySelector<HTMLButtonElement>("#review-login-button")!;
+    expect(loginAction.textContent).toBe("Sign in with Discord to write a review");
     await click(chipButton());
     expect(board.host.scrollIntoView).toHaveBeenCalledOnce();
+    expect(board.shadow.activeElement).toBe(loginAction);
     expect(field().disabled).toBe(true);
     expect(mocks.login).not.toHaveBeenCalled();
     expect(mocks.sendMessage).not.toHaveBeenCalled();
     registerReviewBoard(null);
     await click(chipButton());
     expect(board.host.scrollIntoView).toHaveBeenCalledOnce();
+    await click(loginAction);
+    expect(mocks.login).toHaveBeenCalledOnce();
   });
 
   it("persists dismissal across purchase-root remounts without scrolling or starting login", async () => {

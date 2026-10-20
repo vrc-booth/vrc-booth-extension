@@ -29,7 +29,10 @@ export const focusReviewForm = (): boolean => {
   registeredRefs.host.scrollIntoView({ behavior: "smooth", block: "center" });
 
   const field = registeredRefs.root.querySelector<HTMLTextAreaElement>(`#${REVIEW_FORM_FIELD_ID}`);
-  field?.focus({ preventScroll: true });
+  const target = field?.closest("[hidden]")
+    ? registeredRefs.root.querySelector<HTMLButtonElement>("#review-login-button")
+    : field;
+  target?.focus({ preventScroll: true });
 
   return true;
 };

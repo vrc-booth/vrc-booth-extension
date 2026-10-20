@@ -560,7 +560,22 @@ export function ReviewBoard() {
           <div ref={loadMoreTriggerRef} className="h-px" />
         </div>
 
-        <form className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
+        {!isAuthenticated && (
+          <section className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center" aria-labelledby="review-login-title">
+            <h3 id="review-login-title" className="text-sm font-semibold text-slate-800">{i18n.t("reviewBoard.loginTitle")}</h3>
+            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{i18n.t("reviewBoard.loginDescription")}</p>
+            <button
+              id="review-login-button"
+              type="button"
+              disabled={isAuthPending || userQuery.isPending}
+              onClick={handleLogin}
+              className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#fc4d50] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e94145] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fc4d50] disabled:cursor-wait disabled:opacity-60"
+            >
+              {i18n.t(isAuthPending ? "reviewBoard.loginPending" : "reviewBoard.loginAction")}
+            </button>
+          </section>
+        )}
+        <form hidden={!isAuthenticated} className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
           {showUsernameHint && (
             <div role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
               <p>{i18n.t("messages.usernameSetupHint")}</p>

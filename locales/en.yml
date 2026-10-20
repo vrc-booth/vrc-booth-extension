@@ -1,4 +1,8 @@
 reviewBoard:
+  loginTitle: Have you tried this item?
+  loginDescription: Sign in to share your experience with a rating and photos.
+  loginAction: Sign in with Discord to write a review
+  loginPending: Signing in…
   anonymous: Anonymous
   deactivated: Deleted user
   blinded: This review is hidden.
@@ -79,7 +83,10 @@ aria:
 reviewImages:
   label: Attached images $1 / $2
   help: Up to 5 JPEG, PNG or WebP images, 8 MiB each. Still images only; at least 64×64 px, up to 8000 px per side and 40 megapixels. Uploaded when you save the review.
-  add: Choose images
+  add: Add images
+  empty: Click the button to choose images.
+  selected: $1 images selected
+  full: All 5 slots are filled. Remove an image to choose another.
   remove: Remove image $1
   imageAlt: Review image $1
   countError: You can attach up to 5 images.
