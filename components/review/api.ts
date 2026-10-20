@@ -180,7 +180,15 @@ export const fetchUserComment = async (productId: string, context?: ReviewReques
     // The owner can edit a blinded review. Do not strip its draft images here.
     return payload?.review ? { ...payload.review, images: normalizeReviewImages(payload.review.images) } : null;
   } catch (error) {
-    if (error instanceof ApiError && (error.status === 401 || error.status === 404)) return null;
+    if (error instanceof ApiError && error.status === 401) {
+      // A recoverable session must not turn an unread review into a new-review
+      // form. Keep the query in error until authentication can be verified.
+      if ((await authTokenStorage.getValue())?.accessToken) {
+        throw new ApiError("Session verification is temporarily unavailable", 503);
+      }
+      return null;
+    }
+    if (error instanceof ApiError && error.status === 404) return null;
     throw error;
   }
 };

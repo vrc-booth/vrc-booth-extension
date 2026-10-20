@@ -12,7 +12,17 @@ export const useUserProfileQuery = (options?: UserProfileQueryOptions) => {
   useEffect(() => watchAuthSessionCache(client), [client]);
   return useQuery<UserProfile | null>({
     queryKey: ["userProfile"],
-    queryFn: fetchUserProfile,
+    queryFn: async () => {
+      const profile = await fetchUserProfile();
+      if (profile) {
+        // A cached profile can keep the review query enabled throughout an auth
+        // outage. Recovery does not toggle enabled, so retry failed reads here.
+        void client.invalidateQueries({
+          predicate: (query) => query.queryKey[0] === "myComment" && query.state.status === "error",
+        }).catch(() => undefined);
+      }
+      return profile;
+    },
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     retry: (failureCount, error) =>
