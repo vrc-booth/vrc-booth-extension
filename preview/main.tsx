@@ -6,6 +6,9 @@ import { createRoot } from "react-dom/client";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ReviewBoard } from "@/components/ReviewBoard";
+import { CommentCountButton } from "@/components/review/CommentCountButton";
+import { IconHeart } from "@tabler/icons-react";
+import { registerReviewBoard } from "@/components/review/reviewBoardFocus";
 import AccountPanel from "@/entrypoints/user.sidepanel/App";
 import { REVIEW_TOAST_CONTAINER_ID } from "@/utils/toast";
 import { ACCOUNT_EVENT, PREVIEW_EVENT, resetScenario, state, type PreviewScenario } from "./mocks/state";
@@ -81,7 +84,17 @@ function Preview() {
           <div className="preview-surface-label"><span>{accountVisible ? "실제 사이드 패널 · Account settings" : "실제 콘텐츠 화면 · Review board"}</span><span>{signedIn ? "● Simulated signed in" : "○ Signed out"}</span></div>
           <QueryClientProvider client={queryClient}>
             <div key={`${revision}-${accountVisible}`} className={accountVisible ? "preview-account" : "preview-board"}>
-              {accountVisible ? <AccountPanel /> : <ReviewBoard />}
+              {accountVisible ? <AccountPanel /> : <>
+                <div className="mb-6 flex items-center gap-2" aria-label="하트 옆 댓글 수 미리보기">
+                  <div className="inline-flex h-12 items-center gap-1 rounded-lg border-2 border-[#d4d9e1] bg-white px-3 text-sm text-[#8190a5]" aria-label="하트 버튼 모양 예시">
+                    <IconHeart size={24} stroke={1.5} />
+                  </div>
+                  <CommentCountButton />
+                </div>
+                <div ref={(host) => registerReviewBoard(host ? { host, root: host } : null)}>
+                  <ReviewBoard />
+                </div>
+              </>}
             </div>
             <ToastContainer containerId={REVIEW_TOAST_CONTAINER_ID} position="bottom-right" />
           </QueryClientProvider>

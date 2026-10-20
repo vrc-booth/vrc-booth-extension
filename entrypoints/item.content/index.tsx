@@ -4,6 +4,8 @@ import ReactDOM from "react-dom/client";
 import "~/assets/tailwind.css";
 import App from "./App.tsx";
 import PurchaseApp from "./PurchaseApp.tsx";
+import CommentCountApp from "./CommentCountApp.tsx";
+import { resolveCommentCountAnchor } from "./commentCountAnchor";
 import { createProductUiLifecycle } from "./lifecycle";
 import { resolvePurchaseAnchor } from "./purchaseAnchor";
 
@@ -25,6 +27,22 @@ export default defineContentScript({
 
     try {
       await Promise.all([
+        createShadowRootUi(ctx, {
+          name: "booth-comment-count",
+          position: "inline",
+          anchor: resolveCommentCountAnchor,
+          append: "after",
+          onMount: (container, _shadow, shadowHost) => {
+            shadowHost.style.display = "inline-flex";
+            shadowHost.style.marginLeft = "8px";
+            shadowHost.style.alignSelf = "center";
+            shadowHost.style.flexShrink = "0";
+            const root = ReactDOM.createRoot(container);
+            root.render(<CommentCountApp />);
+            return { root };
+          },
+          onRemove: (elements) => elements?.root.unmount(),
+        }).then((ui) => lifecycle.add(ui, resolveCommentCountAnchor, "after")),
         createShadowRootUi(ctx, {
           name: "booth-review",
           position: "inline",

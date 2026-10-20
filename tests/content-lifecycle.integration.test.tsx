@@ -39,6 +39,9 @@ vi.mock("../entrypoints/item.content/PurchaseApp.tsx", () => ({ default: functio
   return createElement(QueryClientProvider, { client: queryClient }, createElement(ProductFixture, { purchase: true }));
 } }));
 vi.mock("~/assets/tailwind.css", () => ({}));
+vi.mock("../entrypoints/item.content/CommentCountApp.tsx", () => ({
+  default: () => createElement("button", null, "Comments fixture"),
+}));
 
 type Definition = { matches: string[]; main: (ctx: ContentScriptContext) => Promise<void> };
 let definition: Definition;

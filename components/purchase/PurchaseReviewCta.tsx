@@ -3,7 +3,7 @@ import { useProductCommentsQuery, useProductQuery } from "@/components/review/qu
 import { focusReviewForm } from "@/components/review/reviewBoardFocus";
 import { dismissReviewChip, isReviewChipDismissed } from "@/utils/purchase-review";
 import { formatScore } from "@/utils/review-utils";
-import { IconStar, IconStarFilled, IconX } from "@tabler/icons-react";
+import { IconStarFilled, IconX } from "@tabler/icons-react";
 import { useState } from "react";
 import { i18n } from "#i18n";
 
@@ -36,7 +36,7 @@ export function PurchaseReviewCta() {
   const commentsQuery = useProductCommentsQuery(productId, COMMENTS_PAGE_SIZE);
   const reviewCount = commentsQuery.data?.pages?.[0]?.count ?? 0;
 
-  if (isDismissed || !productQuery.isSuccess || !commentsQuery.isSuccess || !product) {
+  if (isDismissed || !productQuery.isSuccess || !commentsQuery.isSuccess || !product || reviewCount <= 0) {
     return null;
   }
 
@@ -45,8 +45,6 @@ export function PurchaseReviewCta() {
     setIsDismissed(true);
   };
 
-  const hasReviews = reviewCount > 0;
-
   return (
     <section
       className="mb-2 flex w-full items-center justify-center"
@@ -54,23 +52,14 @@ export function PurchaseReviewCta() {
     >
       <div className={PILL_CLASS_NAME}>
         <button type="button" className={LABEL_CLASS_NAME} onClick={() => focusReviewForm()}>
-          {hasReviews ? (
-            <>
-              <IconStarFilled className="shrink-0 text-yellow-500" size={12} />
-              <span>{formatScore(product.score)}</span>
-              <span aria-hidden className="text-slate-300">
-                ·
-              </span>
-              <span className="font-medium text-slate-500">
-                {i18n.t("purchaseReview.reviewCount", [reviewCount])}
-              </span>
-            </>
-          ) : (
-            <>
-              <IconStar className="shrink-0 text-slate-400" size={12} />
-              <span className="font-medium">{i18n.t("purchaseReview.writeFirst")}</span>
-            </>
-          )}
+          <IconStarFilled className="shrink-0 text-yellow-500" size={12} />
+          <span>{formatScore(product.score)}</span>
+          <span aria-hidden className="text-slate-300">
+            ·
+          </span>
+          <span className="font-medium text-slate-500">
+            {i18n.t("purchaseReview.reviewCount", [reviewCount])}
+          </span>
         </button>
 
         <button

@@ -192,7 +192,7 @@ describe("purchase chip and review board in distinct real application roots", ()
     expect(mocks.fetchMyComment).toHaveBeenCalledOnce();
   });
 
-  it("shows the first-review invitation only after a successful zero-count comments result", async () => {
+  it("keeps the chip hidden after a successful zero-count comments result", async () => {
     const pendingComments = deferred<ReturnType<typeof page>>();
     mocks.fetchComments.mockReturnValue(pendingComments.promise);
     await mountBoth();
@@ -200,7 +200,8 @@ describe("purchase chip and review board in distinct real application roots", ()
     expect(chip()).toBeNull();
     expect(purchase.shadow.textContent).not.toContain("Write the first review");
     await act(async () => pendingComments.resolve(page(0)));
-    await eventually(() => expect(chipButton().textContent).toBe("Write the first review"));
+    await eventually(() => expect(board.shadow.textContent).toContain("No comments yet."));
+    expect(chip()).toBeNull();
     expect(board.shadow.textContent).toContain("No comments yet.");
   });
 
@@ -213,10 +214,9 @@ describe("purchase chip and review board in distinct real application roots", ()
     if (request === "product") expect(mocks.fetchComments).not.toHaveBeenCalled();
   });
 
-  it("hides a previously empty chip if its background revalidation fails", async () => {
-    mocks.fetchComments.mockResolvedValue(page(0));
+  it("hides a previously visible chip if its background revalidation fails", async () => {
     await ready();
-    expect(chipButton().textContent).toBe("Write the first review");
+    expect(chip()).not.toBeNull();
     mocks.fetchComments.mockRejectedValue(new Error("Synthetic revalidation failure"));
     await act(async () => queryClient.invalidateQueries({ queryKey: ["comments", product.id, COMMENTS_PAGE_SIZE] }));
     await eventually(() => expect(chip()).toBeNull());
@@ -315,6 +315,6 @@ describe("purchase chip and review board in distinct real application roots", ()
     expect(dismissButton().getAttribute("aria-label")).toBe(text.dismiss);
     mocks.fetchComments.mockResolvedValue(page(0));
     await act(async () => queryClient.invalidateQueries({ queryKey: ["comments", product.id, COMMENTS_PAGE_SIZE] }));
-    await eventually(() => expect(chipButton().textContent).toBe(text.writeFirst));
+    await eventually(() => expect(chip()).toBeNull());
   });
 });
