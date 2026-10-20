@@ -1,64 +1,51 @@
-# For more information see: https://pnpm.io/ko/next/continuous-integration#github-actions
-name: pnpm Workflow
+name: Extension CI
+
 on:
   pull_request:
-    branches: [ "main" ]
-    types: [closed]
+    branches: [main, dev]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main, dev]
+  merge_group:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extension-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-22.04
-    strategy:
-      matrix:
-        node-version: [24]
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
         with:
-          version: 10
-
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+          persist-credentials: false
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "pnpm"
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Build Extension
-        run: pnpm run zip
-
-      - name: Read package.json
-        uses: zvonimirsun/read-package-version-actions@v2
-        with: 
-          path: "./"
-        id: package-version
-
-      - name: Show version number
-        run: echo "Version is ${{ steps.package-version.outputs.version }}"
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          node-version: 24.19.0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          tag_name: ${{ steps.package-version.outputs.version }}"
-          release_name: v${{ steps.package-version.outputs.version }}"
-          body: ${{ github.event.pull_request.body }}
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Assets
-        id: upload-release-assets
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          bun-version-file: package.json
+      - uses: actions/setup-python@v5
         with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*.zip
-          asset_name: v${{ steps.package-version.outputs.version }}".zip
-          asset_content_type: application/zip
+          python-version: '3.12'
+      - name: Install locked dependencies
+        run: test -f bun.lock && bun install --frozen-lockfile
+      - name: Unit and integration tests
+        run: bun run test
+      - name: Release guard regression tests
+        run: bun run test:release
+      - name: Chrome publication guard regressions (offline only)
+        run: bun run test:cws
+      - name: TypeScript
+        run: bun run compile
+      - name: Chrome MV3 build
+        run: bun run build
+      - name: Firefox MV2 build
+        run: bun run build:firefox
+      - name: Package and verify both browsers
+        run: bun run release:package

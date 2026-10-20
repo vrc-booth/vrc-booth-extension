@@ -1,10 +1,11 @@
-common:
-  on: ON
-  off: OFF
 reviewBoard:
+  anonymous: 匿名
+  deactivated: 退会したユーザー
+  blinded: このレビューは非表示です。
+  productUnavailable: この商品はまだレビューサービスに登録されていません。
   header: 商品レビュー
   loading: レビューを読み込んでいます…
-  info: 新着順に並べ、いいね/よくないね数も表示されます。
+  info: レビューは新着順に表示されます。コメントへの評価投票はサポートを終了しました。
   commentsCount: コメント $1 件
   button:
     login: ログイン
@@ -12,6 +13,7 @@ reviewBoard:
     accountSettings: アカウント設定
   noComments: まだコメントがありません。最初の体験を共有してみてください。
   placeholder: 使用した感想を正直に共有してください。
+  characterCount: $1 / $2 文字
   rating: 評価
   loginPrompt: ログインするとコメントできます。
   submit:
@@ -20,9 +22,6 @@ reviewBoard:
     saving: 保存中…
     deleting: 削除中…
     delete: コメントを削除
-  vote:
-    like: コメントにいいね
-    dislike: コメントによくないね
   loader:
     loadingMore: 次のページを読み込んでいます…
 userComments:
@@ -34,17 +33,17 @@ userComments:
   previous: 前へ
   next: 次へ
 messages:
+  loginError: ログインがキャンセルされたか、完了できませんでした。もう一度お試しください。
+  usernameSetupHint: 操作が拒否されました。ユーザー名の設定が必要な場合があります。アカウント設定で保存してから、もう一度お試しください。
+  accountSettingsError: アカウント設定を開けませんでした。ブラウザーからBoothPlusのサイドパネルを開いてください。
   fetchReviewFailed: レビューの取得に失敗しました。
   checkContent: 内容を確認してください。
   reviewSaveError: コメントの保存中にエラーが発生しました。
   reviewDeleteError: コメントの削除中にエラーが発生しました。
-  voteOwnUp: 自分のレビューにはいいねできません。
-  voteOwnDown: 自分のレビューにはよくないねできません。
-  voteError: 投票中にエラーが発生しました。
   logoutError: ログアウト中にエラーが発生しました。
-  loginError: ログイン中にエラーが発生しました。
   loginRequired: ログインが必要です。
   emptyContent: 内容を入力してください。
+  contentTooLong: コメントは$1文字以内で入力してください。
   usernameRequired: ユーザー名を入力してください。
 purchaseReview:
   label: レビュー要約
@@ -53,7 +52,8 @@ purchaseReview:
   dismiss: レビュー要約を隠す
 userPanel:
   title: ユーザー管理
-  description: 現在ログイン中のユーザーのプロフィールと設定を管理します。
+  description: ユーザー名の変更と、自分のコメントの確認ができます。
+  retiredSettings: 自己紹介、アダルトコンテンツ、説明の展開設定は、サービスに保存されなくなりました。
   loading: ユーザー情報を読み込んでいます…
   notLoggedIn: レビュー管理パネルにログインしていません。まずレビュー画面でログインを完了してください。
   checkLogin: ログイン状態を再確認
@@ -65,27 +65,28 @@ userPanel:
     yes: はい
     no: いいえ
   sections:
-    settings: 基本設定
     profile: プロフィール
-  toggles:
-    adult: アダルトコンテンツを許可
-    hideAvatar: プロフィールアバターを非表示
-    autoCollapse: 説明を自動で展開
   profileFields:
     username: ユーザー名
-    bio: 自己紹介
     save: 保存
     refresh: 再読み込み
   statuses:
-    adultSaved: アダルト設定を保存しました。
-    adultError: アダルト設定の保存に失敗しました。
-    autoCollapseSaved: 自動展開設定を保存しました。
-    autoCollapseError: 自動展開設定の保存に失敗しました。
-    hideAvatarSaved: アバター表示設定を保存しました。
-    hideAvatarError: アバター表示設定の保存に失敗しました。
     usernameSaved: ユーザー名を保存しました。
     usernameError: ユーザー名の保存に失敗しました。
-    bioSaved: 自己紹介を保存しました。
-    bioError: 自己紹介の保存に失敗しました。
 aria:
   scorePoint: $1.0 点
+
+reviewImages:
+  label: 添付画像 $1 / $2
+  help: JPEG・PNG・WebPを最大5枚、1枚8MiBまで。静止画のみ、最小64×64px、1辺最大8000px・4000万画素。レビュー保存時にアップロードします。
+  add: 画像を選択
+  remove: 画像 $1 を削除
+  imageAlt: レビュー画像 $1
+  countError: 画像は最大5枚まで添付できます。
+  typeError: JPEG・PNG・WebP画像を選択してください。
+  sizeError: 空でない8MiB以下の画像を選択してください。
+  invalidError: 画像の形式・サイズ・解像度を確認してください。動画画像は非対応です。下書きは保持されます。
+  pendingError: 画像のアップロード上限に達しました。しばらくして再試行してください。下書きは保持されます。
+  moderationError: 添付画像がサービスの画像審査を通過しませんでした。別の画像を選択してください。
+  uploadError: 画像を保存できませんでした。下書きは保持されているので再試行してください。
+  removeError: アップロード済み画像を削除できませんでした。再試行してください。

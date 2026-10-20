@@ -36,7 +36,7 @@ export function PurchaseReviewCta() {
   const commentsQuery = useProductCommentsQuery(productId, COMMENTS_PAGE_SIZE);
   const reviewCount = commentsQuery.data?.pages?.[0]?.count ?? 0;
 
-  if (isDismissed || productQuery.isLoading || commentsQuery.isLoading || !product) {
+  if (isDismissed || !productQuery.isSuccess || !commentsQuery.isSuccess || !product) {
     return null;
   }
 
