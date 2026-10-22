@@ -1,18 +1,10 @@
 import { ReviewBoard } from "@/components/ReviewBoard";
 import { REVIEW_TOAST_CONTAINER_ID } from "@/utils/toast";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { i18n } from "#i18n";
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      staleTime: 1000 * 60,
-    },
-  },
-});
+import { queryClient } from "./queryClient";
 
 export default () => (
   <>
