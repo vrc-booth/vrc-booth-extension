@@ -32,7 +32,9 @@ class ReleaseArchiveTests(unittest.TestCase):
             with self.subTest(name=name), tempfile.TemporaryDirectory() as directory:
                 path = Path(directory) / "invalid.zip"
                 with zipfile.ZipFile(path, "w") as archive:
-                    archive.writestr(name, b"invalid")
+                    info = zipfile.ZipInfo(name)
+                    info.filename = name  # Preserve invalid separators on Windows.
+                    archive.writestr(info, b"invalid")
                 with self.assertRaises(ValueError):
                     release.archive_contents(path)
 
@@ -73,7 +75,8 @@ class ChromeOnlyPackagingTests(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
         sources = {
-            "package.json": json.dumps({"name": "boothplus", "version": self.version, "packageManager": "bun@1.4.2"}).encode(),
+            "package.json": json.dumps({"name": "boothplus", "version": self.version, "packageManager": "bun@1.4.2",
+                                        "description": "BOOTH 상품 리뷰・レビュー"}, ensure_ascii=False).encode("utf-8"),
             "bun.lock": b"lockfile", "bunfig.toml": b'[install]\nlinker = "isolated"\n', "wxt.config.ts": b"fixture",
             "scripts/release-packages.py": b"fixture", "CHANGELOG.md": b"## 3.3.0\nCandidate\n",
         }

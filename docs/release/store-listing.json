@@ -1,0 +1,18 @@
+{
+  "name": "boothplus",
+  "default_locale": "ko",
+  "locales": {
+    "ko": {
+      "short_description": "BOOTH 상품 페이지에서 리뷰·별점·사진을 확인하고, Discord 로그인으로 내 리뷰를 작성·수정·삭제하세요.",
+      "description": "BoothPlus는 BOOTH 상품 페이지에서 VRC-BOOTH의 리뷰를 확인하고, 직접 사용한 경험을 공유할 수 있게 해주는 확장 프로그램입니다.\n\n주요 기능\n• 로그인 없이 상품 리뷰, 별점, 첨부 사진 확인\n• 상품의 댓글 수 버튼을 눌러 리뷰 목록으로 이동\n• Discord 로그인 후 500자 이내의 리뷰와 별점 작성, 내 리뷰 수정·삭제\n• 리뷰에 JPEG·PNG·WebP 이미지 최대 5장 첨부, 장당 최대 8MiB\n• 계정 설정에서 사용자명 변경 및 내가 작성한 리뷰 확인\n\n한국어, 영어, 일본어를 지원합니다. 리뷰 기능은 VRC-BOOTH 리뷰 서비스에 등록된 상품에서 사용할 수 있습니다.\n\nBoothPlus는 BOOTH 또는 pixiv의 공식 확장 프로그램이 아닙니다."
+    },
+    "en": {
+      "short_description": "Read reviews, ratings and photos on BOOTH. Sign in with Discord to write, edit and delete your reviews.",
+      "description": "BoothPlus brings reviews from VRC-BOOTH to BOOTH product pages so you can read other users' experiences and share your own.\n\nFeatures\n• View product reviews, ratings and attached photos without signing in.\n• Jump to the review list using the comment-count button on the product page.\n• Sign in with Discord to write reviews of up to 500 characters with a rating, and edit or delete your own reviews.\n• Attach up to 5 JPEG, PNG or WebP images per review, up to 8 MiB each.\n• Change your username and view your own reviews in account settings.\n\nSupports Korean, English and Japanese. Review features are available for products registered with the VRC-BOOTH review service.\n\nBoothPlus is not an official extension of BOOTH or pixiv."
+    },
+    "ja": {
+      "short_description": "BOOTHの商品ページでレビュー・評価・写真を確認。Discordでログインして、自分のレビューを投稿・編集・削除できます。",
+      "description": "BoothPlusは、BOOTHの商品ページでVRC-BOOTHのレビューを確認し、自分の使用感を共有できる拡張機能です。\n\n主な機能\n• ログインせずに商品レビュー、評価、添付写真を確認\n• 商品ページのコメント数ボタンからレビュー一覧へ移動\n• Discordでログインして、500文字以内のレビューと評価を投稿し、自分のレビューを編集・削除\n• レビューごとにJPEG・PNG・WebP画像を最大5枚添付、1枚あたり最大8MiB\n• アカウント設定でユーザー名を変更し、自分が投稿したレビューを確認\n\n韓国語、英語、日本語に対応しています。レビュー機能は、VRC-BOOTHのレビューサービスに登録されている商品で利用できます。\n\nBoothPlusはBOOTHまたはpixivの公式拡張機能ではありません。"
+    }
+  }
+}

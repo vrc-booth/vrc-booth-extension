@@ -1,6 +1,6 @@
 # 릴리스 준비와 복구
 
-현재 `3.3.0`은 **미배포 로컬 후보**다. `v3.3.0`은 제안 태그일 뿐 만들지 않았다. #30/#31/#32를 연결하며, 실제 게시·서명·OAuth 설정 변경은 별도 승인 대상이다.
+현재 `3.3.1`은 **미배포 로컬 후보**다. `v3.3.1`은 제안 태그일 뿐 만들지 않았다. #30/#31/#32를 연결하며, 실제 게시·서명·OAuth 설정 변경은 별도 승인 대상이다.
 
 ## 고정 입력과 검증
 
@@ -17,7 +17,7 @@ bun run release:package
 bun run release:verify
 ```
 
-산출물은 `boothplus-3.3.0-chrome.zip`, `boothplus-3.3.0-firefox.zip`, `boothplus-3.3.0-sources.zip`이다. `dist/release-manifest.json`에 커밋·작업 트리 상태·버전·해시·배포 차단 항목을 기록하고 `dist/SHA256SUMS`와 함께 검토한다. WXT ZIP의 시간/순서를 정규화하되 도구나 플랫폼이 다른 빌드까지 비트 단위로 같다고 보장하지 않는다.
+산출물은 `boothplus-3.3.1-chrome.zip`, `boothplus-3.3.1-firefox.zip`, `boothplus-3.3.1-sources.zip`이다. `dist/release-manifest.json`에 커밋·작업 트리 상태·버전·해시·배포 차단 항목을 기록하고 `dist/SHA256SUMS`와 함께 검토한다. WXT ZIP의 시간/순서를 정규화하되 도구나 플랫폼이 다른 빌드까지 비트 단위로 같다고 보장하지 않는다.
 
 ## CI와 수동 준비
 
@@ -25,7 +25,7 @@ bun run release:verify
 - PR을 병합하지 않고 닫는 것만으로 실행되는 공개 릴리스 경로를 제거했다.
 - 수동 준비는 main에서 정확한 40자리 후보 SHA와 버전, 해당 SHA의 실제 브라우저 QA 기록을 요구한다. 후보는 main 이력에 포함되어야 하며 작업 트리가 깨끗해야 한다.
 - 예제 `qa-record.example.json`은 의도적으로 미완료다. 검사하지 않은 시나리오를 passed로 바꾸지 않는다. 실제 브라우저 버전·확장 ID·관찰한 OAuth 반환 주소·증거 링크를 기록한다.
-- prefixed `v3.3.0`과 bare `3.3.0` 태그 중 하나라도 있으면 새 태그를 덮어쓰지 않는다.
+- prefixed `v3.3.1`과 bare `3.3.1` 태그 중 하나라도 있으면 새 태그를 덮어쓰지 않는다.
 - 권한은 contents:read이며, upload-artifact로 후보 파일만 보관한다. GitHub Release 생성·tag push·Chrome Web Store·AMO 게시 동작은 없다.
 
 ## 신원·권한·업데이트
@@ -34,7 +34,7 @@ Chrome의 기존 공개 키는 유지하며 계산된 ID는 `hafbafjoecfjdlhjilp
 
 Firefox에는 Chrome의 key/sidePanel 권한을 넣지 않는다. 계정 설정은 account.html로 열린다. 영구 Gecko ID를 임의로 만들지 않았다. 게시자가 ID를 결정하고 해당 ID의 identity.getRedirectURL() 결과를 실제로 확인하여 Discord 등록·AMO 고지·서명을 완료해야 한다. [Mozilla 설명](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/identity/getRedirectURL)에 따르면 임시 설치 ID가 바뀌면 반환 주소도 바뀐다.
 
-기존 local:authToken 키와 accessToken/refreshToken 쌍을 유지한다. 새 sessionId 필드는 선택적이며 옛 토큰 쌍을 지우는 마이그레이션은 없다. 자동 검사는 이전 형식과 모듈 재로드를 확인했지만 실제 브라우저 재시작/확장 업데이트 검사는 #31에서 해야 한다. 제거된 프로필 옵션은 서버에도 저장되지 않으므로 값을 복구하거나 새 저장소로 이전하지 않는다. 칩 숨김 키는 기존 PR #29 형식을 유지한다.
+기존 local:authToken 키와 accessToken/refreshToken 쌍을 유지한다. 새 sessionId 필드는 선택적이며 옛 토큰 쌍을 지우는 마이그레이션은 없다. 자동 검사는 이전 형식과 모듈 재로드를 확인했지만 실제 브라우저 재시작/확장 업데이트 검사는 #31에서 해야 한다. 제거된 프로필 옵션은 서버에도 저장되지 않으므로 값을 복구하거나 새 저장소로 이전하지 않는다. 구매 요약 칩과 그 localStorage 숨김 키(`boothplus.purchaseReviewChip.dismissed`)는 제거했다. 남아 있는 값은 더 이상 읽지 않으므로 마이그레이션은 없다.
 
 ## 승인된 게시 전 체크
 

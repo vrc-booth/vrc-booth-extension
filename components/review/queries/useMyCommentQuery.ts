@@ -9,7 +9,6 @@ export const useMyCommentQuery = (productId: string | null, options?: MyCommentQ
     queryKey: ["myComment", productId],
     queryFn: () => fetchUserComment(productId!),
     enabled: Boolean(productId),
-    refetchOnWindowFocus: false,
     retry: false,
     ...options,
   });

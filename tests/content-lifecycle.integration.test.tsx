@@ -13,30 +13,27 @@ const effects = vi.hoisted(() => {
   vi.stubGlobal("chrome", { runtime: {
     id: "fixture-extension", getURL: (path: string) => `chrome-extension://fixture-extension${path}`,
   } });
-  return { mount: vi.fn(), unmount: vi.fn(), purchaseMount: vi.fn(), purchaseUnmount: vi.fn(), product: vi.fn() };
+  return { mount: vi.fn(), unmount: vi.fn(), product: vi.fn() };
 });
 vi.mock("wxt/browser", () => ({ browser: { runtime: {
   id: "fixture-extension", getURL: (path: string) => `chrome-extension://fixture-extension${path}`,
 } } }));
 vi.mock("../components/review/api", () => ({ findProductForCurrentPage: effects.product }));
 
-function ProductFixture({ purchase = false }: { purchase?: boolean }) {
+function ProductFixture() {
   const product = useProductQuery();
   const [draft, setDraft] = useState("");
   useEffect(() => {
-    (purchase ? effects.purchaseMount : effects.mount)(window.location.pathname);
-    return () => { (purchase ? effects.purchaseUnmount : effects.unmount)(); };
+    effects.mount(window.location.pathname);
+    return () => { effects.unmount(); };
   }, []);
-  return createElement("section", { "data-fixture": purchase ? "purchase" : "review", "data-product": product.data?.id },
-    createElement("p", null, purchase ? "Synthetic purchase application" : "Synthetic review application"),
-    !purchase && createElement("button", { "data-action": "draft", onClick: () => setDraft("Unsaved review") }, "Write fixture draft"),
-    !purchase && createElement("textarea", { id: "review-content", value: draft, onChange: (event) => setDraft((event.target as HTMLTextAreaElement).value) }));
+  return createElement("section", { "data-fixture": "review", "data-product": product.data?.id },
+    createElement("p", null, "Synthetic review application"),
+    createElement("button", { "data-action": "draft", onClick: () => setDraft("Unsaved review") }, "Write fixture draft"),
+    createElement("textarea", { id: "review-content", value: draft, onChange: (event) => setDraft((event.target as HTMLTextAreaElement).value) }));
 }
 vi.mock("../entrypoints/item.content/App.tsx", () => ({ default: function TestApplication() {
   return createElement(QueryClientProvider, { client: queryClient }, createElement(ProductFixture));
-} }));
-vi.mock("../entrypoints/item.content/PurchaseApp.tsx", () => ({ default: function TestPurchaseApplication() {
-  return createElement(QueryClientProvider, { client: queryClient }, createElement(ProductFixture, { purchase: true }));
 } }));
 vi.mock("~/assets/tailwind.css", () => ({}));
 vi.mock("../entrypoints/item.content/CommentCountApp.tsx", () => ({
@@ -111,20 +108,25 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     expect(definition.matches).toEqual(["*://booth.pm/*/items/*", "*://*.booth.pm/items/*"]);
   });
 
-  it("mounts isolated roots next to both anchors and shares the product query", async () => {
+  it("mounts the board and comment count without adding a purchase summary badge", async () => {
+    document.querySelector("main")!.insertAdjacentHTML("afterbegin",
+      '<div><form action="/items/100/wish_list"></form><button id="heart"><span><pixiv-icon name="24/BoothLikeOff"></pixiv-icon></span></button></div>');
     await start();
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
+    const commentCountHost = document.querySelector("booth-comment-count");
+    expect(commentCountHost).not.toBeNull();
+    expect(document.querySelector("#heart")?.nextElementSibling).toBe(commentCountHost);
+    expect(commentCountHost?.shadowRoot?.textContent).toContain("Comments fixture");
     expect(document.querySelector(".primary-image-thumbnails")?.nextElementSibling).toBe(host());
-    expect(document.querySelector(".cart-btns")?.previousElementSibling).toBe(purchaseHost());
+    expect(document.querySelector(".cart-btns")?.previousElementSibling).toBe(host());
     expect(host()?.shadowRoot?.querySelector('[data-fixture="review"]')?.textContent).toBe("Synthetic review applicationWrite fixture draft");
     expect(document.querySelector("#variations")?.textContent).toBe("Purchase controls");
     expect(effects.mount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledOnce();
     expect(effects.product).toHaveBeenCalledOnce();
   });
 
-  it("unmounts both roots, clears focus refs, and stops remounting after invalidation", async () => {
+  it("unmounts the board, clears focus refs, and stops remounting after invalidation", async () => {
     const ctx = await start();
     const scroll = vi.spyOn(host() as HTMLElement, "scrollIntoView");
     expect(focusReviewForm()).toBe(true);
@@ -134,7 +136,6 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     expect(purchaseHost()).toBeNull();
     expect(focusReviewForm()).toBe(false);
     expect(effects.unmount).toHaveBeenCalledOnce();
-    expect(effects.purchaseUnmount).toHaveBeenCalledOnce();
     appendAnchors();
     await navigate("/en/items/101");
     expect(host()).toBeNull();
@@ -148,7 +149,7 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     const newContext = await start();
     expect(host()).not.toBe(firstHost);
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
     await invalidate(oldContext);
     const scroll = vi.spyOn(host() as HTMLElement, "scrollIntoView");
     expect(focusReviewForm()).toBe(true);
@@ -157,10 +158,9 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     expect(focusReviewForm()).toBe(false);
     expect(effects.mount).toHaveBeenCalledTimes(2);
     expect(effects.unmount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseUnmount).toHaveBeenCalledTimes(2);
   });
 
-  it("waits for missing image and purchase anchors, then mounts each exactly once", async () => {
+  it("waits for the image anchor and mounts the board without a purchase badge", async () => {
     document.querySelector("main")!.replaceChildren();
     await start();
     expect(host()).toBeNull();
@@ -169,12 +169,11 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     appendAnchors();
     await flush();
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
     expect(effects.mount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledOnce();
   });
 
-  it("mounts a late main-domain variations parent independently of the board", async () => {
+  it("leaves late main-domain purchase controls untouched", async () => {
     document.querySelector(".cart-btns")!.remove();
     await start();
     expect(host()).not.toBeNull();
@@ -183,12 +182,11 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     purchase.innerHTML = '<ul id="variations"><li>Main-domain purchase controls</li></ul>';
     document.querySelector("main")!.append(purchase);
     await flush();
-    expect(purchase.previousElementSibling).toBe(purchaseHost());
+    expect(purchaseHost()).toBeNull();
     expect(effects.mount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledOnce();
   });
 
-  it("unmounts removed anchors and mounts replacements without waiting for absence", async () => {
+  it("remounts the board after image replacement without adding a purchase badge", async () => {
     await start();
     const image = document.querySelector(".primary-image-thumbnails")!;
     const purchase = document.querySelector(".cart-btns")!;
@@ -198,13 +196,10 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     purchase.replaceWith(newPurchase);
     await flush();
     expect(newImage.nextElementSibling).toBe(host());
-    expect(newPurchase.previousElementSibling).toBe(purchaseHost());
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
     expect(effects.mount).toHaveBeenCalledTimes(2);
     expect(effects.unmount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseUnmount).toHaveBeenCalledOnce();
 
     newImage.remove();
     newPurchase.remove();
@@ -215,23 +210,19 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     appendAnchors();
     await flush();
     expect(effects.mount).toHaveBeenCalledTimes(3);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(3);
   });
 
   it("recovers when page updates remove only the shadow hosts", async () => {
     await start();
     host()!.remove();
-    purchaseHost()!.remove();
     await flush();
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
     expect(effects.unmount).toHaveBeenCalledOnce();
-    expect(effects.purchaseUnmount).toHaveBeenCalledOnce();
     expect(effects.mount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(2);
   });
 
-  it("follows moved anchors and resolves a newly introduced purchase wrapper", async () => {
+  it("follows a moved image anchor without adding a badge to a new purchase wrapper", async () => {
     document.querySelector(".cart-btns")!.className = "main-domain-purchase";
     await start();
     const destination = document.createElement("aside");
@@ -244,11 +235,9 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     newWrapper.append(purchase);
     await flush();
     expect(destination.lastElementChild).toBe(host());
-    expect(newWrapper.previousElementSibling).toBe(purchaseHost());
+    expect(purchaseHost()).toBeNull();
     expect(effects.mount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(2);
     expect(effects.unmount).toHaveBeenCalledOnce();
-    expect(effects.purchaseUnmount).toHaveBeenCalledOnce();
   });
 
   it("detects anchor selector changes and survives complete body replacement", async () => {
@@ -262,17 +251,14 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     document.querySelector("#variations-loading")!.id = "variations";
     await flush();
     expect(effects.mount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledOnce();
     const body = document.createElement("body");
     body.innerHTML = '<main><div class="primary-image-thumbnails"></div><div class="cart-btns"><ul id="variations"></ul></div></main>';
     document.body.replaceWith(body);
     await flush();
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
     expect(effects.mount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(2);
     expect(effects.unmount).toHaveBeenCalledOnce();
-    expect(effects.purchaseUnmount).toHaveBeenCalledOnce();
   });
 
   it("does not remount for unrelated or shadow-tree React mutations", async () => {
@@ -285,11 +271,10 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
       await flush();
     }
     expect(effects.mount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledOnce();
     expect(effects.unmount).not.toHaveBeenCalled();
   });
 
-  it("remounts both apps on repeated history navigation and uses the new product query", async () => {
+  it("remounts the board on history navigation without restoring the purchase badge", async () => {
     await start();
     for (const id of ["101", "102", "100"]) {
       await act(async () => { (host()!.shadowRoot!.querySelector("button") as HTMLButtonElement).click(); });
@@ -297,14 +282,12 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
       // This is the native Back/Forward event; no DOM changes are necessary.
       await navigate(`/en/items/${id}`);
       expect(host()?.shadowRoot?.querySelector("[data-product]")?.getAttribute("data-product")).toBe(id);
-      expect(purchaseHost()?.shadowRoot?.querySelector("[data-product]")?.getAttribute("data-product")).toBe(id);
       expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-      expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+      expect(purchaseHost()).toBeNull();
       expect((host()!.shadowRoot!.querySelector("textarea") as HTMLTextAreaElement).value).toBe("");
     }
     expect(effects.mount).toHaveBeenCalledTimes(4);
     expect(effects.unmount).toHaveBeenCalledTimes(3);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(4);
     expect(effects.product).toHaveBeenCalledTimes(3); // Returning to 100 reuses its fresh shared cache.
   });
 
@@ -317,7 +300,6 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     });
     await flush();
     expect(effects.mount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(2);
     expect(host()?.shadowRoot?.querySelector("[data-product]")?.getAttribute("data-product")).toBe("101");
   });
 
@@ -331,7 +313,6 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     expect(focusReviewForm()).toBe(false);
     await navigate("/en/items/101");
     expect(effects.mount).toHaveBeenCalledTimes(2);
-    expect(effects.purchaseMount).toHaveBeenCalledTimes(2);
   });
 
   it("ignores an older initialization that finishes after a newer context", async () => {
@@ -349,9 +330,8 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     await flush();
     expect(host()).toBe(currentHost);
     expect(document.querySelectorAll("booth-review")).toHaveLength(1);
-    expect(document.querySelectorAll("booth-purchase-review")).toHaveLength(1);
+    expect(purchaseHost()).toBeNull();
     expect(effects.mount).toHaveBeenCalledOnce();
-    expect(effects.purchaseMount).toHaveBeenCalledOnce();
     expect(focusReviewForm()).toBe(true);
   });
 
@@ -364,7 +344,6 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     expect(host()).toBeNull();
     expect(purchaseHost()).toBeNull();
     expect(effects.mount).not.toHaveBeenCalled();
-    expect(effects.purchaseMount).not.toHaveBeenCalled();
   });
 
   it("does not mount if invalidated while WXT stylesheets are still loading", async () => {
@@ -380,7 +359,6 @@ describe("content entrypoint with real WXT shadow-root mounting in simulated DOM
     expect(host()).toBeNull();
     expect(purchaseHost()).toBeNull();
     expect(effects.mount).not.toHaveBeenCalled();
-    expect(effects.purchaseMount).not.toHaveBeenCalled();
     expect(focusReviewForm()).toBe(false);
   });
 });

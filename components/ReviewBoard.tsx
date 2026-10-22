@@ -14,7 +14,7 @@ import {
   useProductQuery,
   useUserProfileQuery,
 } from "@/components/review/queries";
-import { ApiError, formatDateTime } from "@/utils/review-utils";
+import { ApiError } from "@/utils/review-utils";
 import { loginWithDiscord } from "@/components/review/auth";
 import { COMMENTS_PAGE_SIZE } from "@/components/review/constants";
 import { REVIEW_FORM_FIELD_ID } from "@/components/review/reviewBoardFocus";
@@ -24,9 +24,11 @@ import { FormEvent, useEffect, useRef, useState } from "react";
 import { authTokenStorage } from "@/utils/storage";
 import { normalizeReviewImages, validateReviewFiles } from "@/components/review/images";
 import { useReviewImageDraft, type DraftReviewImage } from "@/components/review/image-draft";
-import { ReviewImages } from "@/components/review/components/ReviewImages";
+import { ReviewCard } from "@/components/review/components/ReviewCard";
 import { ReviewImageInput } from "@/components/review/components/ReviewImageInput";
 import StarIcons from "./StarIcon";
+import { IconBrandDiscord } from "@tabler/icons-react";
+import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS, TEXT_BUTTON_CLASS } from "@/components/ui/buttons";
 
 const DEFAULT_SCORE = 8;
 const MAX_COMMENT_LENGTH = 500;
@@ -76,8 +78,7 @@ export function ReviewBoard() {
   const loadMoreTriggerRef = useRef<HTMLDivElement | null>(null);
 
   const comments = commentsQuery.data?.pages?.flatMap((page) => page.comments) ?? [];
-  const totalCount = commentsQuery.data?.pages?.[0]?.count ?? 0;
-  const commentCount = totalCount;
+  const commentCount = commentsQuery.data?.pages?.[0]?.count ?? 0;
   const hasMoreComments = Boolean(commentsQuery.hasNextPage);
   const isFetchingNextPage = commentsQuery.isFetchingNextPage;
   const myComment = myCommentQuery.data ?? null;
@@ -132,18 +133,6 @@ export function ReviewBoard() {
     content: "",
     score: DEFAULT_SCORE,
   });
-  useEffect(() => {
-    if (!productQuery.isError) {
-      return;
-    }
-
-    const message =
-      productQuery.error instanceof Error
-        ? productQuery.error.message
-        : i18n.t("messages.fetchReviewFailed");
-    showErrorToast(message);
-  }, [productQuery.error, productQuery.isError]);
-
   const lastUserId = useRef(user?.id);
   useEffect(() => {
     if (lastUserId.current && lastUserId.current !== user?.id) {
@@ -256,7 +245,6 @@ export function ReviewBoard() {
       if (activeOperation.current !== variables.operation || variables.operation.controller.signal.aborted) return;
       if (isForbiddenWriteError(error)) {
         setShowUsernameHint(true);
-        showErrorToast(i18n.t("messages.usernameSetupHint"));
       } else if (variables.phase === "upload" && error instanceof ApiError) {
         showErrorToast(i18n.t(error.status === 429 ? "reviewImages.pendingError"
           : error.status === 422 ? "reviewImages.moderationError"
@@ -433,14 +421,6 @@ export function ReviewBoard() {
     }
   };
 
-  const handleLoadMoreComments = () => {
-    if (!hasMoreComments || isFetchingNextPage) {
-      return;
-    }
-
-    commentsQuery.fetchNextPage();
-  };
-
   const handleStarSelect = (value: number) => {
     if (!canEdit || isSubmitting) {
       return;
@@ -451,227 +431,181 @@ export function ReviewBoard() {
 
   if (productQuery.isLoading) {
     return (
-      <div className="rounded-3xl bg-white p-5 shadow">
-        <p className="text-sm text-slate-500">{i18n.t("reviewBoard.loading")}</p>
-      </div>
+      <section className="py-6 text-center text-sm text-booth-sub">{i18n.t("reviewBoard.loading")}</section>
     );
   }
 
+  const hasError = productQuery.isError || commentsQuery.isError || (isAuthenticated && myCommentQuery.isError);
+  // A cached profile keeps the form usable through a transient failure; only an
+  // unknown session shows the status box, so the two never appear together.
+  const isSessionPending = !user && (userQuery.isPending || userQuery.isError);
+  const canWrite = Boolean(product);
+  const isOverLimit = formState.content.length > MAX_COMMENT_LENGTH;
+
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl bg-white p-5 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <p className="text-[11px] text-slate-400">{i18n.t("reviewBoard.info")}</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-[#fc4d50]">
-              {i18n.t("reviewBoard.commentsCount", [commentCount])}
-            </span>
-            {isAuthenticated && (
-              <button
-                type="button"
-                className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600 transition hover:border-[#fc4d50]/40"
-                onClick={handleOpenAccountSettings}
-              >
+    <section className="text-booth-text" aria-labelledby="review-board-title">
+      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-booth-border pb-3">
+        <h2 id="review-board-title" className="text-lg leading-7 font-bold text-booth-heading">
+          {i18n.t("reviewBoard.header")}
+          <span className="ml-2 text-sm font-normal text-booth-sub">
+            {i18n.t("reviewBoard.commentsCount", [commentCount])}
+          </span>
+        </h2>
+        {isAuthenticated && (
+          <div className="flex items-center gap-4">
+            {!showUsernameHint && (
+              <button type="button" className={TEXT_BUTTON_CLASS} onClick={handleOpenAccountSettings}>
                 {i18n.t("reviewBoard.button.accountSettings")}
               </button>
             )}
-              {(isAuthenticated || userQuery.isSuccess) && <button
-                type="button"
-                className="rounded-full border border-[#fc4d50]/40 bg-[#fc4d50]/10 px-3 py-1 text-xs font-medium text-[#fc4d50] transition hover:bg-[#fc4d50]/20 disabled:opacity-60"
-                onClick={isAuthenticated ? handleLogout : handleLogin}
-                disabled={isBusy}
-              >
-                {isAuthenticated ? i18n.t("reviewBoard.button.logout") : i18n.t("reviewBoard.button.login")}
-              </button>}
-          </div>
-        </div>
-
-        <div className="mt-4 space-y-3 max-h-[360px] overflow-y-auto pr-2">
-          {commentsLoading && (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="flex animate-pulse gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3"
-                >
-                  <div className="flex-1 space-y-2">
-                    <span className="block h-3 w-1/3 rounded-full bg-slate-200" />
-                    <span className="block h-4 rounded-full bg-slate-200" />
-                    <span className="block h-3 w-2/3 rounded-full bg-slate-200" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {(productQuery.isError || commentsQuery.isError || (isAuthenticated && myCommentQuery.isError)) && (
-            <div role="alert" className="text-xs text-red-600">
-              <p>{i18n.t("messages.fetchReviewFailed")}</p>
-              <button type="button" className="mt-2 underline" onClick={() => {
-                if (productQuery.isError) void productQuery.refetch();
-                else if (myCommentQuery.isError) void myCommentQuery.refetch();
-                else void commentsQuery.refetch();
-              }}>{i18n.t("userComments.refresh")}</button>
-            </div>
-          )}
-          {productQuery.isSuccess && !product && (
-            <p className="text-xs text-slate-500">{i18n.t("reviewBoard.productUnavailable")}</p>
-          )}
-
-          {showEmptyComments && (
-            <p className="text-xs text-slate-500">{i18n.t("reviewBoard.noComments")}</p>
-          )}
-
-          {!commentsLoading &&
-            comments.map((comment) => {
-              const mine = user && comment.user.id === user.id;
-            return (
-              <article
-                key={comment.id}
-                className={`flex flex-col gap-3 rounded-2xl border px-4 py-3 shadow-sm transition ${
-                  mine ? "border-[#fc4d50]/40 bg-[#fc4d50]/10" : "border-slate-100 bg-white"
-                }`}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">{comment.user.anonymous ? i18n.t("reviewBoard.anonymous") : comment.user.deactivated ? i18n.t("reviewBoard.deactivated") : comment.user.username}</p>
-                        <p className="text-[11px] text-slate-500">{formatDateTime(comment.updatedAt)}</p>
-                      </div>
-                      <span className="text-xs font-semibold text-slate-600">
-                        <StarIcons score={comment.score} size={12} />
-                      </span>
-                    </div>
-                    <p className="mt-2 text-sm leading-relaxed text-slate-900">{comment.blinded ? i18n.t("reviewBoard.blinded") : comment.content}</p>
-                    <ReviewImages images={comment.images} blinded={comment.blinded} />
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-
-          {isFetchingNextPage && (
-            <p className="text-xs text-slate-500 text-center">{i18n.t("reviewBoard.loader.loadingMore")}</p>
-          )}
-
-          <div ref={loadMoreTriggerRef} className="h-px" />
-        </div>
-
-        {(userQuery.isPending || userQuery.isError) && (
-          <section role="status" className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center">
-            <p className="text-sm text-slate-600">{i18n.t(userQuery.isFetching || userQuery.isPending ? "reviewBoard.sessionChecking" : "reviewBoard.sessionUnavailable")}</p>
-            {userQuery.isError && <button type="button" onClick={() => void userQuery.refetch()} disabled={userQuery.isFetching}
-              className="mt-3 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 disabled:opacity-60">
-              {i18n.t("userPanel.checkLogin")}
-            </button>}
-          </section>
-        )}
-        {!isAuthenticated && userQuery.isSuccess && (
-          <section className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center" aria-labelledby="review-login-title">
-            <h3 id="review-login-title" className="text-sm font-semibold text-slate-800">{i18n.t("reviewBoard.loginTitle")}</h3>
-            <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{i18n.t("reviewBoard.loginDescription")}</p>
-            <button
-              id="review-login-button"
-              type="button"
-              disabled={isAuthPending || userQuery.isPending}
-              onClick={handleLogin}
-              className="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-[#fc4d50] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#e94145] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fc4d50] disabled:cursor-wait disabled:opacity-60"
-            >
-              {i18n.t(isAuthPending ? "reviewBoard.loginPending" : "reviewBoard.loginAction")}
+            <button type="button" className={TEXT_BUTTON_CLASS} onClick={handleLogout} disabled={isBusy}>
+              {i18n.t("reviewBoard.button.logout")}
             </button>
-          </section>
+          </div>
         )}
-        <form hidden={!isAuthenticated} className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
-          {showUsernameHint && (
-            <div role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
-              <p>{i18n.t("messages.usernameSetupHint")}</p>
+      </header>
+
+      <div className="max-h-[440px] overflow-y-auto">
+        {commentsLoading && (
+          <div className="divide-y divide-booth-divider" aria-hidden="true">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className="animate-pulse space-y-2 py-4">
+                <span className="block h-3 w-1/4 rounded-sm bg-booth-surface" />
+                <span className="block h-3 w-3/4 rounded-sm bg-booth-surface" />
+                <span className="block h-3 w-1/2 rounded-sm bg-booth-surface" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {hasError && (
+          <div role="alert" className="flex flex-wrap items-center gap-3 py-4 text-sm text-booth-primary">
+            <p>{i18n.t("messages.fetchReviewFailed")}</p>
+            <button type="button" className="font-bold underline underline-offset-2" onClick={() => {
+              if (productQuery.isError) void productQuery.refetch();
+              else if (myCommentQuery.isError) void myCommentQuery.refetch();
+              else void commentsQuery.refetch();
+            }}>{i18n.t("reviewBoard.retry")}</button>
+          </div>
+        )}
+        {productQuery.isSuccess && !product && (
+          <p className="py-6 text-center text-sm text-booth-sub">{i18n.t("reviewBoard.productUnavailable")}</p>
+        )}
+        {showEmptyComments && (
+          <p className="py-6 text-center text-sm text-booth-sub">{i18n.t("reviewBoard.noComments")}</p>
+        )}
+
+        {!commentsLoading && comments.length > 0 && (
+          <div className="divide-y divide-booth-divider">
+            {comments.map((comment) => (
+              <ReviewCard key={comment.id} comment={comment} highlighted={Boolean(user && comment.user.id === user.id)} />
+            ))}
+          </div>
+        )}
+
+        {isFetchingNextPage && (
+          <p className="py-3 text-center text-xs text-booth-sub">{i18n.t("reviewBoard.loader.loadingMore")}</p>
+        )}
+        <div ref={loadMoreTriggerRef} className="h-px" />
+      </div>
+
+      {isSessionPending && (
+        <section role="status" className="mt-4 rounded-lg border border-booth-border px-5 py-5 text-center">
+          <p className="text-sm text-booth-sub">
+            {i18n.t(userQuery.isFetching || userQuery.isPending ? "reviewBoard.sessionChecking" : "reviewBoard.sessionUnavailable")}
+          </p>
+          {userQuery.isError && (
+            <button
+              type="button"
+              onClick={() => void userQuery.refetch()}
+              disabled={userQuery.isFetching}
+              className={`mt-3 ${SECONDARY_BUTTON_CLASS}`}
+            >
+              {i18n.t("userPanel.checkLogin")}
+            </button>
+          )}
+        </section>
+      )}
+
+      {!isAuthenticated && userQuery.isSuccess && canWrite && (
+        <section className="mt-4 rounded-lg border border-booth-border px-5 py-6 text-center" aria-labelledby="review-login-title">
+          <h3 id="review-login-title" className="text-base font-bold text-booth-heading">{i18n.t("reviewBoard.loginTitle")}</h3>
+          <p className="mt-1 text-sm text-booth-sub">{i18n.t("reviewBoard.loginDescription")}</p>
+          <button
+            id="review-login-button"
+            type="button"
+            disabled={isAuthPending}
+            onClick={handleLogin}
+            className={`mt-4 ${SECONDARY_BUTTON_CLASS} disabled:cursor-wait`}
+          >
+            <IconBrandDiscord size={20} className="text-discord" aria-hidden="true" />
+            {i18n.t(isAuthPending ? "reviewBoard.loginPending" : "reviewBoard.loginAction")}
+          </button>
+        </section>
+      )}
+
+      <form
+        hidden={!isAuthenticated || !canWrite}
+        className="mt-4 overflow-hidden rounded-lg border border-booth-border bg-white transition focus-within:border-booth-sub"
+        onSubmit={handleSubmit}
+      >
+        {showUsernameHint && (
+          <div role="status" className="flex flex-wrap items-center gap-3 border-b border-booth-divider px-4 py-2.5 text-xs text-booth-primary">
+            <p>{i18n.t("messages.usernameSetupHint")}</p>
+            <button type="button" className="font-bold underline underline-offset-2" onClick={handleOpenAccountSettings}>
+              {i18n.t("reviewBoard.button.accountSettings")}
+            </button>
+          </div>
+        )}
+        <textarea
+          id={REVIEW_FORM_FIELD_ID}
+          rows={4}
+          maxLength={MAX_COMMENT_LENGTH}
+          aria-describedby="review-content-count"
+          aria-invalid={isOverLimit}
+          className="block w-full resize-y border-0 bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-booth-text placeholder:text-booth-sub focus:outline-none disabled:opacity-60"
+          value={formState.content}
+          onChange={(event) =>
+            setFormState((previous) => ({ ...previous, content: event.target.value }))
+          }
+          placeholder={i18n.t("reviewBoard.placeholder")}
+          disabled={!canEdit || isSubmitting}
+        />
+        <div className="flex flex-wrap items-end justify-between gap-3 px-4 pb-3">
+          <ReviewImageInput images={imageDraft.images} disabled={!canEdit || isSubmitting} onAdd={handleAddImages} onRemove={handleRemoveImage} />
+          <p
+            id="review-content-count"
+            className={`ml-auto shrink-0 text-xs tabular-nums ${isOverLimit ? "text-booth-primary" : "text-booth-sub"}`}
+          >
+            {i18n.t("reviewBoard.characterCount", [formState.content.length, MAX_COMMENT_LENGTH])}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-booth-divider px-4 py-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-booth-sub">{i18n.t("reviewBoard.rating")}</span>
+            <StarIcons score={formState.score} size={22} interactive onSelect={handleStarSelect} />
+          </div>
+          <div className="flex items-center gap-4">
+            {myComment && (
               <button
                 type="button"
-                className="mt-2 font-semibold underline underline-offset-2"
-                onClick={handleOpenAccountSettings}
+                className={`${TEXT_BUTTON_CLASS} hover:text-booth-primary`}
+                onClick={handleDelete}
+                disabled={!canEdit || isSubmitting}
               >
-                {i18n.t("reviewBoard.button.accountSettings")}
+                {deleteMutation.isPending ? i18n.t("reviewBoard.submit.deleting") : i18n.t("reviewBoard.submit.delete")}
               </button>
-            </div>
-          )}
-          <div>
-            <label className="text-xs font-semibold text-slate-500" htmlFor={REVIEW_FORM_FIELD_ID}>
-              {i18n.t("userComments.title")}
-            </label>
-            <textarea
-              id={REVIEW_FORM_FIELD_ID}
-              rows={4}
-              maxLength={MAX_COMMENT_LENGTH}
-              aria-describedby="review-content-count"
-              aria-invalid={formState.content.length > MAX_COMMENT_LENGTH}
-              className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-inner transition focus:border-[#fc4d50]/80 focus:outline-none"
-              value={formState.content}
-              onChange={(event) =>
-                setFormState((previous) => ({ ...previous, content: event.target.value }))
-              }
-              placeholder={i18n.t("reviewBoard.placeholder")}
-              disabled={!canEdit || isSubmitting}
-            />
-            <p
-              id="review-content-count"
-              className={`mt-1 text-right text-[11px] ${
-                formState.content.length > MAX_COMMENT_LENGTH ? "text-red-600" : "text-slate-400"
-              }`}
-            >
-              {i18n.t("reviewBoard.characterCount", [formState.content.length, MAX_COMMENT_LENGTH])}
-            </p>
-          </div>
-
-          <ReviewImageInput images={imageDraft.images} disabled={!canEdit || isSubmitting} onAdd={handleAddImages} onRemove={handleRemoveImage} />
-
-          <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
-            <label className="text-[11px]" htmlFor="review-score">
-              {i18n.t("reviewBoard.rating")}
-            </label>
-            <div className="flex gap-1">
-              <StarIcons
-                score={formState.score}
-                interactive
-                onSelect={(value) => handleStarSelect(value)}
-              />
-            </div>
-            {!isAuthenticated && (
-              <p className="text-[11px] text-slate-400">{i18n.t("reviewBoard.loginPrompt")}</p>
             )}
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              className="flex-1 rounded-2xl bg-gradient-to-r from-[#fc4d50] to-[#ff826a] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-60"
-              type="submit"
-              disabled={!canEdit || isSubmitting}
-            >
+            <button type="submit" className={PRIMARY_BUTTON_CLASS} disabled={!canEdit || isSubmitting}>
               {submitMutation.isPending
                 ? i18n.t("reviewBoard.submit.saving")
                 : myComment
                   ? i18n.t("reviewBoard.submit.edit")
                   : i18n.t("reviewBoard.submit.new")}
             </button>
-
-            {myComment && (
-              <button
-                type="button"
-                className="rounded-2xl border border-red-200 px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 disabled:opacity-60"
-                onClick={handleDelete}
-                disabled={!canEdit || isSubmitting}
-              >
-                {deleteMutation.isPending
-                  ? i18n.t("reviewBoard.submit.deleting")
-                  : i18n.t("reviewBoard.submit.delete")}
-              </button>
-            )}
           </div>
-        </form>
-
-      </div>
-    </div>
+        </div>
+      </form>
+    </section>
   );
 }

@@ -1,3 +1,4 @@
+extensionDescription: Read reviews, ratings and photos on BOOTH. Sign in with Discord to write, edit and delete your reviews.
 reviewBoard:
   sessionChecking: Checking your sign-in status…
   sessionUnavailable: Could not verify your sign-in status. We will check again when the connection returns.
@@ -11,31 +12,30 @@ reviewBoard:
   productUnavailable: This product is not registered with the review service yet.
   header: Product Reviews
   loading: Loading reviews…
-  info: Reviews are shown newest first. Comment voting is no longer supported.
-  commentsCount: Comments $1
+  commentsCount: $1 reviews
   button:
-    login: Log in
     logout: Log out
     accountSettings: Account settings
-  noComments: No comments yet. Share your first experience.
+  noComments: No reviews yet. Share your first experience.
   placeholder: Share your honest experience using the product.
   characterCount: $1 / $2 characters
   rating: Rating
-  loginPrompt: Log in to write a comment.
+  mine: Your review
+  retry: Try again
   submit:
-    new: Post comment
-    edit: Edit comment
+    new: Post review
+    edit: Update review
     saving: Saving…
     deleting: Deleting…
-    delete: Delete comment
+    delete: Delete review
   loader:
     loadingMore: Loading next page…
 userComments:
-  title: My comments
-  total: Total $1 comments
+  title: My reviews
+  total: Total $1
   refresh: Refresh
-  loading: Loading comments…
-  empty: You haven’t written any comments yet.
+  loading: Loading reviews…
+  empty: You haven’t written any reviews yet.
   previous: Previous
   next: Next
 messages:
@@ -44,38 +44,25 @@ messages:
   accountSettingsError: Could not open account settings. Open the BoothPlus side panel from your browser.
   fetchReviewFailed: Failed to load reviews.
   checkContent: Please review your content.
-  reviewSaveError: An error occurred while saving your comment.
-  reviewDeleteError: An error occurred while deleting your comment.
+  reviewSaveError: An error occurred while saving your review.
+  reviewDeleteError: An error occurred while deleting your review.
   logoutError: An error occurred while logging out.
   loginRequired: Login is required.
   emptyContent: Please enter some text.
-  contentTooLong: Keep your comment within $1 characters.
+  contentTooLong: Keep your review within $1 characters.
   usernameRequired: Please enter a username.
-purchaseReview:
-  label: Review summary
-  reviewCount: $1 reviews
-  writeFirst: Write the first review
-  dismiss: Hide review summary
 userPanel:
-  title: User management
-  description: Update your username and view your comments.
-  retiredSettings: Bio, adult-content, and description display settings are no longer saved by the service.
+  title: Account settings
   loading: Loading user information…
   notLoggedIn: You are not logged into the review dashboard. Please finish logging in on the review page first.
   checkLogin: Recheck login status
   labels:
     userId: User ID
     discord: Discord
-    admin: Admin rights
-  adminValue:
-    yes: Yes
-    no: No
-  sections:
-    profile: Profile
+    admin: Admin
   profileFields:
     username: Username
     save: Save
-    refresh: Reload
   statuses:
     usernameSaved: Username saved.
     usernameError: Failed to save username.
@@ -84,11 +71,8 @@ aria:
 
 reviewImages:
   label: Attached images $1 / $2
-  help: Up to 5 JPEG, PNG or WebP images, 8 MiB each. Still images only; at least 64×64 px, up to 8000 px per side and 40 megapixels. Uploaded when you save the review.
+  help: Up to 5 JPEG, PNG or WebP images, 8 MiB each. Uploaded when you save the review.
   add: Add images
-  empty: Click the button to choose images.
-  selected: $1 images selected
-  full: All 5 slots are filled. Remove an image to choose another.
   remove: Remove image $1
   imageAlt: Review image $1
   countError: You can attach up to 5 images.

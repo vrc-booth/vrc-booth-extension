@@ -66,15 +66,6 @@ export const updateUsername = async (username: string): Promise<void> => {
   state.myComments = state.myComments.map(rename);
   notify();
 };
-const retired = async (): Promise<never> => {
-  throw new ApiError("This retired endpoint is intentionally unavailable in the preview", 410);
-};
-export const upvoteComment = (_comment: CommentItem) => retired();
-export const downvoteComment = (_comment: CommentItem) => retired();
-export const updateUserAdult = (_value: boolean) => retired();
-export const updateUserAutoCollapse = (_value: boolean) => retired();
-export const updateBio = (_value: string) => retired();
-export const apiFetch = (_path: string, _init: RequestInit = {}): Promise<never> => retired();
 
 // In-memory only. Selected files never leave this isolated preview.
 export const captureReviewSession = async (signal?: AbortSignal) => {

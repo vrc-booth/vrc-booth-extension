@@ -9,7 +9,6 @@ export const useProductQuery = (options?: ProductQueryOptions) =>
   useQuery<ReviewProduct | null>({
     queryKey: ["product", typeof window === "undefined" ? "unknown" : normalizeUrl(window.location.href)],
     queryFn: findProductForCurrentPage,
-    refetchOnWindowFocus: false,
     retry: false,
     ...options,
   });

@@ -27,8 +27,6 @@ export type CommentItem = {
   language?: string;
   blinded?: boolean;
   images?: ReviewImage[];
-  upvotes?: number;
-  downvotes?: number;
   updatedAt: string;
   user: {
     id: string;

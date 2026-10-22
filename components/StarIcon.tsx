@@ -1,10 +1,5 @@
-import {
-  IconStar,
-  IconStarFilled,
-  IconStarHalfFilled,
-} from '@tabler/icons-react';
-import { useMemo } from 'react';
-import { i18n } from '#i18n';
+import { IconStar, IconStarFilled, IconStarHalfFilled } from "@tabler/icons-react";
+import { i18n } from "#i18n";
 
 type Props = {
   score?: number;
@@ -13,49 +8,35 @@ type Props = {
   onSelect?: (value: number) => void;
 };
 
-const StarIcons = ({ score = 0, size = 24, interactive = false, onSelect }: Props) => {
-  const starArr = useMemo(() => new Array(5).fill(0), []);
+const STAR_COUNT = 5;
 
-  return (
-    <div className="flex flex-row gap-0.5">
-      {starArr.map((_, idx) => {
-        const baseValue = idx * 2;
-        const fill = Math.max(0, Math.min(1, (score - baseValue) / 2));
-        const isFilled = fill >= 1;
-        const isHalf = fill > 0 && fill < 1;
-        const color = fill > 0 ? "text-yellow-500" : "text-slate-200";
-
-        let StarIcon = IconStar;
-        if (isFilled) {
-          StarIcon = IconStarFilled;
-        } else if (isHalf) {
-          StarIcon = IconStarHalfFilled;
-        }
-
-        return (
-          <div key={`star_${idx}`} className="relative inline-flex items-center justify-center">
-            <StarIcon className={`block aspect-square ${color}`} size={size} />
-            {interactive && onSelect && (
-              <>
-                <button
-                  type="button"
-                  className="absolute inset-y-0 left-0 w-1/2 cursor-pointer bg-transparent"
-                  aria-label={i18n.t("aria.scorePoint", [baseValue + 1])}
-                  onClick={() => onSelect(baseValue + 1)}
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 w-1/2 cursor-pointer bg-transparent"
-                  aria-label={i18n.t("aria.scorePoint", [baseValue + 2])}
-                  onClick={() => onSelect(baseValue + 2)}
-                />
-              </>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-};
+/** Half-star granularity on the service's 0–10 scale, drawn in BOOTH's accent red. */
+const StarIcons = ({ score = 0, size = 24, interactive = false, onSelect }: Props) => (
+  <div
+    className="inline-flex gap-0.5"
+    role={interactive ? undefined : "img"}
+    aria-label={interactive ? undefined : i18n.t("aria.scorePoint", [score])}
+  >
+    {Array.from({ length: STAR_COUNT }, (_, index) => {
+      const baseValue = index * 2;
+      const fill = Math.max(0, Math.min(1, (score - baseValue) / 2));
+      const Star = fill >= 1 ? IconStarFilled : fill > 0 ? IconStarHalfFilled : IconStar;
+      return (
+        <span key={index} className={`relative inline-flex ${fill > 0 ? "text-booth-primary" : "text-booth-border"}`}>
+          <Star size={size} stroke={1.5} aria-hidden="true" />
+          {interactive && onSelect && [1, 2].map((offset) => (
+            <button
+              key={offset}
+              type="button"
+              aria-label={i18n.t("aria.scorePoint", [baseValue + offset])}
+              className={`absolute inset-y-0 ${offset === 1 ? "left-0 rounded-l-sm" : "right-0 rounded-r-sm"} w-1/2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-booth-primary`}
+              onClick={() => onSelect(baseValue + offset)}
+            />
+          ))}
+        </span>
+      );
+    })}
+  </div>
+);
 
 export default StarIcons;

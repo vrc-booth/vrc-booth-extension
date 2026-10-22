@@ -1,11 +1,12 @@
 import "@/assets/tailwind.css";
 import "./preview.css";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ReviewBoard } from "@/components/ReviewBoard";
+import { createReviewQueryClient } from "@/components/review/queryClient";
 import { CommentCountButton } from "@/components/review/CommentCountButton";
 import { IconHeart } from "@tabler/icons-react";
 import { registerReviewBoard } from "@/components/review/reviewBoardFocus";
@@ -16,12 +17,12 @@ import { setLocale, type PreviewLocale } from "./mocks/i18n";
 import { installPreviewNetworkGuard } from "./network";
 
 installPreviewNetworkGuard();
-const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false } } });
+const queryClient = createReviewQueryClient({ retry: false });
 const scenarios: Array<{ id: PreviewScenario; title: string; description: string }> = [
   { id: "signed-out", title: "로그아웃 · Reviews", description: "로그인 안내와 실제 리뷰 컴포넌트를 확인하세요" },
-  { id: "signed-in", title: "로그인 · Write", description: "평점 선택, 댓글 작성·수정·삭제를 로컬에서 시험하세요" },
-  { id: "account", title: "계정 · Account", description: "사용자명 저장과 나의 댓글 페이지 이동을 확인하세요" },
-  { id: "empty", title: "빈 상태 · Empty", description: "리뷰가 없는 상품의 첫 댓글 작성 상태를 확인하세요" },
+  { id: "signed-in", title: "로그인 · Write", description: "평점 선택, 리뷰 작성·수정·삭제를 로컬에서 시험하세요" },
+  { id: "account", title: "계정 · Account", description: "사용자명 저장과 내 리뷰 페이지 이동을 확인하세요" },
+  { id: "empty", title: "빈 상태 · Empty", description: "리뷰가 없는 상품의 첫 리뷰 작성 상태를 확인하세요" },
 ];
 const initialScenario = new URLSearchParams(window.location.search).get("state");
 const selectedScenario = scenarios.some(({ id }) => id === initialScenario) ? initialScenario as PreviewScenario : "signed-out";
@@ -85,7 +86,7 @@ function Preview() {
           <QueryClientProvider client={queryClient}>
             <div key={`${revision}-${accountVisible}`} className={accountVisible ? "preview-account" : "preview-board"}>
               {accountVisible ? <AccountPanel /> : <>
-                <div className="mb-6 flex items-center gap-2" aria-label="하트 옆 댓글 수 미리보기">
+                <div className="mb-6 flex items-center gap-2" aria-label="하트 옆 리뷰 수 미리보기">
                   <div className="inline-flex h-12 items-center gap-1 rounded-lg border-2 border-[#d4d9e1] bg-white px-3 text-sm text-[#8190a5]" aria-label="하트 버튼 모양 예시">
                     <IconHeart size={24} stroke={1.5} />
                   </div>

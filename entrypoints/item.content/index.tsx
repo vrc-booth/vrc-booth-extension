@@ -3,11 +3,9 @@ import { registerReviewBoard } from "@/components/review/reviewBoardFocus";
 import ReactDOM from "react-dom/client";
 import "~/assets/tailwind.css";
 import App from "./App.tsx";
-import PurchaseApp from "./PurchaseApp.tsx";
 import CommentCountApp from "./CommentCountApp.tsx";
 import { resolveCommentCountAnchor } from "./commentCountAnchor";
 import { createProductUiLifecycle } from "./lifecycle";
-import { resolvePurchaseAnchor } from "./purchaseAnchor";
 
 let activeLifecycle: ReturnType<typeof createProductUiLifecycle> | undefined;
 let registeredReviewHost: HTMLElement | undefined;
@@ -52,6 +50,8 @@ export default defineContentScript({
             const wrapper = document.createElement("div");
             container.append(wrapper);
 
+            shadowHost.style.display = "block";
+
             registeredReviewHost = shadowHost;
             registerReviewBoard({ host: shadowHost, root: container });
 
@@ -70,24 +70,6 @@ export default defineContentScript({
             elements?.wrapper.remove();
           },
         }).then((ui) => lifecycle.add(ui, resolveReviewAnchor, "after")),
-        createShadowRootUi(ctx, {
-          name: "booth-purchase-review",
-          position: "inline",
-          anchor: resolvePurchaseAnchor,
-          append: "before",
-          onMount: (container) => {
-            const wrapper = document.createElement("div");
-            container.append(wrapper);
-
-            const root = ReactDOM.createRoot(wrapper);
-            root.render(<PurchaseApp />);
-            return { root, wrapper };
-          },
-          onRemove: (elements) => {
-            elements?.root.unmount();
-            elements?.wrapper.remove();
-          },
-        }).then((ui) => lifecycle.add(ui, resolvePurchaseAnchor, "before")),
       ]);
     } catch (error) {
       lifecycle.stop();

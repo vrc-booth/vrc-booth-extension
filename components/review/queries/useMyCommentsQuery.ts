@@ -17,7 +17,6 @@ export const useMyCommentsQuery = (page: number, limit: number, options?: MyComm
     queryKey: ["myComments", page, limit],
     queryFn: () => fetchMyComments(page, limit),
     enabled: resolvedEnabled,
-    refetchOnWindowFocus: false,
     ...restOptions,
   });
 };

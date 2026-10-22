@@ -1,8 +1,8 @@
 {
   "name": "boothplus",
-  "description": "manifest.json description",
+  "description": "BOOTH 상품 페이지에서 리뷰·별점·사진을 확인하고, Discord 로그인으로 내 리뷰를 작성·수정·삭제하세요.",
   "private": true,
-  "version": "3.3.0",
+  "version": "3.3.1",
   "type": "module",
   "scripts": {
     "dev": "wxt",

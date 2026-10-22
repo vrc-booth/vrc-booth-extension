@@ -25,7 +25,6 @@ export const useProductCommentsQuery = (productId: string | null, limit = COMMEN
       return fetchCommentsForProduct(productId, pageNumber, limit);
     },
     enabled: resolvedEnabled,
-    refetchOnWindowFocus: false,
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
       if (lastPage.pageSize <= 0) {

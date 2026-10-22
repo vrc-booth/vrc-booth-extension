@@ -26,7 +26,9 @@ def archive_contents(path):
     with zipfile.ZipFile(path) as archive:
         names = archive.namelist()
         check(len(names) == len(set(names)), f"{path}: duplicate ZIP entries")
-        for name in names:
+        for info in archive.infolist():
+            # ZipInfo normalizes backslashes on Windows; validate the raw entry.
+            name = info.orig_filename
             check(not name.startswith("/") and ".." not in PurePosixPath(name).parts
                   and "\\" not in name, f"{path}: unsafe entry {name}")
             check(not name.endswith(".pyc") and "__pycache__" not in name,
@@ -98,7 +100,7 @@ def release_blockers(manifests):
 
 
 def verify(root, normalize=False, release_ready=False, chrome_only=False):
-    pkg = json.loads((root / "package.json").read_text())
+    pkg = json.loads((root / "package.json").read_text(encoding="utf-8"))
     version = pkg["version"]
     check(pkg["name"] == "boothplus" and re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version), "Invalid release metadata")
     check(version != "0.0.0" and all(int(part) <= 65535 for part in version.split(".")), "Invalid extension version")
@@ -119,7 +121,7 @@ def verify(root, normalize=False, release_ready=False, chrome_only=False):
                       f"Source archive differs from checkout: {name_in_zip}")
         else:
             directory = root / "dist" / ("chrome-mv3" if target == "chrome" else "firefox-mv2")
-            manifest = json.loads((directory / "manifest.json").read_text())
+            manifest = json.loads((directory / "manifest.json").read_text(encoding="utf-8"))
             validate_extension(contents, manifest, version, target)
             expected_files = {path.relative_to(directory).as_posix(): path.read_bytes() for path in directory.rglob("*") if path.is_file()}
             check(contents == expected_files, f"{target}: ZIP contents do not exactly match the build directory")
@@ -138,7 +140,7 @@ def verify(root, normalize=False, release_ready=False, chrome_only=False):
         blockers.append(f"Installed {'Chrome' if chrome_only else 'Chrome/Firefox'} QA attestation for the exact candidate is missing")
     if release_ready:
         check(not blockers, "Release blocked: " + "; ".join(blockers))
-        qa = json.loads(qa_path.read_text())
+        qa = json.loads(qa_path.read_text(encoding="utf-8"))
         check(qa.get("source_commit") == git("rev-parse", "HEAD") and qa.get("version") == version, "QA evidence is stale")
         check(qa["browsers"]["chrome"]["extension_id"] == CHROME_ID, "Chrome QA used a different extension ID")
         check(qa["browsers"]["chrome"]["oauth_redirect"].startswith(f"https://{CHROME_ID}.chromiumapp.org/"), "Chrome QA redirect differs from stable identity")
@@ -157,8 +159,8 @@ def verify(root, normalize=False, release_ready=False, chrome_only=False):
               "chrome_extension_id": CHROME_ID, "release_blockers": blockers,
               "lockfile_sha256": hashlib.sha256((root / "bun.lock").read_bytes()).hexdigest(),
               "package_manager": pkg.get("packageManager"), "artifacts": artifacts}
-    (root / "dist" / "release-manifest.json").write_text(json.dumps(report, indent=2) + "\n")
-    (root / "dist" / "SHA256SUMS").write_text("".join(f"{item['sha256']}  {item['file']}\n" for item in artifacts))
+    (root / "dist" / "release-manifest.json").write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    (root / "dist" / "SHA256SUMS").write_text("".join(f"{item['sha256']}  {item['file']}\n" for item in artifacts), encoding="utf-8")
     return report
 
 

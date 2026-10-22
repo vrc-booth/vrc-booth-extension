@@ -28,7 +28,6 @@ describe("legacy-compatible review UI", () => {
     expect(userPanel).toContain('id="username"');
     expect(userPanel).toContain("handleUsernameSave");
     expect(userPanel).toContain("<UserCommentsList");
-    expect(userPanel).toContain('i18n.t("userPanel.retiredSettings")');
     expect(userPanel).not.toMatch(/updateBio|updateUserAdult|updateUserAutoCollapse|updateUserHideAvatar/);
     expect(userPanel).not.toMatch(/type="checkbox"|id="bio"|bioSaved|adultSaved/);
   });
@@ -66,7 +65,6 @@ describe("legacy-compatible review UI", () => {
 
   it.each(["en", "ko", "ja"])("localizes the supported state in %s", (locale) => {
     const source = readSource(`locales/${locale}.yml`);
-    expect(source).toMatch(/^  retiredSettings: .+$/m);
     expect(source).toMatch(/^  usernameSetupHint: .+$/m);
     expect(source).toMatch(/^  accountSettingsError: .+$/m);
     expect(source).toMatch(/^  contentTooLong: .*\$1.*$/m);

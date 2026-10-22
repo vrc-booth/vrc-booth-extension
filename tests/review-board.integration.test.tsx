@@ -148,6 +148,11 @@ function button(label: string): HTMLButtonElement {
   return match!;
 }
 function textarea(): HTMLTextAreaElement { return container.querySelector("textarea")!; }
+function loginButton(): HTMLButtonElement {
+  const match = container.querySelector<HTMLButtonElement>("#review-login-button");
+  expect(match, "Expected the single Discord login button").not.toBeNull();
+  return match!;
+}
 async function click(element: HTMLElement) { await act(async () => element.click()); }
 async function typeReview(value: string) {
   await act(async () => {
@@ -242,8 +247,8 @@ describe("ReviewBoard React DOM integration", () => {
     await eventually(() => expect(container.querySelector('[role="alert"]')).not.toBeNull());
     expect(container.textContent).not.toContain("reviewBoard.noComments");
     expect(textarea().disabled).toBe(true);
-    expect(mocks.errorToast).toHaveBeenCalledWith("Product request failed");
-    await click(button("userComments.refresh"));
+    expect(mocks.errorToast).not.toHaveBeenCalled();
+    await click(button("reviewBoard.retry"));
     await eventually(() => expect(container.textContent).toContain("reviewBoard.noComments"));
     expect(mocks.findProduct).toHaveBeenCalledTimes(2);
     expect(container.querySelector('[role="alert"]')).toBeNull();
@@ -255,7 +260,7 @@ describe("ReviewBoard React DOM integration", () => {
     await ready();
     await eventually(() => expect(container.querySelector('[role="alert"]')).not.toBeNull());
     expect(container.textContent).not.toContain("reviewBoard.noComments");
-    await click(button("userComments.refresh"));
+    await click(button("reviewBoard.retry"));
     await eventually(() => expect(container.textContent).toContain("Review recovered"));
     expect(mocks.fetchComments).toHaveBeenCalledTimes(2);
     expect(mocks.findProduct).toHaveBeenCalledTimes(1);
@@ -277,7 +282,9 @@ describe("ReviewBoard React DOM integration", () => {
     await eventually(() => expect(container.textContent).toContain("reviewBoard.noComments"));
     expect(textarea().disabled).toBe(true);
     expect(button("reviewBoard.submit.new").disabled).toBe(true);
-    expect(container.textContent).toContain("reviewBoard.loginPrompt");
+    expect(container.querySelectorAll("#review-login-button")).toHaveLength(1);
+    expect(loginButton().disabled).toBe(false);
+    expect(container.querySelector("form")?.hidden).toBe(true);
     expect(container.textContent).not.toContain("reviewBoard.button.accountSettings");
     await click(button("aria.scorePoint:1"));
     await submitForm();
@@ -388,18 +395,19 @@ describe("ReviewBoard React DOM integration", () => {
     mocks.fetchProfile.mockResolvedValue(null);
     mocks.login.mockReturnValueOnce(cancelled.promise).mockReturnValueOnce(successful.promise);
     await renderBoard();
-    await eventually(() => expect(button("reviewBoard.button.login").disabled).toBe(false));
-    await click(button("reviewBoard.button.login"));
-    expect(button("reviewBoard.button.login").disabled).toBe(true);
-    await click(button("reviewBoard.button.login"));
+    await eventually(() => expect(loginButton().disabled).toBe(false));
+    await click(loginButton());
+    expect(loginButton().disabled).toBe(true);
+    expect(loginButton().textContent).toBe("reviewBoard.loginPending");
+    await click(loginButton());
     expect(mocks.login).toHaveBeenCalledTimes(1);
     await act(async () => cancelled.reject(new Error("Cancelled by user")));
-    await eventually(() => expect(button("reviewBoard.button.login").disabled).toBe(false));
+    await eventually(() => expect(loginButton().disabled).toBe(false));
     expect(mocks.errorToast).toHaveBeenCalledWith("messages.loginError");
     expect(mocks.fetchProfile).toHaveBeenCalledTimes(1);
     expect(textarea().disabled).toBe(true);
-    await click(button("reviewBoard.button.login"));
-    await click(button("reviewBoard.button.login"));
+    await click(loginButton());
+    await click(loginButton());
     expect(mocks.login).toHaveBeenCalledTimes(2);
     mocks.fetchProfile.mockResolvedValue(profile);
     await act(async () => successful.resolve());
@@ -428,7 +436,7 @@ describe("ReviewBoard React DOM integration", () => {
     mocks.fetchProfile.mockResolvedValue(null);
     await act(async () => logout.resolve());
     await eventually(() => {
-      expect(button("reviewBoard.button.login").disabled).toBe(false);
+      expect(loginButton().disabled).toBe(false);
       expect(textarea().value).toBe("");
       expect(textarea().disabled).toBe(true);
     });
@@ -466,8 +474,8 @@ describe("ReviewBoard React DOM integration", () => {
     mocks.fetchProfile.mockResolvedValue(null);
     mocks.login.mockReturnValue(login.promise);
     await renderBoard();
-    await eventually(() => expect(button("reviewBoard.button.login").disabled).toBe(false));
-    await click(button("reviewBoard.button.login"));
+    await eventually(() => expect(loginButton().disabled).toBe(false));
+    await click(loginButton());
     mocks.fetchProfile.mockResolvedValue(profile);
     mocks.fetchMyComment.mockResolvedValue(existingReview);
     await act(async () => login.resolve());
@@ -484,7 +492,8 @@ describe("ReviewBoard React DOM integration", () => {
     await submitForm();
     await eventually(() => expect(container.querySelector('[role="status"]')?.textContent).toContain("messages.usernameSetupHint"));
     expect(textarea().value).toBe("Please save this review");
-    expect(mocks.errorToast).toHaveBeenCalledWith("messages.usernameSetupHint");
+    expect(mocks.errorToast).not.toHaveBeenCalled();
+    expect(container.textContent).not.toContain("reviewBoard.button.accountSettings:");
     const hintButton = container.querySelector<HTMLButtonElement>('[role="status"] button')!;
     await click(hintButton);
     expect(mocks.sendMessage).toHaveBeenCalledWith("openAccountSettings", undefined);
@@ -771,11 +780,11 @@ describe("review image authoring and safe rendering (synthetic DOM only)", () =>
   it("does not erase existing images when login's public-comments refetch finishes last", async () => {
     const slowComments = deferred<typeof emptyPage>();
     mocks.fetchProfile.mockResolvedValue(null);
-    await renderBoard(); await eventually(() => expect(button("reviewBoard.button.login").disabled).toBe(false));
+    await renderBoard(); await eventually(() => expect(loginButton().disabled).toBe(false));
     mocks.fetchProfile.mockResolvedValue(profile);
     mocks.fetchMyComment.mockResolvedValue({ ...existingReview, images: [imageOne] });
     mocks.fetchComments.mockReturnValue(slowComments.promise);
-    await click(button("reviewBoard.button.login"));
+    await click(loginButton());
     await eventually(() => expect(draftImages()).toHaveLength(1));
     await act(async () => slowComments.resolve(emptyPage));
     await eventually(() => expect(button("reviewBoard.submit.edit").disabled).toBe(false));
@@ -786,9 +795,9 @@ describe("review image authoring and safe rendering (synthetic DOM only)", () =>
     mocks.fetchMyComment.mockRejectedValueOnce(new Error("read unavailable")).mockResolvedValue(existingReview);
     await renderBoard(); await eventually(() => expect(container.querySelector('[role="alert"]')).not.toBeNull());
     expect(textarea().disabled).toBe(true);
-    expect(container.textContent).not.toContain("reviewBoard.loginPrompt");
+    expect(container.querySelector("#review-login-button")).toBeNull();
     await submitForm(); expect(mocks.submitComment).not.toHaveBeenCalled();
-    await click(button("userComments.refresh"));
+    await click(button("reviewBoard.retry"));
     await eventually(() => expect(textarea().value).toBe(existingReview.content));
     expect(textarea().disabled).toBe(false);
   });

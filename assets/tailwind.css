@@ -1,3 +1,24 @@
 @import "tailwindcss";
 @source "../components";
 @source "../entrypoints";
+
+/*
+ * BOOTH's own look, measured on booth.pm product pages, so the injected UI reads
+ * as part of the page: flat surfaces, thin gray borders, one accent red.
+ */
+@theme {
+  --default-font-family: -apple-system, BlinkMacSystemFont, Avenir, "Helvetica Neue", "Segoe UI", Arial,
+    "ヒラギノ角ゴ ProN", "Hiragino Kaku Gothic ProN", メイリオ, Meiryo, "ＭＳ Ｐゴシック", sans-serif;
+  --font-sans: var(--default-font-family);
+
+  --color-booth-primary: #fc4d50;
+  --color-booth-primary-hover: #e94145;
+  --color-booth-text: #252f3d;
+  --color-booth-heading: #3d4651;
+  --color-booth-sub: #7f8d9f;
+  --color-booth-border: #d5d9de;
+  --color-booth-divider: #e6e8eb;
+  --color-booth-surface: #ebedf2;
+  --color-booth-surface-soft: #f8f9fb;
+  --color-discord: #5865f2;
+}
