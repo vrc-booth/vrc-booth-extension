@@ -1,5 +1,5 @@
 import type { CommentItem } from "@/components/review/types";
-import { SMALL_BUTTON_CLASS, TEXT_BUTTON_CLASS } from "@/components/ui/buttons";
+import { PAGER_BUTTON_CLASS, TEXT_BUTTON_CLASS } from "@/components/ui/buttons";
 import { i18n } from "#i18n";
 import { ReviewCard } from "./ReviewCard";
 
@@ -19,36 +19,36 @@ export function UserCommentsList({ comments, count, page, pageSize, isLoading, i
   const hasNoComments = !isLoading && comments.length === 0;
 
   return (
-    <section aria-labelledby="user-comments-title">
-      <div className="flex items-center justify-between gap-3 border-b border-booth-border pb-2">
-        <h2 id="user-comments-title" className="text-base font-bold text-booth-heading">
-          {i18n.t("userComments.title")}
-          <span className="ml-2 text-sm font-normal text-booth-sub">{i18n.t("userComments.total", [count])}</span>
-        </h2>
-        <button type="button" className={TEXT_BUTTON_CLASS} onClick={onRefresh} disabled={isFetching}>
-          {i18n.t("userComments.refresh")}
-        </button>
+    <section className="space-y-4 rounded-2xl bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-900">{i18n.t("userComments.title")}</h2>
+        <div className="flex items-center gap-2 text-[11px] text-slate-500">
+          <span>{i18n.t("userComments.total", [count])}</span>
+          <button type="button" className={TEXT_BUTTON_CLASS} onClick={onRefresh} disabled={isFetching}>
+            {i18n.t("userComments.refresh")}
+          </button>
+        </div>
       </div>
 
-      {isLoading && <p className="py-6 text-center text-sm text-booth-sub">{i18n.t("userComments.loading")}</p>}
-      {hasNoComments && <p className="py-6 text-center text-sm text-booth-sub">{i18n.t("userComments.empty")}</p>}
+      {isLoading && <p className="text-xs text-slate-500">{i18n.t("userComments.loading")}</p>}
+      {hasNoComments && <p className="text-xs text-slate-500">{i18n.t("userComments.empty")}</p>}
 
-      <div className="divide-y divide-booth-divider">
+      <div className="space-y-3">
         {comments.map((comment) => (
           <ReviewCard key={comment.id} comment={comment} showAuthor={false} />
         ))}
       </div>
 
       {totalPages > 1 && (
-        <nav className="mt-3 flex items-center justify-between text-xs text-booth-sub">
-          <button type="button" className={SMALL_BUTTON_CLASS} onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1}>
+        <div className="flex items-center justify-between text-[11px] text-slate-400">
+          <button type="button" className={PAGER_BUTTON_CLASS} onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1}>
             {i18n.t("userComments.previous")}
           </button>
-          <span className="tabular-nums">{page} / {totalPages}</span>
-          <button type="button" className={SMALL_BUTTON_CLASS} onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>
+          <span>{page} / {totalPages}</span>
+          <button type="button" className={PAGER_BUTTON_CLASS} onClick={() => onPageChange(page + 1)} disabled={page >= totalPages}>
             {i18n.t("userComments.next")}
           </button>
-        </nav>
+        </div>
       )}
     </section>
   );

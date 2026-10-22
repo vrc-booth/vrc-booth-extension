@@ -50,7 +50,6 @@ export default defineContentScript({
             const wrapper = document.createElement("div");
             container.append(wrapper);
 
-            shadowHost.style.display = "block";
 
             registeredReviewHost = shadowHost;
             registerReviewBoard({ host: shadowHost, root: container });

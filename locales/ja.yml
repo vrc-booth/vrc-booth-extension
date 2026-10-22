@@ -20,7 +20,7 @@ reviewBoard:
   placeholder: 使用した感想を正直に共有してください。
   characterCount: $1 / $2 文字
   rating: 評価
-  mine: 自分のレビュー
+  contentLabel: レビュー内容
   retry: 再試行
   submit:
     new: レビューを投稿

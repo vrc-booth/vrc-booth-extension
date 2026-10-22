@@ -20,7 +20,7 @@ reviewBoard:
   placeholder: Share your honest experience using the product.
   characterCount: $1 / $2 characters
   rating: Rating
-  mine: Your review
+  contentLabel: Your review
   retry: Try again
   submit:
     new: Post review

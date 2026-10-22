@@ -3,6 +3,7 @@ import { REVIEW_TOAST_CONTAINER_ID } from "@/utils/toast";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { i18n } from "#i18n";
 import { queryClient } from "./queryClient";
 
 export default () => (
@@ -18,8 +19,11 @@ export default () => (
         closeButton={false}
       />
     </div>
-    <div className="my-5 text-booth-text">
-      <ReviewBoard />
+    <div className="text-gray-900">
+      <div className="mx-auto max-w-4xl space-y-6">
+        <h1 className="text-2xl font-bold">{i18n.t("reviewBoard.header")}</h1>
+        <ReviewBoard />
+      </div>
     </div>
   </QueryClientProvider>
 );

@@ -16,7 +16,7 @@ reviewBoard:
   placeholder: 직접 사용한 경험을 솔직하게 공유해보세요.
   characterCount: $1 / $2자
   rating: 평점
-  mine: 내 리뷰
+  contentLabel: 리뷰 내용
   retry: 다시 시도
   loginTitle: 이 상품, 직접 사용해 보셨나요?
   loginDescription: 로그인하고 별점과 사진으로 사용 경험을 공유해 주세요.

@@ -10,10 +10,10 @@ type Props = {
 
 const STAR_COUNT = 5;
 
-/** Half-star granularity on the service's 0–10 scale, drawn in BOOTH's accent red. */
+/** Half-star granularity on the service's 0–10 scale. */
 const StarIcons = ({ score = 0, size = 24, interactive = false, onSelect }: Props) => (
   <div
-    className="inline-flex gap-0.5"
+    className="flex flex-row gap-0.5"
     role={interactive ? undefined : "img"}
     aria-label={interactive ? undefined : i18n.t("aria.scorePoint", [score])}
   >
@@ -22,18 +22,18 @@ const StarIcons = ({ score = 0, size = 24, interactive = false, onSelect }: Prop
       const fill = Math.max(0, Math.min(1, (score - baseValue) / 2));
       const Star = fill >= 1 ? IconStarFilled : fill > 0 ? IconStarHalfFilled : IconStar;
       return (
-        <span key={index} className={`relative inline-flex ${fill > 0 ? "text-booth-primary" : "text-booth-border"}`}>
-          <Star size={size} stroke={1.5} aria-hidden="true" />
+        <div key={index} className="relative inline-flex items-center justify-center">
+          <Star className={`block aspect-square ${fill > 0 ? "text-yellow-500" : "text-slate-200"}`} size={size} aria-hidden="true" />
           {interactive && onSelect && [1, 2].map((offset) => (
             <button
               key={offset}
               type="button"
               aria-label={i18n.t("aria.scorePoint", [baseValue + offset])}
-              className={`absolute inset-y-0 ${offset === 1 ? "left-0 rounded-l-sm" : "right-0 rounded-r-sm"} w-1/2 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-booth-primary`}
+              className={`absolute inset-y-0 ${offset === 1 ? "left-0" : "right-0"} w-1/2 cursor-pointer bg-transparent focus-visible:outline-2 focus-visible:outline-[#fc4d50]`}
               onClick={() => onSelect(baseValue + offset)}
             />
           ))}
-        </span>
+        </div>
       );
     })}
   </div>

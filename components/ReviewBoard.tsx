@@ -27,8 +27,14 @@ import { useReviewImageDraft, type DraftReviewImage } from "@/components/review/
 import { ReviewCard } from "@/components/review/components/ReviewCard";
 import { ReviewImageInput } from "@/components/review/components/ReviewImageInput";
 import StarIcons from "./StarIcon";
-import { IconBrandDiscord } from "@tabler/icons-react";
-import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS, TEXT_BUTTON_CLASS } from "@/components/ui/buttons";
+import {
+  ACCENT_PILL_BUTTON_CLASS,
+  DANGER_BUTTON_CLASS,
+  LOGIN_BUTTON_CLASS,
+  PILL_BUTTON_CLASS,
+  PRIMARY_BUTTON_CLASS,
+  SECONDARY_BUTTON_CLASS,
+} from "@/components/ui/buttons";
 
 const DEFAULT_SCORE = 8;
 const MAX_COMMENT_LENGTH = 500;
@@ -431,7 +437,9 @@ export function ReviewBoard() {
 
   if (productQuery.isLoading) {
     return (
-      <section className="py-6 text-center text-sm text-booth-sub">{i18n.t("reviewBoard.loading")}</section>
+      <div className="rounded-3xl bg-white p-5 shadow">
+        <p className="text-sm text-slate-500">{i18n.t("reviewBoard.loading")}</p>
+      </div>
     );
   }
 
@@ -443,45 +451,44 @@ export function ReviewBoard() {
   const isOverLimit = formState.content.length > MAX_COMMENT_LENGTH;
 
   return (
-    <section className="text-booth-text" aria-labelledby="review-board-title">
-      <header className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-booth-border pb-3">
-        <h2 id="review-board-title" className="text-lg leading-7 font-bold text-booth-heading">
-          {i18n.t("reviewBoard.header")}
-          <span className="ml-2 text-sm font-normal text-booth-sub">
-            {i18n.t("reviewBoard.commentsCount", [commentCount])}
-          </span>
-        </h2>
+    <div className="rounded-3xl bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-[#fc4d50]">
+          {i18n.t("reviewBoard.commentsCount", [commentCount])}
+        </span>
         {isAuthenticated && (
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             {!showUsernameHint && (
-              <button type="button" className={TEXT_BUTTON_CLASS} onClick={handleOpenAccountSettings}>
+              <button type="button" className={PILL_BUTTON_CLASS} onClick={handleOpenAccountSettings}>
                 {i18n.t("reviewBoard.button.accountSettings")}
               </button>
             )}
-            <button type="button" className={TEXT_BUTTON_CLASS} onClick={handleLogout} disabled={isBusy}>
+            <button type="button" className={ACCENT_PILL_BUTTON_CLASS} onClick={handleLogout} disabled={isBusy}>
               {i18n.t("reviewBoard.button.logout")}
             </button>
           </div>
         )}
-      </header>
+      </div>
 
-      <div className="max-h-[440px] overflow-y-auto">
+      <div className="mt-4 max-h-[360px] space-y-3 overflow-x-hidden overflow-y-auto pr-2">
         {commentsLoading && (
-          <div className="divide-y divide-booth-divider" aria-hidden="true">
+          <div className="space-y-3" aria-hidden="true">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="animate-pulse space-y-2 py-4">
-                <span className="block h-3 w-1/4 rounded-sm bg-booth-surface" />
-                <span className="block h-3 w-3/4 rounded-sm bg-booth-surface" />
-                <span className="block h-3 w-1/2 rounded-sm bg-booth-surface" />
+              <div key={index} className="flex animate-pulse gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                <div className="flex-1 space-y-2">
+                  <span className="block h-3 w-1/3 rounded-full bg-slate-200" />
+                  <span className="block h-4 rounded-full bg-slate-200" />
+                  <span className="block h-3 w-2/3 rounded-full bg-slate-200" />
+                </div>
               </div>
             ))}
           </div>
         )}
 
         {hasError && (
-          <div role="alert" className="flex flex-wrap items-center gap-3 py-4 text-sm text-booth-primary">
+          <div role="alert" className="text-xs text-red-600">
             <p>{i18n.t("messages.fetchReviewFailed")}</p>
-            <button type="button" className="font-bold underline underline-offset-2" onClick={() => {
+            <button type="button" className="mt-2 underline" onClick={() => {
               if (productQuery.isError) void productQuery.refetch();
               else if (myCommentQuery.isError) void myCommentQuery.refetch();
               else void commentsQuery.refetch();
@@ -489,29 +496,25 @@ export function ReviewBoard() {
           </div>
         )}
         {productQuery.isSuccess && !product && (
-          <p className="py-6 text-center text-sm text-booth-sub">{i18n.t("reviewBoard.productUnavailable")}</p>
+          <p className="text-xs text-slate-500">{i18n.t("reviewBoard.productUnavailable")}</p>
         )}
         {showEmptyComments && (
-          <p className="py-6 text-center text-sm text-booth-sub">{i18n.t("reviewBoard.noComments")}</p>
+          <p className="text-xs text-slate-500">{i18n.t("reviewBoard.noComments")}</p>
         )}
 
-        {!commentsLoading && comments.length > 0 && (
-          <div className="divide-y divide-booth-divider">
-            {comments.map((comment) => (
-              <ReviewCard key={comment.id} comment={comment} highlighted={Boolean(user && comment.user.id === user.id)} />
-            ))}
-          </div>
-        )}
+        {!commentsLoading && comments.map((comment) => (
+          <ReviewCard key={comment.id} comment={comment} highlighted={Boolean(user && comment.user.id === user.id)} />
+        ))}
 
         {isFetchingNextPage && (
-          <p className="py-3 text-center text-xs text-booth-sub">{i18n.t("reviewBoard.loader.loadingMore")}</p>
+          <p className="text-center text-xs text-slate-500">{i18n.t("reviewBoard.loader.loadingMore")}</p>
         )}
         <div ref={loadMoreTriggerRef} className="h-px" />
       </div>
 
       {isSessionPending && (
-        <section role="status" className="mt-4 rounded-lg border border-booth-border px-5 py-5 text-center">
-          <p className="text-sm text-booth-sub">
+        <section role="status" className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center">
+          <p className="text-sm text-slate-600">
             {i18n.t(userQuery.isFetching || userQuery.isPending ? "reviewBoard.sessionChecking" : "reviewBoard.sessionUnavailable")}
           </p>
           {userQuery.isError && (
@@ -528,84 +531,77 @@ export function ReviewBoard() {
       )}
 
       {!isAuthenticated && userQuery.isSuccess && canWrite && (
-        <section className="mt-4 rounded-lg border border-booth-border px-5 py-6 text-center" aria-labelledby="review-login-title">
-          <h3 id="review-login-title" className="text-base font-bold text-booth-heading">{i18n.t("reviewBoard.loginTitle")}</h3>
-          <p className="mt-1 text-sm text-booth-sub">{i18n.t("reviewBoard.loginDescription")}</p>
+        <section className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5 text-center" aria-labelledby="review-login-title">
+          <h3 id="review-login-title" className="text-sm font-semibold text-slate-800">{i18n.t("reviewBoard.loginTitle")}</h3>
+          <p className="mt-1.5 text-xs leading-relaxed text-slate-500">{i18n.t("reviewBoard.loginDescription")}</p>
           <button
             id="review-login-button"
             type="button"
             disabled={isAuthPending}
             onClick={handleLogin}
-            className={`mt-4 ${SECONDARY_BUTTON_CLASS} disabled:cursor-wait`}
+            className={`mt-4 ${LOGIN_BUTTON_CLASS}`}
           >
-            <IconBrandDiscord size={20} className="text-discord" aria-hidden="true" />
             {i18n.t(isAuthPending ? "reviewBoard.loginPending" : "reviewBoard.loginAction")}
           </button>
         </section>
       )}
 
-      <form
-        hidden={!isAuthenticated || !canWrite}
-        className="mt-4 overflow-hidden rounded-lg border border-booth-border bg-white transition focus-within:border-booth-sub"
-        onSubmit={handleSubmit}
-      >
+      <form hidden={!isAuthenticated || !canWrite} className="mt-4 space-y-4 border-t border-slate-100 pt-4" onSubmit={handleSubmit}>
         {showUsernameHint && (
-          <div role="status" className="flex flex-wrap items-center gap-3 border-b border-booth-divider px-4 py-2.5 text-xs text-booth-primary">
+          <div role="status" className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-900">
             <p>{i18n.t("messages.usernameSetupHint")}</p>
-            <button type="button" className="font-bold underline underline-offset-2" onClick={handleOpenAccountSettings}>
+            <button type="button" className="mt-2 font-semibold underline underline-offset-2" onClick={handleOpenAccountSettings}>
               {i18n.t("reviewBoard.button.accountSettings")}
             </button>
           </div>
         )}
-        <textarea
-          id={REVIEW_FORM_FIELD_ID}
-          rows={4}
-          maxLength={MAX_COMMENT_LENGTH}
-          aria-describedby="review-content-count"
-          aria-invalid={isOverLimit}
-          className="block w-full resize-y border-0 bg-transparent px-4 pt-4 pb-2 text-sm leading-relaxed text-booth-text placeholder:text-booth-sub focus:outline-none disabled:opacity-60"
-          value={formState.content}
-          onChange={(event) =>
-            setFormState((previous) => ({ ...previous, content: event.target.value }))
-          }
-          placeholder={i18n.t("reviewBoard.placeholder")}
-          disabled={!canEdit || isSubmitting}
-        />
-        <div className="flex flex-wrap items-end justify-between gap-3 px-4 pb-3">
-          <ReviewImageInput images={imageDraft.images} disabled={!canEdit || isSubmitting} onAdd={handleAddImages} onRemove={handleRemoveImage} />
-          <p
-            id="review-content-count"
-            className={`ml-auto shrink-0 text-xs tabular-nums ${isOverLimit ? "text-booth-primary" : "text-booth-sub"}`}
-          >
+        <div>
+          <label className="text-xs font-semibold text-slate-500" htmlFor={REVIEW_FORM_FIELD_ID}>
+            {i18n.t("reviewBoard.contentLabel")}
+          </label>
+          <textarea
+            id={REVIEW_FORM_FIELD_ID}
+            rows={4}
+            maxLength={MAX_COMMENT_LENGTH}
+            aria-describedby="review-content-count"
+            aria-invalid={isOverLimit}
+            className="mt-1 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-inner transition focus:border-[#fc4d50]/80 focus:outline-none"
+            value={formState.content}
+            onChange={(event) =>
+              setFormState((previous) => ({ ...previous, content: event.target.value }))
+            }
+            placeholder={i18n.t("reviewBoard.placeholder")}
+            disabled={!canEdit || isSubmitting}
+          />
+          <p id="review-content-count" className={`mt-1 text-right text-[11px] ${isOverLimit ? "text-red-600" : "text-slate-400"}`}>
             {i18n.t("reviewBoard.characterCount", [formState.content.length, MAX_COMMENT_LENGTH])}
           </p>
         </div>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-booth-divider px-4 py-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-booth-sub">{i18n.t("reviewBoard.rating")}</span>
-            <StarIcons score={formState.score} size={22} interactive onSelect={handleStarSelect} />
-          </div>
-          <div className="flex items-center gap-4">
-            {myComment && (
-              <button
-                type="button"
-                className={`${TEXT_BUTTON_CLASS} hover:text-booth-primary`}
-                onClick={handleDelete}
-                disabled={!canEdit || isSubmitting}
-              >
-                {deleteMutation.isPending ? i18n.t("reviewBoard.submit.deleting") : i18n.t("reviewBoard.submit.delete")}
-              </button>
-            )}
-            <button type="submit" className={PRIMARY_BUTTON_CLASS} disabled={!canEdit || isSubmitting}>
-              {submitMutation.isPending
-                ? i18n.t("reviewBoard.submit.saving")
-                : myComment
-                  ? i18n.t("reviewBoard.submit.edit")
-                  : i18n.t("reviewBoard.submit.new")}
-            </button>
+
+        <ReviewImageInput images={imageDraft.images} disabled={!canEdit || isSubmitting} onAdd={handleAddImages} onRemove={handleRemoveImage} />
+
+        <div className="flex flex-col gap-2 text-xs font-semibold text-slate-500">
+          <span className="text-[11px]">{i18n.t("reviewBoard.rating")}</span>
+          <div className="flex gap-1">
+            <StarIcons score={formState.score} interactive onSelect={handleStarSelect} />
           </div>
         </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button type="submit" className={`flex-1 ${PRIMARY_BUTTON_CLASS}`} disabled={!canEdit || isSubmitting}>
+            {submitMutation.isPending
+              ? i18n.t("reviewBoard.submit.saving")
+              : myComment
+                ? i18n.t("reviewBoard.submit.edit")
+                : i18n.t("reviewBoard.submit.new")}
+          </button>
+          {myComment && (
+            <button type="button" className={DANGER_BUTTON_CLASS} onClick={handleDelete} disabled={!canEdit || isSubmitting}>
+              {deleteMutation.isPending ? i18n.t("reviewBoard.submit.deleting") : i18n.t("reviewBoard.submit.delete")}
+            </button>
+          )}
+        </div>
       </form>
-    </section>
+    </div>
   );
 }

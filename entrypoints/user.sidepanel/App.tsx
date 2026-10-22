@@ -1,6 +1,6 @@
 import { COMMENTS_PAGE_SIZE } from "@/components/review/constants";
 import { updateUsername } from "@/components/review/api";
-import { PRIMARY_BUTTON_CLASS, SECONDARY_BUTTON_CLASS } from "@/components/ui/buttons";
+import { PRIMARY_BUTTON_CLASS, SMALL_PRIMARY_BUTTON_CLASS } from "@/components/ui/buttons";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { FormEvent, useEffect, useState } from "react";
 import { useMyCommentsQuery, useUserProfileQuery } from "@/components/review/queries";
@@ -54,7 +54,7 @@ function App() {
 
   if (profileQuery.isPending) {
     return (
-      <div className="p-6 text-sm text-booth-sub">
+      <div className="p-6 text-sm text-slate-500">
         {i18n.t("userPanel.loading")}
       </div>
     );
@@ -62,16 +62,18 @@ function App() {
 
   if (!profileQuery.data) {
     return (
-      <div className="p-6 text-sm text-booth-sub">
-        <p>{i18n.t(profileQuery.isError ? "reviewBoard.sessionUnavailable" : "userPanel.notLoggedIn")}</p>
-        <button
-          type="button"
-          className={`mt-3 ${SECONDARY_BUTTON_CLASS}`}
-          onClick={() => profileQuery.refetch()}
-          disabled={profileQuery.isFetching}
-        >
-          {i18n.t("userPanel.checkLogin")}
-        </button>
+      <div className="p-6 text-sm text-slate-500">
+        {i18n.t(profileQuery.isError ? "reviewBoard.sessionUnavailable" : "userPanel.notLoggedIn")}
+        <div className="mt-3">
+          <button
+            type="button"
+            className={SMALL_PRIMARY_BUTTON_CLASS}
+            onClick={() => profileQuery.refetch()}
+            disabled={profileQuery.isFetching}
+          >
+            {i18n.t("userPanel.checkLogin")}
+          </button>
+        </div>
       </div>
     );
   }
@@ -79,37 +81,51 @@ function App() {
   const profile = profileQuery.data;
 
   return (
-    <div className="min-h-screen bg-white text-booth-text">
-      <div className="mx-auto max-w-lg space-y-6 px-5 py-6">
-        <header>
-          <h1 className="text-lg font-bold text-booth-heading">{i18n.t("userPanel.title")}</h1>
-          <p className="mt-1 text-sm text-booth-sub">
-            {i18n.t("userPanel.labels.discord")} {profile.discord} · {i18n.t("userPanel.labels.userId")} {profile.id}
+    <div className="min-h-screen bg-slate-50 p-6">
+      <div className="mx-auto max-w-lg space-y-5">
+        <div className="rounded-2xl bg-white p-4 shadow-sm">
+          <h1 className="text-lg font-semibold text-slate-900">
+            {i18n.t("userPanel.title")}
             {profile.admin && (
-              <span className="ml-2 rounded-sm border border-booth-border px-1.5 py-0.5 text-xs font-bold text-booth-text">
+              <span className="ml-2 rounded-full bg-[#fc4d50]/10 px-2 py-0.5 align-middle text-[11px] font-semibold text-[#fc4d50]">
                 {i18n.t("userPanel.labels.admin")}
               </span>
             )}
-          </p>
-        </header>
+          </h1>
+          <dl className="mt-4 space-y-2 text-[13px]">
+            <div className="flex justify-between">
+              <dt className="text-slate-500">{i18n.t("userPanel.labels.userId")}</dt>
+              <dd className="font-semibold text-slate-900">{profile.id}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-slate-500">{i18n.t("userPanel.labels.discord")}</dt>
+              <dd className="font-semibold text-slate-900">{profile.discord}</dd>
+            </div>
+          </dl>
+        </div>
 
-        <form className="space-y-2" onSubmit={handleUsernameSave}>
-          <label className="block text-xs font-bold text-booth-sub" htmlFor="username">
+        <form className="space-y-2 rounded-2xl bg-white p-4 shadow-sm" onSubmit={handleUsernameSave}>
+          <label className="text-[11px] font-semibold text-slate-500" htmlFor="username">
             {i18n.t("userPanel.profileFields.username")}
           </label>
           <div className="flex gap-2">
             <input
               id="username"
-              className="h-10 min-w-0 flex-1 rounded-lg border border-booth-border px-3 text-sm text-booth-text transition focus:border-booth-sub focus:outline-none"
+              className="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-[#fc4d50]/70 focus:outline-none"
               value={username}
               onChange={(event) => setUsername(event.target.value)}
             />
-            <button type="submit" className={`shrink-0 ${PRIMARY_BUTTON_CLASS}`} disabled={usernameMutation.isPending}>
+            <button type="submit" className={`${PRIMARY_BUTTON_CLASS} px-3 text-xs`} disabled={usernameMutation.isPending}>
               {i18n.t("userPanel.profileFields.save")}
             </button>
           </div>
           {status && (
-            <p role="status" className={`text-xs ${status.variant === "success" ? "text-booth-sub" : "text-booth-primary"}`}>
+            <p
+              role="status"
+              className={`rounded-xl px-3 py-2 text-xs ${
+                status.variant === "success" ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+              }`}
+            >
               {status.message}
             </p>
           )}

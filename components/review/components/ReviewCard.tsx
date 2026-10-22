@@ -8,30 +8,29 @@ type Props = {
   comment: CommentItem;
   /** Off where every entry belongs to the viewer, such as the account page. */
   showAuthor?: boolean;
-  /** Marks the viewer's own review inside a public list with a small label. */
+  /** Tints the viewer's own review inside a public list. */
   highlighted?: boolean;
 };
 
 const reviewAuthorName = (user: CommentItem["user"]) =>
   user.anonymous ? i18n.t("reviewBoard.anonymous") : user.deactivated ? i18n.t("reviewBoard.deactivated") : user.username;
 
-/** One review row. Flat and divider-separated so it reads like BOOTH's own lists. */
+/** One review, shared by the product board and the account page. */
 export function ReviewCard({ comment, showAuthor = true, highlighted = false }: Props) {
   return (
-    <article className="py-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 text-xs text-booth-sub">
-          {showAuthor && (
-            <p className="flex items-center gap-2 text-sm font-bold text-booth-text">
-              <span className="truncate">{reviewAuthorName(comment.user)}</span>
-              {highlighted && <span className="shrink-0 text-xs text-booth-primary">{i18n.t("reviewBoard.mine")}</span>}
-            </p>
-          )}
-          <p>{formatDateTime(comment.updatedAt)}</p>
+    <article
+      className={`rounded-2xl border px-4 py-3 shadow-sm transition ${
+        highlighted ? "border-[#fc4d50]/40 bg-[#fc4d50]/10" : "border-slate-100 bg-white"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          {showAuthor && <p className="truncate text-sm font-semibold text-slate-900">{reviewAuthorName(comment.user)}</p>}
+          <p className="text-[11px] text-slate-500">{formatDateTime(comment.updatedAt)}</p>
         </div>
-        <StarIcons score={comment.score} size={14} />
+        <StarIcons score={comment.score} size={12} />
       </div>
-      <p className="mt-2 text-sm leading-relaxed break-words whitespace-pre-line text-booth-text">
+      <p className="mt-2 text-sm leading-relaxed break-words whitespace-pre-line text-slate-900">
         {comment.blinded ? i18n.t("reviewBoard.blinded") : comment.content}
       </p>
       <ReviewImages images={comment.images} blinded={comment.blinded} />

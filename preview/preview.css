@@ -30,7 +30,7 @@ button:focus-visible, select:focus-visible { outline: 3px solid #fb8c75; outline
 .preview-stage { padding: 21px; border: 1px solid #dadfd6; border-radius: 18px; background: #e9ece5; box-shadow: 0 12px 35px #1e342507; }
 .preview-surface-label { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 16px; color: #70806f; font-size: 9px; letter-spacing: .3px; }
 .preview-board { max-width: 960px; margin: 0 auto; }
-.preview-board { background: #fff; border: 1px solid #dadfd6; border-radius: 12px; padding: 20px 24px; }
+.preview-board > div > div { box-shadow: 0 3px 12px #2d403008; }
 .preview-account { max-width: 520px; margin: 0 auto; border: 1px solid #dbe2db; border-radius: 16px; overflow: hidden; background: white; }
 .preview-account > div { min-height: auto; }
 .preview-back { display: block; margin: 16px auto 0; color: #596c59; border: 0; background: transparent; font-size: 11px; }
