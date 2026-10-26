@@ -1,6 +1,15 @@
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig, WxtViteConfig } from 'wxt';
 
+// Permanent Gecko ID: Firefox derives the Discord OAuth redirect URL from it, and AMO never lets it change.
+export const FIREFOX_GECKO_ID = "@boothplus.ribe";
+// Kept outside the manifest literal because WXT's gecko type predates data_collection_permissions (Firefox 140+).
+const FIREFOX_GECKO = {
+  id: FIREFOX_GECKO_ID,
+  strict_min_version: "140.0",
+  data_collection_permissions: { required: ["authenticationInfo", "browsingActivity", "personalCommunications"] },
+};
+
 // See https://wxt.dev/api/config.html
 export default defineConfig({
   vite: (): WxtViteConfig => ({
@@ -12,7 +21,7 @@ export default defineConfig({
     default_locale: "ko",
     permissions: browser === "firefox" ? ["identity", "storage"] : ["identity", "storage", "sidePanel"],
     host_permissions: [ "*://vbt.kamyu.me/api/**/*", "*://discord.com/**/*" ],
-    
+    browser_specific_settings: browser === "firefox" ? { gecko: FIREFOX_GECKO } : undefined,
   }),
   webExt: {
     startUrls: ["https://booth.pm/ko/items/6571299", "https://jingo1016.booth.pm/items/5058077"],
