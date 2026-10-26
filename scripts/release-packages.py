@@ -13,6 +13,10 @@ import tempfile
 import zipfile
 
 CHROME_ID = "hafbafjoecfjdlhjilpakabocglkaegj"
+FIREFOX_ID = "@boothplus.ribe"
+FIREFOX_DATA_COLLECTION = {"required": ["authenticationInfo", "browsingActivity", "personalCommunications"]}
+# Firefox identity.getRedirectURL(): SHA-1 of the add-on ID under extensions.allizom.org.
+FIREFOX_REDIRECT = f"https://{hashlib.sha1(FIREFOX_ID.encode()).hexdigest()}.extensions.allizom.org/"
 HOSTS = {"*://vbt.kamyu.me/api/**/*", "*://discord.com/**/*"}
 MATCHES = {"*://*.booth.pm/items/*", "*://booth.pm/*/items/*"}
 
@@ -81,6 +85,10 @@ def validate_extension(contents, manifest, version, browser):
     else:
         check("key" not in manifest and "side_panel" not in manifest, "Chrome-only manifest keys leaked into Firefox")
         check(manifest.get("background", {}).get("scripts") == ["background.js"], "Firefox background script missing")
+        gecko = manifest.get("browser_specific_settings", {}).get("gecko", {})
+        check(gecko.get("id") == FIREFOX_ID, "Firefox extension ID changed")
+        check(gecko.get("data_collection_permissions") == FIREFOX_DATA_COLLECTION,
+              "Firefox data-collection disclosure changed; review the AMO disclosure before packaging")
     for resource in resources:
         check(resource and resource in contents, f"{browser}: referenced resource missing: {resource}")
     check(not any(name.endswith(".map") for name in contents), f"{browser}: unexpected source maps")
@@ -151,7 +159,8 @@ def verify(root, normalize=False, release_ready=False, chrome_only=False):
             spec.loader.exec_module(verifier)
             verifier.validate_qa(qa, version, git("rev-parse", "HEAD"), CHROME_ID)
         else:
-            check(qa["browsers"]["firefox"]["extension_id"] == manifests["firefox"]["browser_specific_settings"]["gecko"]["id"], "Firefox QA used a different extension ID")
+            check(qa["browsers"]["firefox"]["extension_id"] == FIREFOX_ID, "Firefox QA used a different extension ID")
+            check(qa["browsers"]["firefox"]["oauth_redirect"].startswith(FIREFOX_REDIRECT), "Firefox QA redirect differs from stable identity")
     report = {"version": version, "proposed_tag": f"v{version}", "source_commit": git("rev-parse", "HEAD"),
               "working_tree_dirty": dirty, "publication_performed": False,
               "chrome_extension_id": CHROME_ID, "release_blockers": blockers,

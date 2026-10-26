@@ -10,7 +10,8 @@
 - 회전 토큰의 다중 탭 갱신, Discord 취소/오류/state/반환 주소 검사를 보강했습니다.
 - 지연 생성·교체된 BOOTH 요소에 리뷰 UI를 다시 연결하고 상품 이동·컨텍스트 종료 시 이전 React 루트를 정리합니다.
 - Chrome 전용 권한·키를 Firefox에 넣지 않으며, Firefox 계정 설정은 별도 확장 페이지로 엽니다.
-- Firefox 개발 모드 빌드에 테스트용 Gecko ID(`ribe@ribe.io`)를 고정해 Discord 로그인 반환 주소가 실행마다 바뀌지 않게 했습니다. 배포용 빌드에는 넣지 않습니다.
+- Firefox Gecko ID를 `@boothplus.ribe`로 고정해 Discord 로그인 반환 주소가 설치·실행마다 바뀌지 않게 했습니다.
+- Firefox AMO 데이터 수집 고지(로그인 정보·조회 상품·작성 리뷰)를 추가하고 최소 버전을 Firefox 140으로 올렸습니다.
 - Chrome·Firefox의 불필요한 `tabs` 권한을 제거하고 패키지 검증 기준을 맞췄습니다.
 - PR CI와 수동 패키지 준비를 분리했습니다. 어떤 워크플로도 공개 릴리스나 스토어 제출을 자동 실행하지 않습니다.
 
@@ -24,4 +25,4 @@
 
 ### 알려진 배포 차단 항목
 
-설치된 Chrome/Firefox의 실제 OAuth·서비스 워커·리뷰 CRUD·업데이트 QA는 아직 미실행입니다. Firefox 영구 부가 기능 ID, 해당 OAuth 반환 주소 등록, AMO 데이터 수집 고지·서명도 게시자 확인이 필요합니다. 합성 DOM 검사와 빌드 성공은 이 검증을 대체하지 않습니다.
+설치된 Chrome/Firefox의 실제 OAuth·서비스 워커·리뷰 CRUD·업데이트 QA는 아직 미실행입니다. Firefox 영구 부가 기능 ID는 `@boothplus.ribe`로 정했으며, AMO 데이터 수집 고지도 설정했습니다. 해당 OAuth 반환 주소 등록과 서명은 게시자 확인이 필요합니다. 합성 DOM 검사와 빌드 성공은 이 검증을 대체하지 않습니다.

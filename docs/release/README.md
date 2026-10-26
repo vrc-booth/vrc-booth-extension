@@ -32,7 +32,7 @@ bun run release:verify
 
 Chrome의 기존 공개 키는 유지하며 계산된 ID는 `hafbafjoecfjdlhjilpakabocglkaegj`다. 관찰해야 할 반환 주소는 `https://hafbafjoecfjdlhjilpakabocglkaegj.chromiumapp.org/`이다. 실제 Discord 등록 여부를 확인한 것은 아니다.
 
-Firefox에는 Chrome의 key/sidePanel 권한을 넣지 않는다. 계정 설정은 account.html로 열린다. 영구 Gecko ID를 임의로 만들지 않았다. 게시자가 ID를 결정하고 해당 ID의 identity.getRedirectURL() 결과를 실제로 확인하여 Discord 등록·AMO 고지·서명을 완료해야 한다. [Mozilla 설명](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/identity/getRedirectURL)에 따르면 임시 설치 ID가 바뀌면 반환 주소도 바뀐다. 개발 모드 Firefox 빌드에만 테스트용 Gecko ID `ribe@ribe.io`(반환 주소 `https://d75f1d80d55cc7c6b40121faf9b7ad4c9937d5f6.extensions.allizom.org/`)를 넣어 로그인 테스트 중 반환 주소를 고정한다. production 빌드/ZIP에는 넣지 않으므로 Gecko ID 배포 차단 항목은 그대로다.
+Firefox에는 Chrome의 key/sidePanel 권한을 넣지 않는다. 계정 설정은 account.html로 열린다. 게시자가 정한 영구 Gecko ID는 `@boothplus.ribe`이며 개발·배포 빌드가 같은 ID를 쓴다. identity.getRedirectURL()은 ID의 SHA-1로 `https://b475ff88666ec2af067c43d77ddaa1fb51507536.extensions.allizom.org/`를 만든다. 실제 Discord 등록 여부를 확인한 것은 아니며, 이 주소를 실제 설치에서 확인하고 Discord 등록·서명을 완료해야 한다. AMO 데이터 수집 고지는 `authenticationInfo`(Discord 로그인 토큰)·`browsingActivity`(조회 중인 BOOTH 상품 번호)·`personalCommunications`(작성한 리뷰 글·이미지)로 정했고 최소 버전은 Firefox 140.0이다. 고지 항목이 바뀌면 패키지 검증이 실패하므로 AMO 고지를 다시 검토한다. [Mozilla 설명](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/identity/getRedirectURL)에 따르면 임시 설치 ID가 바뀌면 반환 주소도 바뀐다.
 
 기존 local:authToken 키와 accessToken/refreshToken 쌍을 유지한다. 새 sessionId 필드는 선택적이며 옛 토큰 쌍을 지우는 마이그레이션은 없다. 자동 검사는 이전 형식과 모듈 재로드를 확인했지만 실제 브라우저 재시작/확장 업데이트 검사는 #31에서 해야 한다. 제거된 프로필 옵션은 서버에도 저장되지 않으므로 값을 복구하거나 새 저장소로 이전하지 않는다. 칩 숨김 키는 기존 PR #29 형식을 유지한다.
 
@@ -40,7 +40,7 @@ Firefox에는 Chrome의 key/sidePanel 권한을 넣지 않는다. 계정 설정�
 
 1. #30의 최종 통합 커밋을 검토·원격 반영한 뒤 동일 SHA를 후보로 고정
 2. #31 실제 설치·OAuth·다중 탭·재시작·리뷰 CRUD·ko/en/ja·구매 영역 비가림·업데이트 검증 완료
-3. Firefox 영구 ID/반환 주소/수집 고지/서명 차단 항목 해소
+3. Firefox 반환 주소 Discord 등록/서명 차단 항목 해소
 4. 깨끗한 동일 커밋에서 다시 패키징하고 해시·QA 기록 검토
 5. 별도 게시 승인을 받은 뒤에만 GitHub Release/스토어 제출 진행
 

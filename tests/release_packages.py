@@ -42,6 +42,23 @@ class ReleaseArchiveTests(unittest.TestCase):
             "id": "test@example.test", "data_collection_permissions": {"required": ["authenticationInfo"]}
         }}}}), [])
 
+    def test_firefox_identity_matches_config_and_redirect(self):
+        config = (Path(__file__).parents[1] / "wxt.config.ts").read_text()
+        self.assertIn(f'FIREFOX_GECKO_ID = "{release.FIREFOX_ID}"', config)
+        self.assertEqual(release.FIREFOX_REDIRECT, "https://b475ff88666ec2af067c43d77ddaa1fb51507536.extensions.allizom.org/")
+
+    def test_changed_firefox_identity_does_not_pass(self):
+        manifest = {"name": "boothplus", "version": "3.3.0", "manifest_version": 2, "default_locale": "ko",
+                    "permissions": ["identity", "storage", *release.HOSTS],
+                    "content_scripts": [{"matches": list(release.MATCHES)}],
+                    "background": {"scripts": ["background.js"]},
+                    "browser_specific_settings": {"gecko": {"id": "@other.extension"}}}
+        with self.assertRaisesRegex(ValueError, "Firefox extension ID changed"):
+            release.validate_extension({"manifest.json": json.dumps(manifest).encode()}, manifest, "3.3.0", "firefox")
+        manifest["browser_specific_settings"]["gecko"] = {"id": release.FIREFOX_ID, "data_collection_permissions": {"required": ["none"]}}
+        with self.assertRaisesRegex(ValueError, "data-collection disclosure changed"):
+            release.validate_extension({"manifest.json": json.dumps(manifest).encode()}, manifest, "3.3.0", "firefox")
+
     def test_invalid_or_mismatched_manifests_do_not_pass(self):
         with self.assertRaises(ValueError):
             release.validate_extension({"manifest.json": b'{"version":"3.2.0"}'}, {"version": "3.3.0"}, "3.3.0", "chrome")

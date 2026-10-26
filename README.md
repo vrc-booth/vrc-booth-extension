@@ -31,7 +31,7 @@ Bun은 의존성 설치와 스크립트 실행에 사용하며, WXT·Vite·Vites
 
 Chrome 빌드는 `dist/chrome-mv3`, Firefox 빌드는 `dist/firefox-mv2`에 생성됩니다.
 
-Firefox 개발 모드(`bun run dev:firefox`, `wxt build -b firefox --mode development`)는 테스트용 Gecko ID `ribe@ribe.io`를 고정합니다. 이 ID의 Discord 반환 주소는 `https://d75f1d80d55cc7c6b40121faf9b7ad4c9937d5f6.extensions.allizom.org/`이며, Discord 앱 OAuth2 Redirects에 이 주소가 등록되어야 Firefox 로그인이 됩니다. 배포용 production 빌드에는 이 ID를 넣지 않습니다.
+Firefox 빌드는 개발·배포 모두 Gecko ID `@boothplus.ribe`를 고정합니다. 이 ID의 Discord 반환 주소는 `https://b475ff88666ec2af067c43d77ddaa1fb51507536.extensions.allizom.org/`이며, Discord 앱 OAuth2 Redirects에 이 주소가 등록되어야 Firefox 로그인이 됩니다. AMO 데이터 수집 고지는 `authenticationInfo`(Discord 로그인 토큰)·`browsingActivity`(조회 중인 BOOTH 상품 번호)·`personalCommunications`(작성한 리뷰 글·이미지)이며, 이 고지를 지원하는 Firefox 140 이상만 지원합니다.
 
 ### 백엔드 호환성
 

@@ -8,7 +8,7 @@
   "tested_at": null,
   "blockers": [
     "Installed extension QA is not complete",
-    "Firefox stable identity, OAuth registration, disclosure, and signing need publisher review"
+    "Firefox OAuth registration and signing need publisher review"
   ],
   "browsers": {
     "chrome": {
