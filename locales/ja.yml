@@ -1,3 +1,4 @@
+extDescription: BOOTHの商品ページで他のユーザーのレビューを確認し、Discordでログインしてレビューを投稿できます。
 reviewBoard:
   sessionChecking: ログイン状態を確認しています…
   sessionUnavailable: ログイン状態を確認できませんでした。接続が回復したら再確認します。

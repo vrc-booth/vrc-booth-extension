@@ -1,3 +1,4 @@
+extDescription: See user reviews on BOOTH product pages and sign in with Discord to write your own.
 reviewBoard:
   sessionChecking: Checking your sign-in status…
   sessionUnavailable: Could not verify your sign-in status. We will check again when the connection returns.

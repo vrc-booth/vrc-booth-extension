@@ -1,3 +1,4 @@
+extDescription: BOOTH 상품 페이지에서 다른 사용자의 리뷰를 확인하고, Discord로 로그인해 직접 리뷰를 남길 수 있습니다.
 reviewBoard:
   sessionChecking: 로그인 상태를 확인하고 있어요…
   sessionUnavailable: 로그인 상태를 확인하지 못했어요. 연결이 복구되면 다시 확인합니다.
