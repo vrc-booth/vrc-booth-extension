@@ -12,6 +12,7 @@
 - Chrome 전용 권한·키를 Firefox에 넣지 않으며, Firefox 계정 설정은 별도 확장 페이지로 엽니다.
 - Firefox Gecko ID를 `@boothplus.ribe`로 고정해 Discord 로그인 반환 주소가 설치·실행마다 바뀌지 않게 했습니다.
 - Firefox AMO 데이터 수집 고지(로그인 정보·조회 상품·작성 리뷰)를 추가하고 최소 버전을 Firefox 140으로 올렸습니다.
+- 확장 설명이 `manifest.json description` 기본 문구로 표시되던 문제를 고쳐 한국어·영어·일본어 설명을 표시합니다.
 - Chrome·Firefox의 불필요한 `tabs` 권한을 제거하고 패키지 검증 기준을 맞췄습니다.
 - PR CI와 수동 패키지 준비를 분리했습니다. 어떤 워크플로도 공개 릴리스나 스토어 제출을 자동 실행하지 않습니다.
 
