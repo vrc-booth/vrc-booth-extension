@@ -32,7 +32,7 @@ bun run release:verify
 
 Chrome의 기존 공개 키는 유지하며 계산된 ID는 `hafbafjoecfjdlhjilpakabocglkaegj`다. 관찰해야 할 반환 주소는 `https://hafbafjoecfjdlhjilpakabocglkaegj.chromiumapp.org/`이다. 실제 Discord 등록 여부를 확인한 것은 아니다.
 
-Firefox에는 Chrome의 key/sidePanel 권한을 넣지 않는다. 계정 설정은 account.html로 열린다. 영구 Gecko ID를 임의로 만들지 않았다. 게시자가 ID를 결정하고 해당 ID의 identity.getRedirectURL() 결과를 실제로 확인하여 Discord 등록·AMO 고지·서명을 완료해야 한다. [Mozilla 설명](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/identity/getRedirectURL)에 따르면 임시 설치 ID가 바뀌면 반환 주소도 바뀐다.
+Firefox에는 Chrome의 key/sidePanel 권한을 넣지 않는다. 계정 설정은 account.html로 열린다. 영구 Gecko ID를 임의로 만들지 않았다. 게시자가 ID를 결정하고 해당 ID의 identity.getRedirectURL() 결과를 실제로 확인하여 Discord 등록·AMO 고지·서명을 완료해야 한다. [Mozilla 설명](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/identity/getRedirectURL)에 따르면 임시 설치 ID가 바뀌면 반환 주소도 바뀐다. 개발 모드 Firefox 빌드에만 테스트용 Gecko ID `ribe@ribe.io`(반환 주소 `https://d75f1d80d55cc7c6b40121faf9b7ad4c9937d5f6.extensions.allizom.org/`)를 넣어 로그인 테스트 중 반환 주소를 고정한다. production 빌드/ZIP에는 넣지 않으므로 Gecko ID 배포 차단 항목은 그대로다.
 
 기존 local:authToken 키와 accessToken/refreshToken 쌍을 유지한다. 새 sessionId 필드는 선택적이며 옛 토큰 쌍을 지우는 마이그레이션은 없다. 자동 검사는 이전 형식과 모듈 재로드를 확인했지만 실제 브라우저 재시작/확장 업데이트 검사는 #31에서 해야 한다. 제거된 프로필 옵션은 서버에도 저장되지 않으므로 값을 복구하거나 새 저장소로 이전하지 않는다. 칩 숨김 키는 기존 PR #29 형식을 유지한다.
 

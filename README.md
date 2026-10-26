@@ -31,6 +31,8 @@ Bun은 의존성 설치와 스크립트 실행에 사용하며, WXT·Vite·Vites
 
 Chrome 빌드는 `dist/chrome-mv3`, Firefox 빌드는 `dist/firefox-mv2`에 생성됩니다.
 
+Firefox 개발 모드(`bun run dev:firefox`, `wxt build -b firefox --mode development`)는 테스트용 Gecko ID `ribe@ribe.io`를 고정합니다. 이 ID의 Discord 반환 주소는 `https://d75f1d80d55cc7c6b40121faf9b7ad4c9937d5f6.extensions.allizom.org/`이며, Discord 앱 OAuth2 Redirects에 이 주소가 등록되어야 Firefox 로그인이 됩니다. 배포용 production 빌드에는 이 ID를 넣지 않습니다.
+
 ### 백엔드 호환성
 
 [현재 백엔드의 리뷰 계약](https://github.com/vrc-booth/vrc-booth/blob/1ec590ea159622fd140de97a0fae962410d662d0/docs/web-api/review-service.md)을 기준으로 리뷰 작성·수정·삭제·조회는 `/api/v2/review`를 사용합니다. 이미지 정보를 무시하는 레거시 `/api/comment`는 더 이상 사용하지 않습니다. 상품·로그인·사용자명은 기존 `/api` 계약을 유지합니다. 리뷰 목록은 1 기반 페이지, 서버 고정 20개와 `reviews`/`review` 응답에 맞춰 변환합니다.
