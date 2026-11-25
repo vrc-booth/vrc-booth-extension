@@ -13,7 +13,7 @@ import tempfile
 import zipfile
 
 CHROME_ID = "hafbafjoecfjdlhjilpakabocglkaegj"
-HOSTS = {"*://vbt.kamyu.me/api/**/*", "*://discord.com/**/*"}
+HOSTS = {"https://vrc-booth.com/api/**/*", "*://discord.com/**/*"}
 MATCHES = {"*://*.booth.pm/items/*", "*://booth.pm/*/items/*"}
 
 

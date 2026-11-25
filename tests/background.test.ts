@@ -29,7 +29,7 @@ vi.mock("wxt/browser", () => ({
 
 let initialize: () => void;
 const redirectUrl = "https://test-extension.chromiumapp.org/";
-const requestUrl = `https://vbt.kamyu.me/api/auth/oauth/discord?${new URLSearchParams({ redirectUrl, state: "expected-state" })}`;
+const requestUrl = `https://vrc-booth.com/api/auth/oauth/discord?${new URLSearchParams({ redirectUrl, state: "expected-state" })}`;
 const dispatch = (type: string, data: unknown, sender = {}) => mocks.handlers.get(type)!({ data, sender });
 
 beforeAll(async () => {
@@ -66,8 +66,8 @@ describe("background OAuth callback validation", () => {
   });
 
   it.each([
-    `https://vbt.kamyu.me/api/auth/oauth/discord?${new URLSearchParams({ redirectUrl })}`,
-    "https://vbt.kamyu.me/api/auth/oauth/discord?redirectUrl=https%3A%2F%2Fother.example%2F&state=expected-state",
+    `https://vrc-booth.com/api/auth/oauth/discord?${new URLSearchParams({ redirectUrl })}`,
+    "https://vrc-booth.com/api/auth/oauth/discord?redirectUrl=https%3A%2F%2Fother.example%2F&state=expected-state",
   ])("does not launch an incomplete or mismatched request", async (request) => {
     await expect(dispatch("loginWithDiscord", request)).resolves.toBeNull();
     expect(mocks.launchWebAuthFlow).not.toHaveBeenCalled();

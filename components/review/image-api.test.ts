@@ -24,7 +24,7 @@ describe("v2 image and review API contracts (mock network only)", () => {
     const selected = file();
     expect(await uploadReviewImage(selected, context)).toEqual(image);
     const [url, init] = network.mock.calls[0];
-    expect(url).toBe("https://vbt.kamyu.me/api/v2/review/image");
+    expect(url).toBe("https://vrc-booth.com/api/v2/review/image");
     expect(init.method).toBe("POST");
     expect(init.body).toBeInstanceOf(FormData);
     expect(init.body.get("file")).toBe(selected);
@@ -84,12 +84,12 @@ describe("v2 image and review API contracts (mock network only)", () => {
     network.mockResolvedValue(new Response(null, { status: 204 }));
     await submitComment("42/1", "POST", { content: "Test", score: 8, imageIds: ["first", "second"] }, context);
     await submitComment("42/1", "PUT", { content: "Edit", score: 6, anonymous: true, imageIds: [] }, context);
-    expect(network.mock.calls.map(([url]) => url)).toEqual(["https://vbt.kamyu.me/api/v2/review/42%2F1", "https://vbt.kamyu.me/api/v2/review/42%2F1"]);
+    expect(network.mock.calls.map(([url]) => url)).toEqual(["https://vrc-booth.com/api/v2/review/42%2F1", "https://vrc-booth.com/api/v2/review/42%2F1"]);
     expect(JSON.parse(network.mock.calls[1][1].body)).toEqual({ content: "Edit", score: 6, anonymous: true, imageIds: [] });
     await deleteComment("42/1", context);
     await deleteReviewImage("image/1", context);
-    expect(network.mock.calls[2][0]).toBe("https://vbt.kamyu.me/api/v2/review/42%2F1");
-    expect(network.mock.calls[3][0]).toBe("https://vbt.kamyu.me/api/v2/review/image/image%2F1");
+    expect(network.mock.calls[2][0]).toBe("https://vrc-booth.com/api/v2/review/42%2F1");
+    expect(network.mock.calls[3][0]).toBe("https://vrc-booth.com/api/v2/review/image/image%2F1");
   });
   it("adapts all v2 read envelopes and fixed page size, withholding blinded public images", async () => {
     const review = { id: "review", content: "text", score: 8, blinded: true, images: [image] };
@@ -100,9 +100,9 @@ describe("v2 image and review API contracts (mock network only)", () => {
     expect(await fetchMyComments(2)).toMatchObject({ count: 1, comments: [{ images: [] }] });
     expect(await fetchUserComment("42/1")).toMatchObject({ images: [image], blinded: true });
     expect(network.mock.calls.map(([url]) => url)).toEqual([
-      "https://vbt.kamyu.me/api/v2/review?productId=42%2F1&sort=new&page=2",
-      "https://vbt.kamyu.me/api/v2/review/my?page=2",
-      "https://vbt.kamyu.me/api/v2/review/42%2F1/my",
+      "https://vrc-booth.com/api/v2/review?productId=42%2F1&sort=new&page=2",
+      "https://vrc-booth.com/api/v2/review/my?page=2",
+      "https://vrc-booth.com/api/v2/review/42%2F1/my",
     ]);
   });
 });

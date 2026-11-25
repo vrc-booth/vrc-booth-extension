@@ -57,7 +57,7 @@ describe("legacy API requests", () => {
       .mockResolvedValueOnce(Response.json({ count: 12, reviews: [{ id: "review" }] }));
     await expect(fetchProductById("42")).resolves.toEqual({ id: "42", title: "Product" });
     await expect(fetchCommentsForProduct("42", 2, 10)).resolves.toEqual({ count: 12, comments: [{ id: "review", images: [] }], page: 2, pageSize: 20 });
-    expect(fetchMock.mock.calls[1][0]).toBe("https://vbt.kamyu.me/api/v2/review?productId=42&sort=new&page=2");
+    expect(fetchMock.mock.calls[1][0]).toBe("https://vrc-booth.com/api/v2/review?productId=42&sort=new&page=2");
   });
 });
 
