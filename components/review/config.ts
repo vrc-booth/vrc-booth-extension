@@ -1,1 +1,1 @@
-export const API_BASE = "https://vbt.kamyu.me/api";
+export const API_BASE = "https://vrc-booth.com/api";

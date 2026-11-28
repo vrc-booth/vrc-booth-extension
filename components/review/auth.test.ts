@@ -33,11 +33,11 @@ describe("Discord login helper", () => {
     const [message, requestUrl] = mocks.sendMessage.mock.calls[1];
     expect(message).toBe("loginWithDiscord");
     const authorization = new URL(requestUrl);
-    expect(authorization.origin + authorization.pathname).toBe("https://vbt.kamyu.me/api/auth/oauth/discord");
+    expect(authorization.origin + authorization.pathname).toBe("https://vrc-booth.com/api/auth/oauth/discord");
     expect(authorization.searchParams.get("redirectUrl")).toBe(redirectUrl);
     expect(authorization.searchParams.get("state")).toBe("test-state");
     const callback = new URL(fetchMock.mock.calls[0][0]);
-    expect(callback.origin + callback.pathname).toBe("https://vbt.kamyu.me/api/auth/oauth/discord/callback");
+    expect(callback.origin + callback.pathname).toBe("https://vrc-booth.com/api/auth/oauth/discord/callback");
     expect(callback.searchParams.get("code")).toBe("a+b&c=d");
     expect(callback.searchParams.get("redirectUrl")).toBe(redirectUrl);
     expect(mocks.sendMessage).toHaveBeenLastCalledWith("setAuthTokens", tokens);

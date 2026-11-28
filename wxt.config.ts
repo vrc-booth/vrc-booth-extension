@@ -12,7 +12,7 @@ export default defineConfig({
     default_locale: "ko",
     description: "__MSG_extensionDescription__",
     permissions: browser === "firefox" ? ["identity", "storage"] : ["identity", "storage", "sidePanel"],
-    host_permissions: [ "*://vbt.kamyu.me/api/**/*", "*://discord.com/**/*" ],
+    host_permissions: [ "https://vrc-booth.com/api/**/*", "*://discord.com/**/*" ],
     
   }),
   webExt: {
